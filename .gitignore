@@ -36,5 +36,8 @@ uploads/
 # Local docs (not for repo)
 docs/
 
+# Client commitments — private notes, the repository is public.
+ZAKRES.md
+
 # Claude Code (per-session artifacts, never commit)
 .claude/

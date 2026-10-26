@@ -1,0 +1,7 @@
+# Deny by default. The image needs exactly one file, so the context is one file.
+# A deny list ("ignore src, ignore build, ignore .gradle...") has to be extended for every directory
+# anyone adds later, and the day it is not, the context quietly grows or a secret rides along.
+# An allow list of one cannot go stale. BuildKit reads the Dockerfile outside the context, so the
+# leading * does not hide it.
+*
+!app.jar

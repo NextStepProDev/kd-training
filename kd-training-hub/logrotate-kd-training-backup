@@ -1,0 +1,19 @@
+# Rotation for the nightly backup log.
+#
+# rclone writes a line per transferred file into it every night and nothing ever trimmed it. That is
+# slow growth on a disk shared with the database — the same disk whose filling up takes Postgres
+# down with it — so it is worth the four lines it costs to bound.
+#
+# Installed to /etc/logrotate.d/kd-training-backup by deploy.yml.
+
+/var/log/kd-training-backup.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    # The backup script appends and never holds the file open between runs, so truncating in place
+    # is safe and keeps the path stable for anything tailing it.
+    copytruncate
+}

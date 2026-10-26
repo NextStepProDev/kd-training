@@ -1,0 +1,138 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: kd-postgres-prod
+    mem_limit: 256m
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=48MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "effective_cache_size=128MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "max_connections=30"
+      - "-c"
+      - "maintenance_work_mem=32MB"
+      - "-c"
+      - "wal_buffers=2MB"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - kd_postgres_data_prod_v18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # No process in a container may gain privileges it did not start with (setuid binaries,
+    # file capabilities) — a cheap belt in case one is taken over (audit, 2026-10-26). Postgres
+    # and nginx start as root and drop to their own users, which this allows; checked on every
+    # image before adding.
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/kd-training-backend:${VERSION:-latest}
+    container_name: kd-backend-prod
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    volumes:
+      - kd_uploads_data_prod:/app/uploads
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_AUTH: "true"
+      MAIL_STARTTLS: "true"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+      OAUTH2_GOOGLE_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID:-}
+      OAUTH2_GOOGLE_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-${MAIL_USERNAME}}
+      ADMIN_HIDDEN_EMAILS: ${ADMIN_HIDDEN_EMAILS:-}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      APP_BASE_URL: ${APP_BASE_URL}
+      SITE_URL: ${SITE_URL:-${APP_BASE_URL}}
+      # Empty on purpose: below 2 GB of RAM the JVM ergonomically picks SerialGC, which uses less
+      # native memory than G1 on a box this tight. Put -XX:+UseG1GC here after a RAM upgrade.
+      # The memory flags themselves (MaxRAMPercentage and friends) live in the backend Dockerfile.
+      JAVA_OPTS: ""
+      # Redundant with -Duser.timezone in the backend Dockerfile — keeps OS-level timestamps consistent too.
+      TZ: Europe/Warsaw
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/kd-training-frontend:${VERSION:-latest}
+    container_name: kd-frontend-prod
+    mem_limit: 64m
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    # Postgres and the backend report their health; nginx did not, so `docker compose ps` called this
+    # container healthy whatever it was serving. Probed over plain HTTP on the container's own port:
+    # the TLS listener needs the mounted origin certificate and SNI, which is a lot of moving parts
+    # for a liveness check, and the redirect this returns already proves nginx parsed its config and
+    # is answering. wget comes with nginx:alpine — no extra layer, unlike curl.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  kd_postgres_data_prod_v18:
+  kd_uploads_data_prod:

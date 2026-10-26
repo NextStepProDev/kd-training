@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    show-sql: true
+
+app:
+  site-url: http://localhost:5175
+  jwt:
+    secret: dev-secret-key-change-in-production-minimum-32-characters
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+logging:
+  level:
+    pl.kdtraining: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

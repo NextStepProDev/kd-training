@@ -1,0 +1,40 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.gradle/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+!.env.example
+
+# Uploads
+uploads/
+
+# Logs
+*.log
+
+# Local docs (not for repo)
+docs/
+
+# Claude Code (per-session artifacts, never commit)
+.claude/

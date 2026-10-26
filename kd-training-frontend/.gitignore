@@ -1,0 +1,14 @@
+node_modules
+dist
+.env
+*.local
+
+# Playwright run artifacts
+test-results
+playwright-report
+
+# Vitest run artifacts. Nothing writes here with the current config — the reporters that would
+# (json, junit, html, blob) are not switched on. Listed from vitest 5 onwards because that release
+# moved all of them under one directory, so the day somebody turns a reporter on to chase a flaky
+# test, the output does not turn up as untracked files in the next commit.
+.vitest

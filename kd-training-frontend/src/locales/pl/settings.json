@@ -1,0 +1,76 @@
+{
+  "title": "Ustawienia",
+  "avatar": {
+    "title": "Zdjęcie profilowe",
+    "upload": "Dodaj zdjęcie",
+    "change": "Zmień zdjęcie",
+    "remove": "Usuń zdjęcie",
+    "formatHint": "JPG, PNG lub WebP. Zdjęcie wykadrujesz w kółku.",
+    "cropTitle": "Wykadruj zdjęcie",
+    "cropHint": "Przeciągnij zdjęcie, aby je ustawić, i przybliż suwakiem. Tak skadrowany avatar zostanie zapisany.",
+    "zoom": "Przybliżenie",
+    "zoomIn": "Przybliż",
+    "zoomOut": "Oddal",
+    "save": "Zapisz zdjęcie",
+    "saved": "Zdjęcie profilowe zaktualizowane",
+    "removed": "Zdjęcie profilowe usunięte",
+    "invalidType": "Wybierz plik obrazu (JPG, PNG lub WebP)"
+  },
+  "profile": {
+    "title": "Profil",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "phone": "Telefon",
+    "save": "Zapisz zmiany",
+    "cancel": "Anuluj",
+    "saved": "Profil zaktualizowany"
+  },
+  "completion": {
+    "pageTitle": "Uzupełnij swoje dane",
+    "pageText": "Zanim przejdziesz dalej, uzupełnij brakujące informacje. Potrzebujemy ich, aby mieć z Tobą kontakt.",
+    "submit": "Zapisz i kontynuuj",
+    "errors": {
+      "fieldRequired": "To pole jest wymagane.",
+      "nameTooShort": "Imię i nazwisko muszą mieć co najmniej 3 znaki."
+    },
+    "decline": {
+      "title": "Nie chcę akceptować polityki prywatności",
+      "text": "Bez akceptacji polityki prywatności nie możemy prowadzić Twojego konta. Możesz je teraz usunąć — natychmiast i trwale skasujemy wszystkie Twoje dane (imię, nazwisko, adres e-mail).",
+      "button": "Nie akceptuję — usuń konto",
+      "confirm": "Na pewno? Twoje konto i wszystkie dane zostaną trwale usunięte. Tej operacji nie można cofnąć.",
+      "confirmYes": "Tak, usuń konto",
+      "cancel": "Anuluj",
+      "deleted": "Konto zostało usunięte."
+    }
+  },
+  "password": {
+    "title": "Zmiana hasła",
+    "current": "Aktualne hasło",
+    "new": "Nowe hasło",
+    "confirm": "Potwierdź nowe hasło",
+    "change": "Zmień hasło",
+    "changed": "Hasło zostało zmienione — zaloguj się ponownie",
+    "changeHint": "Po zmianie hasła wszystkie urządzenia zostaną wylogowane, łącznie z tym."
+  },
+  "marketing": {
+    "title": "Wiadomości marketingowe",
+    "description": "Po udzieleniu zgody będziemy okazjonalnie wysyłać Ci informacje o nowych materiałach i usługach KD Training na adres e-mail przypisany do konta. Maile serwisowe dotyczące Twojego konta i planu treningowego wysyłamy niezależnie od tej zgody.",
+    "toggle": "Chcę otrzymywać wiadomości marketingowe od KD Training.",
+    "unsubscribeHint": "Zgoda jest dobrowolna (art. 6 ust. 1 lit. a RODO) i obejmuje przesyłanie informacji handlowych drogą elektroniczną (art. 10 UŚUDE) oraz marketing bezpośredni (art. 172 Prawa telekomunikacyjnego). Możesz ją wycofać w każdej chwili — tutaj lub linkiem „Zrezygnuj\" w stopce każdej wiadomości — bez wpływu na zgodność z prawem przetwarzania sprzed wycofania.",
+    "privacyLink": "Pełne zasady przetwarzania — Polityka prywatności →",
+    "updated": "Ustawienia zgody marketingowej zaktualizowane"
+  },
+  "sessions": {
+    "title": "Aktywne sesje",
+    "description": "Wyloguj się ze wszystkich urządzeń, na których masz aktywne logowanie — przydatne, gdy korzystasz z cudzego komputera lub podejrzewasz, że ktoś ma dostęp do Twojego konta. Wylogowanie obejmie także to urządzenie, więc po jego użyciu zalogujesz się ponownie. Sesje wygasną w ciągu maksymalnie 15 minut.",
+    "button": "Wyloguj ze wszystkich urządzeń",
+    "confirmTitle": "Wylogować ze wszystkich urządzeń?",
+    "confirmMessage": "Wszystkie urządzenia zostaną wylogowane w ciągu maksymalnie 15 minut, łącznie z tym, którego teraz używasz — zostaniesz przeniesiony do strony logowania. Aby korzystać dalej, zaloguj się ponownie."
+  },
+  "danger": {
+    "title": "Strefa niebezpieczna",
+    "deleteAccount": "Usuń konto",
+    "deleteConfirm": "Czy na pewno chcesz usunąć swoje konto? Ta operacja jest nieodwracalna.",
+    "passwordRequired": "Podaj hasło aby potwierdzić"
+  }
+}

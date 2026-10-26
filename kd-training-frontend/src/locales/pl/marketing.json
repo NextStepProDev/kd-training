@@ -1,0 +1,13 @@
+{
+  "unsubscribe": {
+    "title": "Rezygnacja z wiadomości marketingowych",
+    "text": "Czy na pewno chcesz przestać otrzymywać od KD Training informacje o nowych materiałach i usługach?",
+    "confirm": "Zrezygnuj z wiadomości marketingowych",
+    "doneTitle": "Rezygnacja przyjęta",
+    "doneText": "Nie będziesz już otrzymywać od nas wiadomości marketingowych. Wiadomości dotyczące Twojego konta i planu treningowego nadal będą wysyłane.",
+    "invalidTitle": "Nieprawidłowy link",
+    "invalidText": "Ten link rezygnacji jest niepoprawny lub niekompletny. Zgodą marketingową możesz też zarządzać w ustawieniach swojego konta.",
+    "error": "Coś poszło nie tak. Spróbuj ponownie za chwilę.",
+    "backHome": "Wróć na stronę główną"
+  }
+}

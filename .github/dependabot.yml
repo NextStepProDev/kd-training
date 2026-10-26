@@ -1,0 +1,86 @@
+version: 2
+
+# Weekly dependency updates. Minor/patch bumps are grouped into a single PR per ecosystem so routine
+# maintenance stays one review, while major bumps arrive on their own (they need a real look).
+updates:
+  - package-ecosystem: npm
+    directory: /kd-training-frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      frontend-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gradle
+    directory: /kd-training-backend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      backend-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # Base images for both containers (Dockerfile FROM lines).
+  - package-ecosystem: docker
+    directories:
+      - /kd-training-backend
+      - /kd-training-frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(docker)"
+
+  # The compose files pin the Postgres image — the one holding every client record — and nothing
+  # would be watching them otherwise. `docker` above covers the two Dockerfiles only: Dependabot treats Docker and
+  # Docker Compose as SEPARATE ecosystems, so adding /kd-training-hub to the entry above would have
+  # looked like a fix and updated nothing. Note the database image is the one piece of this stack
+  # that CI never scans, because Trivy only sees images this repo builds.
+  - package-ecosystem: docker-compose
+    directory: /kd-training-hub
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(docker)"
+    ignore:
+      # A Postgres MAJOR bump is a data migration, not a version bump. The server refuses to start
+      # on a data directory written by the previous major, so merging such a PR does not upgrade
+      # anything — it takes the database down and the whole site with it, until somebody puts the
+      # old tag back. That is not hypothetical: in Fire Academy (this project's origin) a merged
+      # 17-alpine -> 18-alpine PR left the database container in a restart loop with backend and
+      # frontend unable to start. Data survived only because Postgres refuses rather than converts.
+      # Minor and patch updates still come through; a major belongs to a planned pg_upgrade, so it
+      # must not arrive as a routine dependency PR that looks like all the others.
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]

@@ -1,0 +1,20 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
+            client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+            scope: email, profile
+            # NOT "{baseUrl}". Spring derives {baseUrl} from the incoming request, forwarded headers
+            # included, so the address Google is told to send the user back to could be bent by a
+            # request header. Google would refuse an unregistered address, but the login would break
+            # and the redirect makes a tidy phishing lure. Pinned to our own configured site URL
+            # instead — it is the same value the mails already use, and it cannot be influenced from
+            # outside. nginx setting its own X-Forwarded-Host is the other half of this.
+            #
+            # Whatever this resolves to must ALSO be registered in the Google console, exactly:
+            #   prod  https://kdtraining.example/login/oauth2/code/google
+            #   dev   http://localhost:5175/login/oauth2/code/google   (Vite proxies it to :8083)
+            redirect-uri: "${app.site-url}/login/oauth2/code/{registrationId}"

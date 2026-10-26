@@ -1,0 +1,13 @@
+{
+  "title": "Moje konto",
+  "greeting": "Cześć, {{name}}!",
+  "profile": {
+    "title": "Twoje dane",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "email": "Email",
+    "phone": "Telefon",
+    "noPhone": "—",
+    "edit": "Edytuj dane"
+  }
+}

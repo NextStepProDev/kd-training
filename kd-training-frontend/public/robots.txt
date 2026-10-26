@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /settings
+Disallow: /moje-konto
+Disallow: /uzupelnij-profil
+Disallow: /wypisz-sie
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /resend-verification
+Disallow: /oauth-callback
+Disallow: /api/
+
+Sitemap: https://kdtraining.example/sitemap.xml

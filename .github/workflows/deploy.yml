@@ -1,0 +1,179 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Optional image tag override (e.g. main, sha-abc1234). Leave blank to deploy the pinned version from the repo VERSION file.
+        required: false
+        default: ''
+
+# The job token reads the repository and nothing else (audit, 2026-10-26): the server pulls
+# the images itself, and a workflow with no `permissions` gets whatever the repository default
+# allows.
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Resolve deploy version
+        id: version
+        # Through the environment, not `${{ }}` in the script: an expression is pasted into the
+        # shell before it runs, so a quote or `$(…)` typed in the field would run as code — here
+        # and, through the output, in the script on the server. The tag pattern below stops it.
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          # Single source of truth: the repo VERSION file. The optional workflow input
+          # only overrides it for ad-hoc deploys (e.g. deploying a specific sha- tag).
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          elif [ -f VERSION ]; then
+            VERSION=$(cat VERSION)
+          else
+            echo "ERROR: no version input and no VERSION file found." >&2
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]; then
+            echo "ERROR: not an image tag: letters, digits, dot, dash, underscore only." >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying version: $VERSION"
+
+      - name: Encode docker-compose.prod.yml
+        id: compose
+        run: echo "content=$(base64 -w 0 kd-training-hub/docker-compose.prod.yml)" >> "$GITHUB_OUTPUT"
+
+      - name: Encode nginx.conf
+        id: nginx
+        run: echo "content=$(base64 -w 0 kd-training-frontend/nginx.conf)" >> "$GITHUB_OUTPUT"
+
+      - name: Encode setup-swap.sh
+        id: swap
+        run: echo "content=$(base64 -w 0 kd-training-hub/setup-swap.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: Encode backup script
+        id: backup
+        run: echo "content=$(base64 -w 0 kd-training-hub/kd-training-backup.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: Encode backup logrotate config
+        id: logrotate
+        run: echo "content=$(base64 -w 0 kd-training-hub/logrotate-kd-training-backup)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to production VM
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          COMPOSE_B64: ${{ steps.compose.outputs.content }}
+          NGINX_B64: ${{ steps.nginx.outputs.content }}
+          SWAP_B64: ${{ steps.swap.outputs.content }}
+          BACKUP_B64: ${{ steps.backup.outputs.content }}
+          LOGROTATE_B64: ${{ steps.logrotate.outputs.content }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: COMPOSE_B64,NGINX_B64,SWAP_B64,BACKUP_B64,LOGROTATE_B64
+          script: |
+            echo "$COMPOSE_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/docker-compose.prod.yml
+            echo "$NGINX_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/nginx.conf
+            # Ensure swap exists before starting memory-hungry containers (idempotent).
+            echo "$SWAP_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/setup-swap.sh
+            sudo -n bash ${{ secrets.DEPLOY_PATH }}/setup-swap.sh || echo "WARN: swap setup skipped/failed (check passwordless sudo)"
+            # The backup script used to exist only on this box — the one file in the backup system
+            # with no backup of its own. It ships from the repo now, like nginx.conf above. Cron
+            # keeps running whatever is at this path, so updating the file is the whole deployment.
+            echo "$BACKUP_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/kd-training-backup.sh
+            sudo -n install -m 0755 ${{ secrets.DEPLOY_PATH }}/kd-training-backup.sh /usr/local/bin/kd-training-backup.sh \
+              || echo "WARN: could not install the backup script (check passwordless sudo)"
+            echo "$LOGROTATE_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/logrotate-kd-training-backup
+            sudo -n install -m 0644 ${{ secrets.DEPLOY_PATH }}/logrotate-kd-training-backup /etc/logrotate.d/kd-training-backup \
+              || echo "WARN: could not install log rotation for the backup log"
+            cd ${{ secrets.DEPLOY_PATH }}
+            export VERSION=${{ steps.version.outputs.version }}
+            # Persist the resolved version into the host .env so a later MANUAL
+            # `docker compose pull/up -d` on the box uses the same tag instead of a
+            # stale pin (a stale VERSION=0.1.0 once silently downgraded prod).
+            if grep -q '^VERSION=' .env; then
+              sed -i "s/^VERSION=.*/VERSION=${VERSION}/" .env
+            else
+              echo "VERSION=${VERSION}" >> .env
+            fi
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            # nginx.conf is bind-mounted from the host, so up -d alone won't reload
+            # it when the image tag is unchanged. Validate and hot-reload explicitly.
+            docker compose -f docker-compose.prod.yml exec -T frontend nginx -t
+            docker compose -f docker-compose.prod.yml exec -T frontend nginx -s reload
+
+      - name: Verify deployment health
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            echo "Waiting for backend to become healthy..."
+            for i in $(seq 1 16); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' kd-backend-prod 2>/dev/null || echo "missing")
+              echo "Attempt $i/16: backend health = $STATUS"
+              if [ "$STATUS" = "healthy" ]; then
+                echo "Deployment verified successfully."
+                exit 0
+              fi
+              sleep 15
+            done
+            echo "ERROR: Backend did not become healthy within 4 minutes."
+            docker logs --tail 80 kd-backend-prod
+            exit 1
+
+      - name: Smoke test public endpoints
+        # The domain comes from the repository variable SITE_URL (Settings → Variables), so it is set
+        # once, in one place, and the day the domain changes needs no edit here.
+        env:
+          BASE: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$BASE" ]; then
+            echo "::error::Repository variable SITE_URL is not set (e.g. https://example.pl)."
+            exit 1
+          fi
+          # Read-only GETs that need no login: the SPA, a prerendered page, and two routes nginx
+          # proxies to the backend. The database is covered by the health step above — the
+          # container is only healthy once /actuator/health (which includes the pool) answers.
+          PATHS=(
+            "/"
+            "/polityka-prywatnosci"
+            "/sitemap.xml"
+            "/og/"
+          )
+          FAILED=0
+          for p in "${PATHS[@]}"; do
+            CODE="000"
+            for attempt in 1 2 3; do
+              CODE=$(curl -sS -m 15 -o /dev/null -w "%{http_code}" "${BASE}${p}" || echo "000")
+              [ "$CODE" = "200" ] && break
+              echo "  ${p} -> HTTP ${CODE} (attempt ${attempt}/3), retrying in 5s..."
+              sleep 5
+            done
+            if [ "$CODE" = "200" ]; then
+              echo "OK   HTTP 200  ${p}"
+            else
+              echo "FAIL HTTP ${CODE}  ${p}"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" -ne 0 ]; then
+            echo "ERROR: one or more public endpoints did not return 200 — deploy is unhealthy."
+            exit 1
+          fi
+          echo "Smoke test passed: all public endpoints return 200."
+
+      - name: SEO smoke test (crawler routing + robots)
+        env:
+          BASE: ${{ vars.SITE_URL }}
+        run: bash kd-training-hub/seo-smoke.sh "$BASE"

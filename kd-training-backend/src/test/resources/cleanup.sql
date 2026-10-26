@@ -1,0 +1,11 @@
+DELETE FROM admin_private_notes;
+DELETE FROM athlete_goals;
+DELETE FROM training_attachments;
+DELETE FROM training_templates;
+DELETE FROM exercise_videos;
+DELETE FROM training_deletions;
+DELETE FROM training_calendar_reads;
+DELETE FROM training_comments;
+DELETE FROM personal_trainings;
+DELETE FROM auth_tokens;
+DELETE FROM users;

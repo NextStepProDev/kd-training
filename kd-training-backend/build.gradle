@@ -1,0 +1,171 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+}
+
+group = 'pl.kdtraining'
+version = (() -> {
+    def versionFile = file("../VERSION")
+    if (versionFile.exists()) {
+        return versionFile.text.trim()
+    }
+    return System.getenv("APP_VERSION") ?: "dev"
+})()
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+// Overrides of versions Spring Boot's BOM manages for us. Each one needs a reason and a way out —
+// a pin nobody remembers is how a project ends up older than the platform it sits on.
+ext {
+    // Three CRITICAL advisories against the embedded Tomcat that serves every request:
+    // CVE-2026-65182 (security constraint bypass via improper access control), CVE-2026-65905
+    // (authentication bypass by limited replay against the DIGEST authenticator) and CVE-2026-68525
+    // (unauthorized resource access via FORM authentication bypass). All three are fixed in 11.0.25.
+    //
+    // This is an override rather than a Boot bump because there is nothing to bump to: 4.1.1 is the
+    // newest Spring Boot release in existence and its BOM still manages tomcat.version 11.0.24, one
+    // patch short. Waiting for the platform would mean shipping the bypasses until Boot 4.1.2.
+    //
+    // REMOVE the moment the BOM manages 11.0.25 or later — from then on the override stops raising
+    // the version and starts holding it down, which is the failure mode this whole block exists to
+    // document. Check with: ./gradlew dependencyInsight --dependency tomcat-embed-core \
+    //   --configuration runtimeClasspath   (it prints "selected by rule" while this pin is active).
+    set('tomcat.version', '11.0.25')
+
+    // HIGH advisories against jackson-core and jackson-databind, which parse every JSON request body:
+    // GHSA-7hhh-6rmp-j9qf, GHSA-p6pp-m3f8-5c89, GHSA-cxp5-3px4-pw24, GHSA-wv8q-qhhj-9h54,
+    // GHSA-q4xh-88c3-wmh7 (plus two MEDIUM). Boot 4.1.1 manages 3.1.5 / 2.21.5; the fixes are in
+    // 3.1.7 / 2.21.7. Both lines ship in the jar — Jackson 3 for Spring itself, Jackson 2 for
+    // springdoc and jjwt-jackson — so both need the pin. Patch bumps only, same minor as the BOM.
+    //
+    // Dependabot cannot raise these itself: the versions come from the BOM, not from this file, so
+    // its security updates fail with security_update_dependency_not_found. Only a property here works.
+    //
+    // REMOVE both lines the moment the BOM manages 3.1.7 / 2.21.7 or later (same check as above,
+    // with --dependency jackson-databind).
+    set('jackson-bom.version', '3.1.7')
+    set('jackson-2-bom.version', '2.21.7')
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    implementation 'org.jspecify:jspecify:1.0.1'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
+
+    implementation 'net.coobird:thumbnailator:0.4.21'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:postgresql:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+}
+
+tasks.named('bootRun') {
+    doFirst {
+        def envFile = file('.env')
+        if (envFile.exists()) {
+            envFile.readLines().each { line ->
+                def trimmed = line.trim()
+                if (trimmed && !trimmed.startsWith('#')) {
+                    def parts = trimmed.split('=', 2)
+                    if (parts.length == 2) {
+                        environment parts[0].trim(), parts[1].trim()
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('processResources') {
+    // The version is read at configuration time and used inside a closure, which Gradle cannot see
+    // into: without declaring it here the task has no idea the value changed, reports UP-TO-DATE
+    // after a ../VERSION bump and leaves the PREVIOUS number inside application.yml. The jar still
+    // gets the new name (that comes from project.version directly), so the file says one version and
+    // its contents say another — and app.version feeds OpenApiConfig, so Swagger and the startup log
+    // report the lie. Same failure mode the `test` task guards against with inputs.file below.
+    inputs.property('appVersion', project.version.toString())
+    filesMatching('application*.yml') {
+        filter { line ->
+            line.replace('@version@', project.version.toString())
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    // Run the suite in the clock the business logic assumes. Billing months, payment windows, "today"
+    // and session dates are all computed from the JVM default zone, which production pins via
+    // -Duser.timezone in the Dockerfile — and nothing pinned it here, so tests inherited the host:
+    // Europe/Warsaw on a developer's machine, UTC on a CI runner. The same assertion could pass in
+    // one place and fail in the other for reasons having nothing to do with the change under test,
+    // and a green suite proved nothing about how a Polish client's bill actually adds up.
+    systemProperty 'user.timezone', 'Europe/Warsaw'
+    // ClockZoneArchTest reads the Dockerfile to check production is still pinned to the same clock.
+    // Gradle only knows the inputs it is told about: without this line the file could lose the flag
+    // and the task would report UP-TO-DATE and never run — a gate that passes by not executing looks
+    // exactly like one that holds. Verified by deleting the flag and watching the build go red.
+    inputs.file('Dockerfile').withPathSensitivity(PathSensitivity.RELATIVE)
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.60
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn jacocoTestCoverageVerification
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-parameters'
+}

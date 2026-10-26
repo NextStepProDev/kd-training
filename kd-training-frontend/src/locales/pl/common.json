@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "home": "Strona główna",
+    "login": "Zaloguj się",
+    "logout": "Wyloguj się",
+    "settings": "Ustawienia",
+    "myAccount": "Moje konto",
+    "admin": "Panel admina",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
+  },
+  "home": {
+    "kicker": "Trener personalny",
+    "title": "Kacper Dąbrowski",
+    "subtitle": "Trening personalny, indywidualny plan i stały kontakt z trenerem — w jednym miejscu.",
+    "seoTitle": "Kacper Dąbrowski — trener personalny",
+    "seoDescription": "Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.",
+    "login": "Zaloguj się",
+    "myAccount": "Moje konto",
+    "contact": "Napisz do mnie"
+  },
+  "admin": {
+    "title": "Panel administratora",
+    "tabs": {
+      "athletes": "Podopieczni",
+      "users": "Użytkownicy"
+    }
+  },
+  "share": {
+    "label": "Udostępnij",
+    "copyLink": "Kopiuj link",
+    "copied": "Skopiowano!"
+  },
+  "actions": {
+    "close": "Zamknij"
+  },
+  "footer": {
+    "copyright": "© {{year}} KD Training. Wszelkie prawa zastrzeżone.",
+    "description": "Trener personalny Kacper Dąbrowski — treningi indywidualne, plan i materiały dla podopiecznych.",
+    "contact": "Kontakt",
+    "privacy": "Polityka prywatności",
+    "shareLabel": "Udostępnij:"
+  },
+  "notFound": {
+    "title": "Nie ma takiej strony",
+    "description": "Adres jest nieprawidłowy albo strona została usunięta. Sprawdź, czy link jest kompletny — albo wróć na stronę główną.",
+    "home": "Strona główna"
+  }
+}

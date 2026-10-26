@@ -1,0 +1,336 @@
+name: CI Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - kd-training-backend/**
+      - VERSION
+      # This workflow tests itself. Without this line a PR touching only CI never runs CI and reaches
+      # main unexercised — which mattered little while these files were thin, and matters now that
+      # the deployable jar travels between two jobs here: a broken download-artifact could merge
+      # green without a single run.
+      - .github/workflows/ci-backend.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - kd-training-backend/**
+      - VERSION
+      - .github/workflows/ci-backend.yml
+
+  # Re-scan what is already published. A build-time scan is only ever as fresh as the day it
+  # ran: these three CRITICAL Tomcat advisories were published into Trivy's database AFTER
+  # the last merge, so CI stayed green because it never ran again, not because it passed.
+  # Monday 06:00 UTC, ahead of Dependabot's Monday run so a fix lands the same morning.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only by default (audit, 2026-10-26): the test job runs code from pull requests and has
+# no business with the registry or the Security tab. Each job below that needs more says so.
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    # The scheduled run re-scans a published image; it does not rebuild or retest.
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    defaults:
+      run:
+        working-directory: kd-training-backend
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - run: ./gradlew classes
+      - run: ./gradlew test
+      # Packaged HERE, in the job that just ran the suite, and handed to the docker job as an
+      # artifact. The image used to compile its own jar with `-x test`, so what was tested and what
+      # was deployed were two different builds and only the tested one was ever executed.
+      # Deliberately not gated on the branch: on a PR this costs seconds against a warm cache and
+      # catches a packaging failure before the merge rather than after it.
+      - run: ./gradlew bootJar
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-reports
+          path: kd-training-backend/build/reports/tests/
+          retention-days: 7
+      # Only the deployable branch needs the artifact stored.
+      - name: Stage the jar for the image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # build/libs is not guaranteed to hold one file: it keeps a jar per version ever built,
+          # and `assemble` adds a dependency-less `-plain.jar` that sorts BEFORE the real one
+          # (verified locally: `-plain.jar` and the bootJar side by side). Picking that one produces
+          # a valid image that dies at startup with no main manifest attribute. A fresh CI checkout
+          # currently hides all of this, so the assertion travels with the copy rather than trusting
+          # that the directory stays tidy.
+          count=$(ls build/libs/*.jar | wc -l)
+          if [ "$count" -ne 1 ]; then
+            echo "::error::Expected exactly one jar in build/libs, found $count:"
+            ls -la build/libs/
+            exit 1
+          fi
+          cp build/libs/*.jar app.jar
+      - name: Upload the jar
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-jar
+          # Relative to the REPOSITORY ROOT, not to defaults.run.working-directory.
+          path: kd-training-backend/app.jar
+          # Default is `warn`: an empty upload would go green here and fail two jobs later as
+          # "artifact not found", nowhere near the cause.
+          if-no-files-found: error
+          # 7 days, not 1: re-running the docker job is now a download, so a jar that has expired
+          # turns "Re-run failed jobs" into "artifact not found" days after the fact. Storage is
+          # free on a public repository, so the shorter window buys nothing.
+          retention-days: 7
+
+  docker:
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      # Required by github/codeql-action/upload-sarif so Trivy findings land in the Security tab.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read version and image owner
+        id: version
+        run: |
+          echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          # One source of truth for the image name. github.repository_owner is "NextStepProDev" and
+          # an OCI reference must be lowercase, which is why a hardcoded literal used to sit in every
+          # Trivy step: two spellings of one name, agreeing by luck until an org rename or a fork.
+          echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Download the jar built by the test job
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: backend-jar
+          # upload-artifact packs the CONTENTS of what it was given, so this restores app.jar here
+          # rather than in a nested directory. Asserted below rather than assumed.
+          path: kd-training-backend
+      # Two things the release path should refuse to ship, checked here because this is the last
+      # point where either is cheap to see.
+      - name: Verify the jar before it becomes an image
+        run: |
+          if [ ! -f kd-training-backend/app.jar ]; then
+            echo "::error::app.jar is missing after download-artifact — the artifact layout changed."
+            ls -R kd-training-backend | head -20
+            exit 1
+          fi
+          # The same defect this change fixes in build.gradle, caught from the opposite side: a jar
+          # about to be tagged :$version has to say $version inside, whatever the build believed.
+          # Without this, a stale stamp is invisible until someone reads Swagger or a startup log.
+          #
+          # Deliberately not `unzip -p ... | grep -q`: the runner's shell is `bash -e -o pipefail`,
+          # `grep -q` exits on the first match, unzip then takes SIGPIPE, and pipefail reports the
+          # pipeline as 141 — turning the SUCCESS case into an intermittent failure that depends on
+          # whether the file was small enough to be written before grep left. sed reads to the end.
+          version=$(cat VERSION)
+          stamped=$(unzip -p kd-training-backend/app.jar BOOT-INF/classes/application.yml \
+            | sed -n "s/^ *version: '\(.*\)'.*/\1/p")
+          if [ "$stamped" != "$version" ]; then
+            echo "::error::app.jar declares '$stamped' but this build is tagged '$version'."
+            exit 1
+          fi
+          echo "app.jar declares $version"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: meta
+        with:
+          images: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: kd-training-backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # No build-args and no GHA layer cache any more. APP_VERSION was load-bearing while the
+          # image compiled its own jar (build.gradle reads ../VERSION first, and ../VERSION sits
+          # outside this build context) — the jar is now built in the job where that file exists.
+          # The cache was already close to useless with `COPY src src` above the Gradle run; what is
+          # left is a COPY of one file plus `apk upgrade`, and caching an `apk upgrade` layer would
+          # preserve exactly the stale packages that line exists to avoid.
+      # The scan produces a REPORT and a GATE, deliberately as two steps.
+      #
+      # The report (SARIF) never fails the build: its job is to put every HIGH and CRITICAL into the
+      # Security tab, where a finding outlives the run that produced it. `format: table` wrote them
+      # into the log of a build that then went green, and a finding that exists only inside a passing
+      # build's log is a finding nobody reads. Three CRITICAL Tomcat auth-bypass advisories
+      # (CVE-2026-65182 / -65905 / -68525) reached production that way.
+      #
+      # The gate fails on CRITICAL only — not HIGH. The Alpine layer carries a HIGH or two (curl,
+      # openssl) at any given moment, unrelated to our code and fixed on Alpine's release rhythm
+      # rather than ours; a gate that goes red on somebody else's schedule gets switched off within
+      # a month, and then nothing gates anything. Measured before this landed: backend CRITICAL 0
+      # (after the 11.0.25 bump), frontend CRITICAL 0 — green from day one.
+      - name: Trivy report (SARIF, never fails)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          format: sarif
+          output: trivy-backend.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      # if: always() so the report still arrives when the gate below fails — the run where the gate
+      # fires is exactly the run whose findings somebody needs to read.
+      # ⚠️ ...but only when the file actually exists. `always()` alone also covers the case where
+      # the scan never ran because an earlier step in the job failed, and then this step ends with
+      # "Path does not exist: trivy-backend.sarif" — which becomes the run's annotation and BURIES
+      # the real cause. Seen in the sibling project: the image build died on a reset connection to
+      # auth.docker.io, and the only visible error pointed at a missing SARIF file.
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-backend.sarif') != ''
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+
+      - name: Trivy gate (CRITICAL fails the build)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+  # Same report+gate as the docker job, pointed at the image already in the registry rather than
+  # one just built. This is the job that would have caught the Tomcat advisories: it re-asks the
+  # question every week against a fresh vulnerability database, with no commit required.
+  scheduled-image-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Pulls the published image from GHCR for the scan.
+      packages: read
+      # Required by github/codeql-action/upload-sarif so Trivy findings land in the Security tab.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read version and image owner
+        id: version
+        run: |
+          echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Trivy report (SARIF, never fails)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          format: sarif
+          output: trivy-backend.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      # Guarded like the one in the docker job above: no file, no upload, no misleading error.
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-backend.sarif') != ''
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+      - name: Trivy gate (CRITICAL fails the build)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+  # The database image is the one thing in this stack that nothing else watches. Trivy only ever
+  # sees images this repo BUILDS, so it never looked at Postgres; Dependabot can only offer
+  # 17-alpine -> 18-alpine, and the 17-alpine tag does not change its name when upstream patches
+  # what is inside it. So a CVE in the image holding every client record reached nobody.
+  #
+  # Report-only, deliberately no gate. Our own images earn a gate because a CRITICAL there is
+  # something we can fix and ship. Here we cannot: at the time of writing postgres:17-alpine
+  # carries CVE-2025-68121 (CRITICAL) in the Go stdlib bundled into `gosu`, a startup helper that
+  # never does TLS, and the only lever we have is waiting for upstream to rebuild. A gate that is
+  # red from day one over something unfixable is a gate somebody switches off inside a month, and
+  # then the whole weekly scan goes with it. Findings land in the Security tab for a human to judge.
+  #
+  # The tag is read from the compose file rather than written here, so this cannot quietly drift
+  # into scanning a version production stopped running.
+  scheduled-postgres-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Required by github/codeql-action/upload-sarif so Trivy findings land in the Security tab.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read Postgres image from the production compose file
+        id: pg
+        run: |
+          # `grep -m1` rather than `grep ... | head -1`: the shell here is `bash -e -o pipefail`, and
+          # head leaving early can hand grep a SIGPIPE, which pipefail then reports as a failed step
+          # for a lookup that actually succeeded. Same hazard as the version check in the docker job.
+          image=$(grep -m1 -oE 'postgres:[0-9]+[a-z0-9.-]*' kd-training-hub/docker-compose.prod.yml)
+          if [ -z "$image" ]; then
+            echo "::error::Could not find a postgres image pin in kd-training-hub/docker-compose.prod.yml"
+            exit 1
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "Scanning $image"
+      - name: Trivy report (SARIF, never fails)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.pg.outputs.image }}
+          format: sarif
+          output: trivy-postgres.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+      # Guarded like the one in the docker job above; note the guard names THIS job's file.
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-postgres.sarif') != ''
+        with:
+          sarif_file: trivy-postgres.sarif
+          category: trivy-postgres

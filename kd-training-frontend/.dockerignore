@@ -1,0 +1,6 @@
+# Deny by default — see the backend .dockerignore for the reasoning.
+# Nothing here may exclude what the Dockerfile copies: dist/ (the built bundle, prerender output
+# included) and nginx.conf (the bot-list and CSP live there).
+*
+!dist
+!nginx.conf

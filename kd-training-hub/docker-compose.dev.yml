@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: kd-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kdtraining}
+      POSTGRES_USER: ${POSTGRES_USER:-kdtraining}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kdtraining_dev}
+    ports:
+      - "5436:5432"
+    volumes:
+      - kd_postgres_data_dev_v18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kdtraining}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: kd-mailhog-dev
+    ports:
+      - "1027:1025"
+      - "8027:8025"
+
+volumes:
+  kd_postgres_data_dev_v18:

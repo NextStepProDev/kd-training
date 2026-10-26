@@ -1,0 +1,38 @@
+spring:
+  jpa:
+    show-sql: false
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,text/plain
+    min-response-size: 512
+  tomcat:
+    # Bound concurrency on a 384 MB box. Virtual threads are enabled, so there is no thread-pool
+    # ceiling — without this, a flood spawns unbounded in-flight requests whose live working set
+    # (response buffers + per-request state) exhausts the heap and triggers a kernel OOM-kill.
+    # Capping accepted connections makes excess load queue (accept-count) and then fail fast (503)
+    # instead of killing the process. Tuned against load tests: ~250 concurrent cached requests
+    # stay well under the heap cap; the public read endpoints have no rate limiter, so this is the
+    # only guard against an unauthenticated read flood. 100 is far above this site's real traffic
+    # (tens of req/min) yet leaves clear heap headroom under a flood (load-tested: ~85% RAM peak vs
+    # a pinned 99.8% at 250) so survival is robust, not marginal.
+    max-connections: 100
+    accept-count: 100
+
+logging:
+  level:
+    pl.kdtraining: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN

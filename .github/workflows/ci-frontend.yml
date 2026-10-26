@@ -1,0 +1,266 @@
+name: CI Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - kd-training-frontend/**
+      - VERSION
+      # This workflow tests itself. Without this line a PR touching only CI never runs CI and reaches
+      # main unexercised — which mattered little while these files were thin, and matters now that
+      # the deployable bundle travels between two jobs here: a broken download-artifact could merge
+      # green without a single run.
+      - .github/workflows/ci-frontend.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - kd-training-frontend/**
+      - VERSION
+      - .github/workflows/ci-frontend.yml
+
+  # Re-scan what is already published. A build-time scan is only ever as fresh as the day it
+  # ran: these three CRITICAL Tomcat advisories were published into Trivy's database AFTER
+  # the last merge, so CI stayed green because it never ran again, not because it passed.
+  # Monday 06:00 UTC, ahead of Dependabot's Monday run so a fix lands the same morning.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only by default (audit, 2026-10-26): the test job runs code from pull requests and has
+# no business with the registry or the Security tab. Each job below that needs more says so.
+permissions:
+  contents: read
+
+jobs:
+  lint-typecheck-build:
+    # The scheduled run re-scans a published image; it does not rebuild or retest.
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: kd-training-frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # Single source of truth for the Node version, and it has to be one, because this job now
+          # builds the bundle that ships. It used to be split: the suite ran on 24 here while the
+          # image built production's bundle on `FROM node:26-alpine` — tested on one runtime,
+          # shipped from another. Pinned to 26 after measuring, not by inheritance: 42 files /
+          # 258 tests, lint, tsc and the prerendering build all pass on 26.8.1, so the version
+          # production was already built on is the one that stays.
+          node-version-file: kd-training-frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: kd-training-frontend/package-lock.json
+      - run: npm ci
+      # Two steps on purpose. The report always prints the full advisory list so a new "high" is visible
+      # in the log; the gate only fails the build on "critical". Reason for the gap: GHSA-qwww-vcr4-c8h2
+      # (react-router, high) has no fix inside the 7.x line — npm's only remedies are a downgrade to
+      # 7.11.0 or the 8.x major, and the advisory covers React Router's RSC mode, which this SPA does not
+      # use. Blocking on "high" today would just mean a permanently red build. Tighten this to
+      # `--audit-level=high` once the React Router 8 upgrade lands.
+      - name: Report dependency advisories
+        run: npm audit || true
+      - name: Fail on critical advisories
+        run: npm audit --audit-level=critical
+      - run: npm run lint
+      - run: npx tsc -b
+      - run: npm test
+      # The end-to-end suite used to be local-only, and drifted red without anyone noticing: three of
+      # its checks asserted routes and markup that had changed months earlier. A suite nobody runs is
+      # not a safety net, it is a file. It costs ~1 min here (one browser, API stubbed, no backend).
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: E2E golden path
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-report
+          path: kd-training-frontend/playwright-report/
+          retention-days: 7
+      # `npm run build` is `tsc -b && vite build && node scripts/prerender.mjs`. This bundle is the
+      # one that ships: the docker job packages this dist/ instead of compiling a second one.
+      - run: npm run build
+      - name: Upload the bundle
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-dist
+          # Relative to the REPOSITORY ROOT, not to defaults.run.working-directory.
+          path: kd-training-frontend/dist
+          # Default is `warn`: an empty upload would go green here and fail two jobs later as
+          # "artifact not found", nowhere near the cause.
+          if-no-files-found: error
+          # 7 days, not 1: re-running the docker job is now a download, so a bundle that has expired
+          # turns "Re-run failed jobs" into "artifact not found" days after the fact. Storage is
+          # free on a public repository, so the shorter window buys nothing.
+          retention-days: 7
+
+  docker:
+    needs: lint-typecheck-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      # Required by github/codeql-action/upload-sarif so Trivy findings land in the Security tab.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read version and image owner
+        id: version
+        run: |
+          echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          # One source of truth for the image name. github.repository_owner is "NextStepProDev" and
+          # an OCI reference must be lowercase, which is why a hardcoded literal used to sit in every
+          # Trivy step: two spellings of one name, agreeing by luck until an org rename or a fork.
+          echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Download the bundle built by the test job
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: frontend-dist
+          # upload-artifact packs a directory's CONTENTS, so this restores dist/* here rather than
+          # dist/dist — which is what the Dockerfile's `COPY dist` expects. Asserted below rather
+          # than assumed.
+          path: kd-training-frontend/dist
+      - name: Verify the bundle before it becomes an image
+        run: |
+          # A dist/dist layout builds an image that serves nginx's welcome page instead of the app,
+          # and nothing about that failure points back here. One line beats that diagnosis.
+          if [ ! -f kd-training-frontend/dist/index.html ] || [ ! -d kd-training-frontend/dist/assets ]; then
+            echo "::error::dist/index.html or dist/assets is missing after download-artifact — the artifact layout changed."
+            ls -R kd-training-frontend/dist | head -20
+            exit 1
+          fi
+          echo "bundle: $(find kd-training-frontend/dist -type f | wc -l) files"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: meta
+        with:
+          images: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: kd-training-frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # No build-args and no GHA layer cache any more. The APP_VERSION arg fed a
+          # VITE_APP_VERSION nothing ever read. The cache was worth having when this compiled the
+          # app; what is left is a COPY of a pre-built directory plus `apk upgrade`, and caching an
+          # `apk upgrade` layer would preserve exactly the stale packages that line exists to avoid.
+      # The scan produces a REPORT and a GATE, deliberately as two steps.
+      #
+      # The report (SARIF) never fails the build: its job is to put every HIGH and CRITICAL into the
+      # Security tab, where a finding outlives the run that produced it. `format: table` wrote them
+      # into the log of a build that then went green, and a finding that exists only inside a passing
+      # build's log is a finding nobody reads. Three CRITICAL Tomcat auth-bypass advisories
+      # (CVE-2026-65182 / -65905 / -68525) reached production that way.
+      #
+      # The gate fails on CRITICAL only — not HIGH. The Alpine layer carries a HIGH or two (curl,
+      # openssl) at any given moment, unrelated to our code and fixed on Alpine's release rhythm
+      # rather than ours; a gate that goes red on somebody else's schedule gets switched off within
+      # a month, and then nothing gates anything. Measured before this landed: backend CRITICAL 0
+      # (after the 11.0.25 bump), frontend CRITICAL 0 — green from day one.
+      - name: Trivy report (SARIF, never fails)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          format: sarif
+          output: trivy-frontend.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      # if: always() so the report still arrives when the gate below fails — the run where the gate
+      # fires is exactly the run whose findings somebody needs to read.
+      # ⚠️ ...but only when the file actually exists — see the twin step in ci-backend.yml, where
+      # `always()` alone turned a failed image build into a misleading "missing SARIF" error that
+      # became the run's annotation instead of the real cause.
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-frontend.sarif') != ''
+        with:
+          sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
+
+      - name: Trivy gate (CRITICAL fails the build)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+  # Same report+gate as the docker job, pointed at the image already in the registry rather than
+  # one just built. This is the job that would have caught the Tomcat advisories: it re-asks the
+  # question every week against a fresh vulnerability database, with no commit required.
+  scheduled-image-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Pulls the published image from GHCR for the scan.
+      packages: read
+      # Required by github/codeql-action/upload-sarif so Trivy findings land in the Security tab.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read version and image owner
+        id: version
+        run: |
+          echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Trivy report (SARIF, never fails)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          format: sarif
+          output: trivy-frontend.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      # Guarded like the one in the docker job above: no file, no upload, no misleading error.
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-frontend.sarif') != ''
+        with:
+          sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
+      - name: Trivy gate (CRITICAL fails the build)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}

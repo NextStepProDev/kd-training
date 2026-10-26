@@ -233,7 +233,7 @@ własnym „Done"). Bramka czyta źródła przez `import.meta.glob`, nie `node:f
 
 ## Gałęzie, PR-y, commity
 
-Ustalone 26.10.2026 (Mateusz): tak samo jak w pozostałych projektach w `Projects/`. Jedyny commit
+Ustalone 26.10.2026 (Mateusz): zasady pracy jak w pozostałych projektach w `Projects/`. Jedyny commit
 poza tym trybem to startowy (fork z Fire) — PR potrzebuje gałęzi bazowej, a puste repo jej nie ma.
 `main` nie ma ochrony w ustawieniach GitHuba (jak Fire i abcwspinania) — pilnuje tego ta zasada.
 
@@ -241,9 +241,11 @@ poza tym trybem to startowy (fork z Fire) — PR potrzebuje gałęzi bazowej, a 
   (nie od innej niescalonej gałęzi — push opublikowałby całą jej historię). Nazwy jak typy commitów:
   `feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, `style/`. **Nigdy nie pracujemy na `main`.**
 - **Na `main` tylko przez PR, scalany squashem.** Repo dopuszcza wyłącznie „Squash and merge”
-  i kasuje gałąź po scaleniu. Opisy commitów gałęzi trafiają do treści commita na `main`, więc mają
-  być kompletne. Po scaleniu kolejna poprawka idzie na nową gałąź od `origin/main` — stara po
-  squashu daje pozorne konflikty.
+  (inaczej niż Fire i abcwspinania, które dopuszczają też rebase, a Fire i merge commit). Gałąź
+  po scaleniu **zostaje** — GitHub jej nie kasuje (`delete_branch_on_merge: false`, jak w pozostałych
+  projektach; włączone przez pomyłkę przy zakładaniu repo i wyłączone 26.10.2026). Opisy
+  commitów gałęzi trafiają do treści commita na `main`, więc mają być kompletne. Po scaleniu
+  kolejna poprawka idzie na nową gałąź od `origin/main` — stara po squashu daje pozorne konflikty.
 - **Commit, push i PR robi Mateusz.** Claude podaje w czacie — **dopiero po audycie** — gotowe
   teksty po angielsku: nazwa gałęzi, commit (temat, pusta linia, opis), tytuł PR, opis PR. Bez
   stopek o autorstwie, bez plików pomocniczych i bez poleceń `git commit` do wklejenia.

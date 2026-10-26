@@ -91,7 +91,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - **Migracje SQL są niezmienne** — nawet poprawka komentarza w zaaplikowanym pliku zmienia checksum Flyway i wywala deploy. Wyjątek jeden i tylko teraz: `V1` nie była jeszcze nigdzie wdrożona, więc **do pierwszego deployu na produkcję** wolno ją poprawiać (każda poprawka = reset lokalnej bazy). Od pierwszego deployu — nowa migracja.
 - Nowy pakiet w backendzie = własny `package-info.java` z `@NullMarked`. Adnotacja **nie schodzi do podpakietów** (mówi to javadoc JSpecify), więc bez tego pliku każde `@Nullable` w pakiecie niesie pół umowy: sąsiedzi mają nullowość *nieokreśloną*, a nie „niepustą". Pilnuje `NullMarkedPackagesTest` — druga asercja łapie literówkę w nazwie pakietu, którą `compileJava` przepuszcza bez słowa. Uwaga na skutek uboczny: repozytorium w oznaczonym pakiecie dostaje `MethodInvocationValidator`, więc `null` w argumencie rzuca `IllegalArgumentException` zamiast zwrócić pustkę.
 - Produkt po polsku, kod (komentarze, logi, commity, PR) po angielsku.
-- Commit funkcjonalny zawsze z bumpem `VERSION` — bez tego tag obrazu w GHCR jest nadpisywany. `feat:` → minor, reszta → patch.
+- PR ruszający backend albo front zawsze z bumpem `VERSION` — bez tego tag obrazu w GHCR jest nadpisywany. `feat:` → minor, reszta → patch. Szczegóły: „Gałęzie, PR-y, commity”.
 - Kopie zapasowe: `rclone copy`, **nigdy** `sync` → [`INFRA.md`](INFRA.md).
 - **Akcje GitHub przypięte do SHA** (`uses: owner/action@<sha> # vX.Y.Z`; Dependabot podbija oba) — tag można przestawić na cudzy kod, a `appleboy/ssh-action` dostaje klucz do serwera. Token domyślnie tylko do odczytu (`packages`/`security-events` wyłącznie w jobach, które ich używają); wersja z formularza Deploy idzie przez `env:` i musi wyglądać jak tag obrazu. Kontenery w `docker-compose.prod.yml` mają `no-new-privileges`. Nowa akcja — od razu z SHA.
 
@@ -231,6 +231,40 @@ własnym „Done"). Bramka czyta źródła przez `import.meta.glob`, nie `node:f
 
 ---
 
+## Gałęzie, PR-y, commity
+
+Ustalone 26.10.2026 (Mateusz): tak samo jak w pozostałych projektach w `Projects/`. Jedyny commit
+poza tym trybem to startowy (fork z Fire) — PR potrzebuje gałęzi bazowej, a puste repo jej nie ma.
+`main` nie ma ochrony w ustawieniach GitHuba (jak Fire i abcwspinania) — pilnuje tego ta zasada.
+
+- **Każda zmiana na nowej gałęzi, zakładanej przed pierwszą edycją**, od aktualnego `origin/main`
+  (nie od innej niescalonej gałęzi — push opublikowałby całą jej historię). Nazwy jak typy commitów:
+  `feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, `style/`. **Nigdy nie pracujemy na `main`.**
+- **Na `main` tylko przez PR, scalany squashem.** Repo dopuszcza wyłącznie „Squash and merge”
+  i kasuje gałąź po scaleniu. Opisy commitów gałęzi trafiają do treści commita na `main`, więc mają
+  być kompletne. Po scaleniu kolejna poprawka idzie na nową gałąź od `origin/main` — stara po
+  squashu daje pozorne konflikty.
+- **Commit, push i PR robi Mateusz.** Claude podaje w czacie — **dopiero po audycie** — gotowe
+  teksty po angielsku: nazwa gałęzi, commit (temat, pusta linia, opis), tytuł PR, opis PR. Bez
+  stopek o autorstwie, bez plików pomocniczych i bez poleceń `git commit` do wklejenia.
+- **`VERSION`:** podbijany w PR-ze, który rusza `kd-training-backend/**`, `kd-training-frontend/**`
+  albo workflow CI — oba workflowy CI mają go w filtrze `paths` i oba etykietują nim obraz. Bez
+  podbicia nowy obraz dostaje tag, który już wskazuje poprzedni build, i wersja przestaje cokolwiek
+  identyfikować. Bump uruchamia też CI drugiej strony, więc obie przechodzą testy. PR
+  z samą dokumentacją (`CLAUDE.md`, `*.md`, `.gitignore`) — bez podbicia: CI się nie uruchamia
+  i nie ma czego etykietować. PR-y Dependabota — bez podbicia.
+- **Przed oddaniem:** te same bramki co CI (backend `./gradlew test`; front `npm run lint`,
+  `npx tsc -b`, `npm test`, `npm run test:e2e`, `npm run build`) plus `npm audit` — CI blokuje
+  dopiero `critical`, a `high` też naprawiamy, zanim trafi do `main`.
+  Do tego audyt całego diffu przez `git diff HEAD` (nowe pliki po `git add -N`). Poprawka bez testu,
+  który bez niej jest czerwony, nie jest zrobiona.
+- **Migracje** numerowane od `main` w chwili scalenia — przed pracą `git merge origin/main`,
+  a przy dwóch równoległych gałęziach z migracją: scalić jedną, drugą przenumerować.
+- **Zobowiązania wobec klienta nie są w repo** (repo jest publiczne) — to prywatne notatki
+  Mateusza, poza gitem. Tutaj są decyzje techniczne i ich powody.
+
+---
+
 ## Fork z Fire Academy
 
 Ustalone 26.10.2026 (Mateusz): nowy projekt na bazie Fire Academy, żeby **nie robić drugi raz**
@@ -274,8 +308,9 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse
    proxy przed nimi. Rozmiar maszyny decyduje o `mem_limit` (dziś 384m backend jak w Fire — patrz
    INFRA.md, pomiar soak).
-6. GitHub: repo, sekrety (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`,
-   `JWT_SECRET` dla CI), zmienna `SITE_URL`, Dependabot alerts + security updates, ochrona `main`.
+6. GitHub: repo `NextStepProDev/kd-training` jest (publiczne, tylko squash, Dependabot alerts
+   i security updates, secret scanning, sekret `JWT_SECRET` dla CI). Brakuje: `DEPLOY_HOST`,
+   `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`, zmiennej `SITE_URL`.
 7. Kopie: `rclone config` z remote'em `kd-crypt` (crypt na własnym folderze Drive),
    `/etc/kd-training-backup.env` z `HEALTHCHECK_URL`, wpis w crontab (instrukcja na końcu skryptu).
 8. SMTP: konto pocztowe nadawcy (`MAIL_*` w `.env`), `ADMIN_EMAIL` = adres Kacpra.

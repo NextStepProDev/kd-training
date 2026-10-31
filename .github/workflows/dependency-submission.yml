@@ -52,3 +52,12 @@ jobs:
         uses: gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           build-root-directory: kd-training-backend
+          # Report what ships, not what builds it. Without this the graph also lists the libraries
+          # Gradle PLUGINS use during the build, which reach neither the jar nor the server: the
+          # first run here raised an alert on commons-lang3 3.16.0 from the plugin classpath while
+          # the application resolves 3.20.0, past the 3.18.0 patch. Dependabot then cannot find that
+          # library in any manifest and its security run aborts with
+          # security_update_dependency_not_found. Plugin versions stay covered by the gradle
+          # ecosystem, which reads the plugins block of build.gradle. Ported from Next Step Pro
+          # Climbing (#211).
+          dependency-graph-exclude-configurations: classpath

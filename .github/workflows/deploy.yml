@@ -104,8 +104,43 @@ jobs:
             else
               echo "VERSION=${VERSION}" >> .env
             fi
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+            # Old app images go BEFORE the pull. `compose pull` keeps every tag it ever pulled (the
+            # sibling app had a hundred images holding 22 GB of a 45 GB disk by its 0.5.35), and a
+            # pull stopped by a full disk ends the deploy red before any later cleanup step could
+            # run — how another project on the same setup failed at 99%. Keeps whatever a container
+            # uses plus the two newest images per repo: today's release and the previous one, the
+            # quick rollback; with the new pull that is at most three on disk. Counted by image ID,
+            # not by tag: `main` and `0.2.0` can name one image, and counting rows would keep one
+            # image and delete the rollback. Scoped to the app images on purpose: postgres runs the
+            # database and alpine runs the backup. `|| echo` throughout: cleanup must never fail
+            # the deploy.
+            IN_USE=$(docker ps -aq | xargs -r docker inspect --format '{{.Image}}' | sed 's/^sha256://' | cut -c1-12 | tr '\n' ' ')
+            for repo in kd-training-backend kd-training-frontend; do
+              # Sorted by creation date here, not trusted from `docker images`: the containerd image
+              # store promises no order, and an unsorted list could rank the newest image third and
+              # delete it. <none> rows are dropped BEFORE the ranking, not after: an untagged image
+              # (the previous `main` once a second `main` deploy takes its tag) would otherwise fill
+              # one of the two places, the prune below would delete it anyway, and only the running
+              # image would be left, without a rollback. Every tag of the third and older distinct
+              # tagged image goes unless a container holds it.
+              docker images --filter "reference=ghcr.io/*/${repo}" --format '{{.CreatedAt}}\t{{.ID}} {{.Repository}}:{{.Tag}}' \
+                | sort -r | cut -f2 \
+                | awk -v used="$IN_USE" '
+                    BEGIN { n = split(used, u, " "); for (i = 1; i <= n; i++) inuse[u[i]] = 1 }
+                    $2 ~ /:<none>$/ { next }
+                    !($1 in rank) { rank[$1] = ++k }
+                    rank[$1] > 2 && !($1 in inuse) { print $2 }' \
+                | xargs -r docker rmi || echo "WARN: could not remove some ${repo} images"
+            done
+            docker image prune -f || echo "WARN: dangling image prune failed"
+            df -h / | tail -1
+            # `|| exit 1` on these two, and only these: the script has no `set -e` (v1.2.5 of the SSH
+            # action dropped `script_stop` and runs to the end), so the step reports the LAST
+            # command. A failed pull (full disk, missing tag) leaves the old containers up, the nginx
+            # reload succeeds, the old backend is healthy, and the deploy goes green on the old
+            # version. Not `set -e` on the whole script: swap, backup and cleanup are meant to warn.
+            docker compose -f docker-compose.prod.yml pull || exit 1
+            docker compose -f docker-compose.prod.yml up -d || exit 1
             # nginx.conf is bind-mounted from the host, so up -d alone won't reload
             # it when the image tag is unchanged. Validate and hot-reload explicitly.
             docker compose -f docker-compose.prod.yml exec -T frontend nginx -t
@@ -118,6 +153,18 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            # Healthy is not enough: the PREVIOUS backend is healthy too, so a release that never
+            # replaced it passed this check. Both containers must run the tag just deployed (the
+            # version is pattern-checked in "Resolve deploy version", so it is safe to paste here).
+            VERSION="${{ steps.version.outputs.version }}"
+            for c in kd-backend-prod kd-frontend-prod; do
+              IMAGE=$(docker inspect --format '{{.Config.Image}}' "$c" 2>/dev/null || echo "missing")
+              if [ "${IMAGE##*:}" != "$VERSION" ]; then
+                echo "ERROR: $c runs '$IMAGE', expected tag '$VERSION'."
+                exit 1
+              fi
+              echo "$c runs $IMAGE"
+            done
             echo "Waiting for backend to become healthy..."
             for i in $(seq 1 16); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' kd-backend-prod 2>/dev/null || echo "missing")

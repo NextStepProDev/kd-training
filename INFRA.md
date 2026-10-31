@@ -109,6 +109,15 @@ pomijany, więc skrypt działa i bez niego.
   Strażnik nazywa **plik tego joba** (skan Postgresa ma własny). `upload-artifact` tej wady nie ma —
   przy braku plików domyślnie tylko ostrzega
 - `deploy.yml`: ręczny trigger → SSH → `docker compose pull && up -d` → health backendu → smoke test pod `vars.SITE_URL`
+  (poprawki przeniesione z Fire Academy, PR #156, 31.10.2026 — przed pierwszym wdrożeniem):
+  - **Przed** `pull` kasuje stare obrazy aplikacji. Fire uzbierało ich 22 GB, bo każdy deploy zostawiał swój obraz na dysku. Przed, a nie po: pull przerwany pełnym dyskiem kończy deploy na czerwono, zanim jakiekolwiek późniejsze sprzątanie ruszy (tak padło anovastudio przy 99%).
+  - Zostaje to, czego używa kontener, plus **dwa najnowsze obrazy na repozytorium** (bieżący i poprzedni, do szybkiego powrotu). Z nowym pullem to najwyżej trzy na dysku.
+  - Liczone po ID, nie po tagu, bo `main` i `0.2.0` mogą być tym samym obrazem.
+  - **Sortowane jawnie po dacie utworzenia**: magazyn containerd nie obiecuje kolejności.
+  - Wiersze `<none>` wypadają **przed** liczeniem, inaczej obraz bez tagu zająłby miejsce wersji do powrotu.
+  - Sprzątanie dotyczy tylko `kd-training-backend` i `kd-training-frontend`; `postgres` i `alpine` (backup) są poza zasięgiem. Sprzątanie nigdy nie wywala deployu.
+  - Odwrotnie `pull` i `up -d`: mają `|| exit 1`. Skrypt SSH nie ma `set -e` (`appleboy/ssh-action` v1.2.5 nie ma `script_stop`), więc krok zwraca wynik **ostatniej** komendy. Nieudany pull zostawiłby stare kontenery, a deploy świeciłby na zielono.
+  - Z tego samego powodu „Verify deployment health” najpierw sprawdza, że oba kontenery chodzą na **wdrażanym tagu**. Stary backend też jest `healthy`.
 
 ### Zmienne środowiskowe (`.env`)
 `POSTGRES_DB/USER/PASSWORD`, `MAIL_HOST/PORT/USERNAME/PASSWORD`, `JWT_SECRET`, `GHCR_OWNER`, `VERSION`, `ADMIN_EMAIL`, `CORS_ORIGINS`, `APP_BASE_URL`, `SITE_URL`

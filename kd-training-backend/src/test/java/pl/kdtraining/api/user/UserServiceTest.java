@@ -252,14 +252,17 @@ class UserServiceTest {
     @Test
     void shouldSetPrivacyAndMarketingOnConsentsForGoogleUser() {
         user.setPrivacyAcceptedAt(null);
+        user.setTermsAcceptedAt(null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
-        UserResponse result = service.submitConsents(userId, new ConsentsRequest(true, true));
+        UserResponse result = service.submitConsents(userId, new ConsentsRequest(true, true, true));
 
         assertTrue(user.hasPrivacyAccepted());
+        assertTrue(user.hasTermsAccepted());
         assertTrue(user.hasMarketingConsent());
         assertTrue(result.privacyAccepted());
+        assertTrue(result.termsAccepted());
         assertTrue(result.marketingConsent());
     }
 
@@ -270,8 +273,34 @@ class UserServiceTest {
         when(msg.get("validation.privacy.required")).thenReturn("Wymagana polityka");
 
         assertThrows(IllegalArgumentException.class,
-            () -> service.submitConsents(userId, new ConsentsRequest(false, true)));
+            () -> service.submitConsents(userId, new ConsentsRequest(false, true, true)));
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRejectConsentsWhenTermsMissingAndNotAccepted() {
+        user.setPrivacyAcceptedAt(null);
+        user.setTermsAcceptedAt(null);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(msg.get("validation.terms.required")).thenReturn("Wymagany regulamin");
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.submitConsents(userId, new ConsentsRequest(true, false, true)));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotAskForTermsAgainOnceAccepted() {
+        java.time.Instant accepted = java.time.Instant.parse("2026-01-01T10:00:00Z");
+        user.setPrivacyAcceptedAt(accepted);
+        user.setTermsAcceptedAt(accepted);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        service.submitConsents(userId, new ConsentsRequest(false, false, true));
+
+        // The first acceptance is the proof; a later request must neither refuse nor overwrite it.
+        assertEquals(accepted, user.getTermsAcceptedAt());
     }
 
     @Test

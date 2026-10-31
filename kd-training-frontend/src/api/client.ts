@@ -287,10 +287,10 @@ export const authApi = {
       method: 'PUT',
       body: JSON.stringify({ enabled }),
     }),
-  submitConsents: (acceptedPrivacy: boolean, acceptedMarketing: boolean) =>
+  submitConsents: (acceptedPrivacy: boolean, acceptedTerms: boolean, acceptedMarketing: boolean) =>
     fetchApi<User>('/user/me/consents', {
       method: 'POST',
-      body: JSON.stringify({ acceptedPrivacy, acceptedMarketing }),
+      body: JSON.stringify({ acceptedPrivacy, acceptedTerms, acceptedMarketing }),
     }),
   /** One-time explicit consent to training-data processing; /my-training 409s without it. */
   grantTrainingConsent: () =>

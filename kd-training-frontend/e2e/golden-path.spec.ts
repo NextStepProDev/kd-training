@@ -44,6 +44,13 @@ test.describe('Golden Path — gość', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   })
 
+  test('regulamin jest dostępny ze stopki', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('footer').getByRole('link', { name: 'Regulamin' }).click()
+    await expect(page).toHaveURL(/\/regulamin$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Regulamin' })).toBeVisible()
+  })
+
   test('nieznany adres pokazuje stronę 404, nie pustkę', async ({ page }) => {
     await page.goto('/tego-adresu-nie-ma')
     await expect(page.getByRole('heading', { level: 1, name: /Nie ma takiej strony/i })).toBeVisible()

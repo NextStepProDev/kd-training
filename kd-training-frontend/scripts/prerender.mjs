@@ -51,6 +51,7 @@ try {
   const routes = [
     { path: '/', title: HOME_TITLE, description: DEFAULT_DESCRIPTION },
     { path: '/polityka-prywatnosci', title: 'Polityka prywatności', description: 'Polityka prywatności KD Training — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują.' },
+    { path: '/regulamin', title: 'Regulamin', description: 'Regulamin serwisu KD Training — zasady korzystania z konta i strefy podopiecznego.' },
   ]
 
   let written = 0

@@ -36,6 +36,9 @@ CREATE TABLE users (
     -- Consents are timestamps, never booleans: NULL means not given, and the moment itself is the
     -- proof GDPR asks for.
     privacy_accepted_at TIMESTAMPTZ,
+    -- Acceptance of the terms of service (regulamin), required at registration like the privacy
+    -- policy; Google accounts give it on the profile-completion screen.
+    terms_accepted_at TIMESTAMPTZ,
     marketing_consent_at TIMESTAMPTZ,
     -- Stable, long-lived token for the unsubscribe link in marketing mail (works without logging in).
     -- Every user has one regardless of consent.

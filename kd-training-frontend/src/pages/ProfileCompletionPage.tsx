@@ -23,7 +23,8 @@ export function ProfileCompletionPage() {
   const { showToast } = useToast()
   const navigate = useNavigate()
   const incomplete = needsProfileCompletion(user)
-  const needPrivacy = !!user && !user.privacyAccepted
+  // Declining is offered while either document still waits for acceptance — the account cannot be used without both.
+  const needConsents = !!user && (!user.privacyAccepted || !user.termsAccepted)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -56,7 +57,7 @@ export function ProfileCompletionPage() {
       <p className="text-surface-400 mt-2 mb-6">{t('completion.pageText')}</p>
       <ProfileCompletionForm />
 
-      {needPrivacy && (
+      {needConsents && (
         <div className="mt-8 pt-6 border-t border-surface-800">
           <h2 className="text-sm font-semibold text-surface-200">{t('completion.decline.title')}</h2>
           <p className="text-sm text-surface-400 mt-1 mb-4">{t('completion.decline.text')}</p>

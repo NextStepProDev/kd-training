@@ -18,7 +18,7 @@ describe('OAuthCallbackPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     loginWithTokens.mockResolvedValue({
-      firstName: 'Kasia', lastName: 'Nowak', phone: '600100200', privacyAccepted: true,
+      firstName: 'Kasia', lastName: 'Nowak', phone: '600100200', privacyAccepted: true, termsAccepted: true,
     })
   })
 
@@ -52,7 +52,7 @@ describe('OAuthCallbackPage', () => {
   it('shouldSendPeopleToCompleteTheirProfileWhenGoogleLeftGapsInIt', async () => {
     // Google hands over no phone number, and the privacy consent is ours to collect, not theirs.
     loginWithTokens.mockResolvedValue({
-      firstName: 'Kasia', lastName: 'Nowak', phone: null, privacyAccepted: false,
+      firstName: 'Kasia', lastName: 'Nowak', phone: null, privacyAccepted: false, termsAccepted: false,
     })
     landOn('#accessToken=abc&refreshToken=def&expiresIn=900')
 

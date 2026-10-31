@@ -8,6 +8,7 @@ export interface User {
   isAdmin: boolean
   superAdmin: boolean
   privacyAccepted: boolean
+  termsAccepted: boolean
   marketingConsent: boolean
   /** 1-on-1 coaching client — unlocks the personal training calendar. Set by an admin. */
   isAthlete: boolean

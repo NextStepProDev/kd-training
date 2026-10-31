@@ -36,15 +36,19 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
   const { user, refreshUser } = useAuth()
   const missing = getMissingProfileFields(user)
   const needPrivacy = !!user && !user.privacyAccepted
+  const needTerms = !!user && !user.termsAccepted
+  const needConsents = needPrivacy || needTerms
   const [values, setValues] = useState<Record<ProfileField, string>>({ firstName: '', lastName: '', phone: '' })
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedMarketing, setAcceptedMarketing] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ProfileField, string>>>({})
   const [privacyError, setPrivacyError] = useState<string | null>(null)
+  const [termsError, setTermsError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  if (!user || (missing.length === 0 && !needPrivacy)) return null
+  if (!user || (missing.length === 0 && !needConsents)) return null
 
   const setField = (field: ProfileField, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -71,10 +75,12 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
       }
     }
     const nextPrivacyError = needPrivacy && !acceptedPrivacy ? t('register.privacyRequired', { ns: 'auth' }) : null
+    const nextTermsError = needTerms && !acceptedTerms ? t('register.termsRequired', { ns: 'auth' }) : null
 
     setFieldErrors(nextFieldErrors)
     setPrivacyError(nextPrivacyError)
-    if (Object.keys(nextFieldErrors).length > 0 || nextPrivacyError) return
+    setTermsError(nextTermsError)
+    if (Object.keys(nextFieldErrors).length > 0 || nextPrivacyError || nextTermsError) return
 
     setLoading(true)
     try {
@@ -86,8 +92,9 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
           missing.includes('phone') ? values.phone.trim() : (user.phone ?? ''),
         )
       }
-      if (needPrivacy) {
-        await authApi.submitConsents(true, acceptedMarketing)
+      if (needConsents) {
+        // Whatever was accepted before stays as it was — the server keeps the first moment.
+        await authApi.submitConsents(true, true, acceptedMarketing)
       }
       await refreshUser()
     } catch (err) {
@@ -126,48 +133,82 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
         )
       })}
 
-      {needPrivacy && (
+      {needConsents && (
         <div className="space-y-3 pt-1">
-          <div>
-            <div className="flex items-start gap-2">
+          {needPrivacy && (
+            <div>
+              <div className="flex items-start gap-2">
+                <input
+                  id="completionPrivacy"
+                  type="checkbox"
+                  checked={acceptedPrivacy}
+                  onChange={(e) => { setAcceptedPrivacy(e.target.checked); setPrivacyError(null) }}
+                  className={clsx(
+                    'mt-0.5 h-4 w-4 rounded bg-surface-800 text-primary-500 focus:ring-2',
+                    privacyError ? 'border-rose-500 focus:ring-rose-500' : 'border-surface-600 focus:ring-primary-500',
+                  )}
+                  aria-invalid={!!privacyError}
+                  aria-describedby={privacyError ? 'completionPrivacy-error' : undefined}
+                />
+                <label htmlFor="completionPrivacy" className={clsx('text-sm', privacyError ? 'text-rose-300' : 'text-surface-300')}>
+                  {t('register.acceptPrivacyPrefix', { ns: 'auth' })}{' '}
+                  <Link to="/polityka-prywatnosci" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                    {t('register.privacyLink', { ns: 'auth' })}
+                  </Link>
+                </label>
+              </div>
+              {privacyError && (
+                <p id="completionPrivacy-error" className="mt-1 text-sm text-rose-400">
+                  {privacyError}
+                </p>
+              )}
+            </div>
+          )}
+          {needTerms && (
+            <div>
+              <div className="flex items-start gap-2">
+                <input
+                  id="completionTerms"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => { setAcceptedTerms(e.target.checked); setTermsError(null) }}
+                  className={clsx(
+                    'mt-0.5 h-4 w-4 rounded bg-surface-800 text-primary-500 focus:ring-2',
+                    termsError ? 'border-rose-500 focus:ring-rose-500' : 'border-surface-600 focus:ring-primary-500',
+                  )}
+                  aria-invalid={!!termsError}
+                  aria-describedby={termsError ? 'completionTerms-error' : undefined}
+                />
+                <label htmlFor="completionTerms" className={clsx('text-sm', termsError ? 'text-rose-300' : 'text-surface-300')}>
+                  {t('register.acceptTermsPrefix', { ns: 'auth' })}{' '}
+                  <Link to="/regulamin" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                    {t('register.termsLink', { ns: 'auth' })}
+                  </Link>
+                </label>
+              </div>
+              {termsError && (
+                <p id="completionTerms-error" className="mt-1 text-sm text-rose-400">
+                  {termsError}
+                </p>
+              )}
+            </div>
+          )}
+          {/* Offered only to someone who has not given it — an unticked box would read as "withdrawn". */}
+          {!user.marketingConsent && (
+            <div className="flex items-start gap-2 rounded-lg border border-surface-700/60 bg-surface-800/40 p-3">
               <input
-                id="completionPrivacy"
+                id="completionMarketing"
                 type="checkbox"
-                checked={acceptedPrivacy}
-                onChange={(e) => { setAcceptedPrivacy(e.target.checked); setPrivacyError(null) }}
-                className={clsx(
-                  'mt-0.5 h-4 w-4 rounded bg-surface-800 text-primary-500 focus:ring-2',
-                  privacyError ? 'border-rose-500 focus:ring-rose-500' : 'border-surface-600 focus:ring-primary-500',
-                )}
-                aria-invalid={!!privacyError}
-                aria-describedby={privacyError ? 'completionPrivacy-error' : undefined}
+                checked={acceptedMarketing}
+                onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-2 focus:ring-primary-500"
               />
-              <label htmlFor="completionPrivacy" className={clsx('text-sm', privacyError ? 'text-rose-300' : 'text-surface-300')}>
-                {t('register.acceptPrivacyPrefix', { ns: 'auth' })}{' '}
-                <Link to="/polityka-prywatnosci" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
-                  {t('register.privacyLink', { ns: 'auth' })}
-                </Link>
+              <label htmlFor="completionMarketing" className="text-sm text-surface-300">
+                {t('register.acceptMarketing', { ns: 'auth' })}
+                <span className="block text-xs text-surface-500 mt-0.5">{t('register.acceptMarketingHint', { ns: 'auth' })}</span>
               </label>
             </div>
-            {privacyError && (
-              <p id="completionPrivacy-error" className="mt-1 text-sm text-rose-400">
-                {privacyError}
-              </p>
-            )}
-          </div>
-          <div className="flex items-start gap-2 rounded-lg border border-surface-700/60 bg-surface-800/40 p-3">
-            <input
-              id="completionMarketing"
-              type="checkbox"
-              checked={acceptedMarketing}
-              onChange={(e) => setAcceptedMarketing(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-2 focus:ring-primary-500"
-            />
-            <label htmlFor="completionMarketing" className="text-sm text-surface-300">
-              {t('register.acceptMarketing', { ns: 'auth' })}
-              <span className="block text-xs text-surface-500 mt-0.5">{t('register.acceptMarketingHint', { ns: 'auth' })}</span>
-            </label>
-          </div>
+          )}
         </div>
       )}
 

@@ -30,7 +30,8 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                         "password": "StrongPass123",
                         "firstName": "Jan",
                         "lastName": "Kowalski",
-                        "acceptedPrivacy": true
+                        "acceptedPrivacy": true,
+                        "acceptedTerms": true
                     }
                     """))
             .andExpect(status().isOk())
@@ -40,18 +41,31 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void shouldRejectRegistrationWhenTermsNotAccepted() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"email":"no-terms@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":false}
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        assertFalse(userRepository.existsByEmail("no-terms@test.com"));
+    }
+
+    @Test
     void shouldRejectDuplicateEmail() throws Exception {
         mockMvc.perform(post("/api/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
-                {"email":"dup@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true}
+                {"email":"dup@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":true}
                 """))
             .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
-                {"email":"dup@test.com","password":"StrongPass123","firstName":"Anna","lastName":"Nowak","acceptedPrivacy":true}
+                {"email":"dup@test.com","password":"StrongPass123","firstName":"Anna","lastName":"Nowak","acceptedPrivacy":true,"acceptedTerms":true}
                 """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
@@ -62,7 +76,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"email":"invalid","password":"short","firstName":"","lastName":"","acceptedPrivacy":true}
+                    {"email":"invalid","password":"short","firstName":"","lastName":"","acceptedPrivacy":true,"acceptedTerms":true}
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
@@ -230,7 +244,8 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                         "password": "StrongPass123",
                         "firstName": "Admin",
                         "lastName": "Fire",
-                        "acceptedPrivacy": true
+                        "acceptedPrivacy": true,
+                        "acceptedTerms": true
                     }
                     """))
             .andExpect(status().isOk());

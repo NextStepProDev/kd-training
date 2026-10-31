@@ -12,7 +12,7 @@ public final class UserDtos {
                                 @Nullable String phone, String role, boolean isAdmin,
                                 boolean superAdmin,
                                 boolean emailVerified,
-                                boolean privacyAccepted, boolean marketingConsent,
+                                boolean privacyAccepted, boolean termsAccepted, boolean marketingConsent,
                                 boolean isAthlete, boolean trainingConsent,
                                 String preferredLanguage, boolean hasPassword,
                                 boolean oauthLinked, @Nullable String avatarUrl, Instant createdAt) {}
@@ -33,7 +33,7 @@ public final class UserDtos {
     public record UpdateMarketingRequest(boolean enabled) {}
 
     // Consents collected on the account side — mainly to complete Google accounts on the profile-completion screen
-    // (privacy policy mandatory, marketing optional). The mandatory check is validated in the service,
-    // because the policy may have been accepted earlier (email/password registration).
-    public record ConsentsRequest(boolean acceptedPrivacy, boolean acceptedMarketing) {}
+    // (privacy policy and terms mandatory, marketing optional). The mandatory checks are validated in the
+    // service, because both may have been accepted earlier (email/password registration).
+    public record ConsentsRequest(boolean acceptedPrivacy, boolean acceptedTerms, boolean acceptedMarketing) {}
 }

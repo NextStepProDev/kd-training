@@ -28,7 +28,7 @@ class SitemapControllerIntegrationTest extends BaseIntegrationTest {
             .andReturn();
 
         List<String> locs = parseLocs(result);
-        assertEquals(List.of(BASE + "/", BASE + "/polityka-prywatnosci"), locs);
+        assertEquals(List.of(BASE + "/", BASE + "/polityka-prywatnosci", BASE + "/regulamin"), locs);
     }
 
     /** A W3C date is YYYY-MM-DD; ISO_DATE used to append the zone and print "2026-10-26Z". */

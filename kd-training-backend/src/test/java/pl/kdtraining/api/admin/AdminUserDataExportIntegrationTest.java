@@ -139,6 +139,8 @@ class AdminUserDataExportIntegrationTest extends BaseIntegrationTest {
         JsonNode data = JSON.readTree(raw);
         assertEquals("marek@kdtraining.test", data.at("/profil/email").asText());
         assertFalse(data.at("/zgody/zgoda_na_dane_zdrowotne").isNull());
+        // Acceptance of the terms is part of what the person agreed to — it leaves with their data.
+        assertTrue(data.at("/zgody").has("regulamin_zaakceptowany"));
 
         JsonNode trainings = data.at("/plan_1na1/treningi_i_zadania");
         assertEquals(1, trainings.size());

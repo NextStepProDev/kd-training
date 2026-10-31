@@ -6,9 +6,10 @@ import { useAuth } from '../../context/AuthContext'
 import { needsProfileCompletion } from '../../utils/profileCompletion'
 
 // Routes available to a logged-in user who hasn't completed their account yet (missing data or
-// privacy policy not accepted). Everything else is blocked until acceptance
-// — GDPR: without consent to the policy we don't allow using the app.
-const COMPLETION_ALLOWED_PATHS = ['/uzupelnij-profil', '/polityka-prywatnosci', '/oauth-callback']
+// privacy policy or terms not accepted). Everything else is blocked until acceptance
+// — GDPR: without consent to the policy we don't allow using the app. Both documents stay
+// readable: nobody can be asked to accept what they are not allowed to open.
+const COMPLETION_ALLOWED_PATHS = ['/uzupelnij-profil', '/polityka-prywatnosci', '/regulamin', '/oauth-callback']
 
 export function Layout() {
   const location = useLocation()

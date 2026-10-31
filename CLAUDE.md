@@ -143,7 +143,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/api/admin` | ROLE_ADMIN | użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, biblioteka filmów, szablony, notatki |
 | `/api/public` | brak | wypis z marketingu |
 | `/api/files` | brak | streaming plików z białej listy folderów (dziś tylko `avatars`) |
-| `/og/` · `/sitemap.xml` | brak | Open Graph strony głównej, mapa strony (`/`, `/polityka-prywatnosci`) |
+| `/og/` · `/sitemap.xml` | brak | Open Graph strony głównej, mapa strony (`/`, `/polityka-prywatnosci`, `/regulamin`) |
 | `/api/dev` | profil `dev` | logowanie na skróty, lista userów |
 
 ---
@@ -154,11 +154,12 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 |---------|-----------|------|
 | `/` | HomePage | Wizytówka — **zaślepka** do czasu treści i projektu od klienta |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę |
-| `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności) |
+| `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
 | `/moje-konto/plan-treningowy` | MyTrainingCalendarPage | strefa podopiecznego: zgoda art. 9 → cele, kalendarz, wiadomości, statystyki |
 | `/settings` | SettingsPage | avatar, dane, hasło, zgoda marketingowa, usunięcie konta |
 | `/polityka-prywatnosci` | PrivacyPolicyPage | polityka — **wersja robocza** (dane administratora do uzupełnienia) |
+| `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy i weryfikacja prawna do zrobienia); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
 | `/wypisz-sie` | MarketingUnsubscribePage | rezygnacja z marketingu z linku w mailu |
 | `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
 | `/verify-email` · `/reset-password` · `/forgot-password` · `/resend-verification` · `/oauth-callback` | — | przepływy konta |
@@ -305,7 +306,9 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
    zgody marketingowe (`auth.json`, `settings.json`); adres kontaktowy → `config/site.ts`,
    `calendar.json` (`withdrawNote`).
 3. Treść i projekt wizytówki, logo, ikony, `og-default.png` (dziś zaślepki).
-4. Regulamin + akceptacja przy rejestracji (brief klienta, pkt 6) — jeszcze nie zaimplementowane.
+4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
+   `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
+   `TermsPage.tsx` to szkic do podmiany po danych usługodawcy i weryfikacji prawnej.
 5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/kd-training`, a skoro
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse
    proxy przed nimi. Rozmiar maszyny decyduje o `mem_limit` (dziś 384m backend jak w Fire — patrz

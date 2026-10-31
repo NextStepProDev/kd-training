@@ -142,9 +142,10 @@ jobs:
             echo "::error::Repository variable SITE_URL is not set (e.g. https://example.pl)."
             exit 1
           fi
-          # Read-only GETs that need no login: the SPA, a prerendered page, and two routes nginx
-          # proxies to the backend. The database is covered by the health step above — the
-          # container is only healthy once /actuator/health (which includes the pool) answers.
+          # Read-only GETs that need no login: the SPA, the two prerendered legal pages (privacy
+          # policy, terms), and two routes nginx proxies to the backend. The database is covered by
+          # the health step above — the container is only healthy once /actuator/health (which
+          # includes the pool) answers.
           PATHS=(
             "/"
             "/polityka-prywatnosci"

@@ -107,6 +107,7 @@ export function PrivacyPolicyPage() {
               'Numer telefonu',
               'Hasło — przechowywane wyłącznie w postaci zaszyfrowanego hashu (bcrypt), nigdy w formie jawnej',
               'Data i godzina akceptacji polityki prywatności — jako potwierdzenie udzielonej zgody',
+              'Data i godzina akceptacji regulaminu — jako potwierdzenie zawarcia umowy o prowadzenie konta',
             ]} />
           </SubSection>
 

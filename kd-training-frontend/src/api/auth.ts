@@ -11,6 +11,7 @@ export interface RegisterRequest {
   phone: string
   preferredLanguage?: string
   acceptedPrivacy: boolean
+  acceptedTerms: boolean
   acceptedMarketing: boolean
 }
 

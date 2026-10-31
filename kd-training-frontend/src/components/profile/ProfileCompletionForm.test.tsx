@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { ProfileCompletionForm } from './ProfileCompletionForm'
-import { getMissingProfileFields } from '../../utils/profileCompletion'
+import { getMissingProfileFields, needsProfileCompletion } from '../../utils/profileCompletion'
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -19,6 +19,9 @@ vi.mock('react-i18next', () => ({
         'register.acceptPrivacyPrefix': 'Akceptuję',
         'register.privacyLink': 'Politykę prywatności',
         'register.privacyRequired': 'Musisz zaakceptować Politykę prywatności.',
+        'register.acceptTermsPrefix': 'Akceptuję',
+        'register.termsLink': 'Regulamin',
+        'register.termsRequired': 'Musisz zaakceptować Regulamin.',
         'register.acceptMarketing': 'Chcę otrzymywać wiadomości marketingowe.',
         'register.acceptMarketingHint': 'Bez spamu.',
       }
@@ -37,13 +40,28 @@ vi.mock('../../api/client', () => ({
 }))
 
 const refreshUserMock = vi.fn()
-type MockUser = { firstName: string; lastName: string; phone: string | null; privacyAccepted: boolean }
+type MockUser = {
+  firstName: string; lastName: string; phone: string | null
+  privacyAccepted: boolean; termsAccepted: boolean; marketingConsent: boolean
+}
 let mockUser: MockUser | null = null
 vi.mock('../../context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser, refreshUser: refreshUserMock }),
 }))
 
 const renderForm = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>)
+
+describe('needsProfileCompletion', () => {
+  const complete = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: true, termsAccepted: true }
+
+  it('should let a complete account through', () => {
+    expect(needsProfileCompletion(complete)).toBe(false)
+  })
+
+  it('should hold an account that has not accepted the terms', () => {
+    expect(needsProfileCompletion({ ...complete, termsAccepted: false })).toBe(true)
+  })
+})
 
 describe('getMissingProfileFields', () => {
   it('should report no missing fields when all required values are present', () => {
@@ -67,7 +85,7 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should render only the missing fields', () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     render(<ProfileCompletionForm />)
     expect(screen.getByText('Telefon')).toBeInTheDocument()
     expect(screen.queryByText('Imię')).not.toBeInTheDocument()
@@ -75,13 +93,13 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should render nothing when the profile is already complete', () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     const { container } = render(<ProfileCompletionForm />)
     expect(container).toBeEmptyDOMElement()
   })
 
   it('should block submit and flag the empty field with an inline error', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     const user = userEvent.setup()
     const { container } = render(<ProfileCompletionForm />)
 
@@ -94,7 +112,7 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should clear a field error once the user starts editing', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     const user = userEvent.setup()
     const { container } = render(<ProfileCompletionForm />)
 
@@ -109,7 +127,7 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should reject a too-short name', async () => {
-    mockUser = { firstName: 'Anna', lastName: '', phone: '111', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: '', phone: '111', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     const user = userEvent.setup()
     const { container } = render(<ProfileCompletionForm />)
 
@@ -122,7 +140,7 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should merge the filled field with existing account values and refresh the user', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     const user = userEvent.setup()
     const { container } = render(<ProfileCompletionForm />)
 
@@ -135,7 +153,7 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should surface a server error and not refresh on failure', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
     updateProfileMock.mockRejectedValue(new Error('Numer zajęty'))
     const user = userEvent.setup()
     const { container } = render(<ProfileCompletionForm />)
@@ -149,14 +167,14 @@ describe('ProfileCompletionForm', () => {
   })
 
   it('should show consent checkboxes for a Google user without privacy acceptance', () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false, termsAccepted: false, marketingConsent: false }
     const { container } = renderForm(<ProfileCompletionForm />)
     expect(container.querySelector('#completionPrivacy')).toBeInTheDocument()
     expect(container.querySelector('#completionMarketing')).toBeInTheDocument()
   })
 
   it('should block submit when the mandatory privacy consent is unchecked', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false }
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false, termsAccepted: false, marketingConsent: false }
     const user = userEvent.setup()
     renderForm(<ProfileCompletionForm />)
 
@@ -166,17 +184,39 @@ describe('ProfileCompletionForm', () => {
     expect(submitConsentsMock).not.toHaveBeenCalled()
   })
 
-  it('should submit privacy and marketing consents when both are checked', async () => {
-    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false }
+  it('should submit privacy, terms and marketing consents when all are checked', async () => {
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false, termsAccepted: false, marketingConsent: false }
     const user = userEvent.setup()
     const { container } = renderForm(<ProfileCompletionForm />)
 
     await user.click(container.querySelector('#completionPrivacy')!)
+    await user.click(container.querySelector('#completionTerms')!)
     await user.click(container.querySelector('#completionMarketing')!)
     await user.click(screen.getByText('Zapisz i kontynuuj'))
 
-    await waitFor(() => expect(submitConsentsMock).toHaveBeenCalledWith(true, true))
+    await waitFor(() => expect(submitConsentsMock).toHaveBeenCalledWith(true, true, true))
     expect(updateProfileMock).not.toHaveBeenCalled()
     expect(refreshUserMock).toHaveBeenCalled()
+  })
+
+  it('should block submit when the mandatory terms are unchecked', async () => {
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: false, termsAccepted: false, marketingConsent: false }
+    const user = userEvent.setup()
+    const { container } = renderForm(<ProfileCompletionForm />)
+
+    await user.click(container.querySelector('#completionPrivacy')!)
+    await user.click(screen.getByText('Zapisz i kontynuuj'))
+
+    expect(screen.getByText('Musisz zaakceptować Regulamin.')).toBeInTheDocument()
+    expect(submitConsentsMock).not.toHaveBeenCalled()
+  })
+
+  it('should ask only for the terms when the privacy policy is already accepted', () => {
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '111', privacyAccepted: true, termsAccepted: false, marketingConsent: true }
+    const { container } = renderForm(<ProfileCompletionForm />)
+    expect(container.querySelector('#completionTerms')).toBeInTheDocument()
+    expect(container.querySelector('#completionPrivacy')).not.toBeInTheDocument()
+    // Already given: an unticked box here would read as withdrawing it.
+    expect(container.querySelector('#completionMarketing')).not.toBeInTheDocument()
   })
 })

@@ -148,6 +148,7 @@ jobs:
           PATHS=(
             "/"
             "/polityka-prywatnosci"
+            "/regulamin"
             "/sitemap.xml"
             "/og/"
           )

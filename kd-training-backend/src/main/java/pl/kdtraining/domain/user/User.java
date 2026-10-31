@@ -63,6 +63,10 @@ public class User {
     @Nullable
     private Instant privacyAcceptedAt;
 
+    @Column(name = "terms_accepted_at")
+    @Nullable
+    private Instant termsAcceptedAt;
+
     @Column(name = "marketing_consent_at")
     @Nullable
     private Instant marketingConsentAt;
@@ -260,6 +264,19 @@ public class User {
 
     public boolean hasPrivacyAccepted() {
         return privacyAcceptedAt != null;
+    }
+
+    @Nullable
+    public Instant getTermsAcceptedAt() {
+        return termsAcceptedAt;
+    }
+
+    public void setTermsAcceptedAt(@Nullable Instant termsAcceptedAt) {
+        this.termsAcceptedAt = termsAcceptedAt;
+    }
+
+    public boolean hasTermsAccepted() {
+        return termsAcceptedAt != null;
     }
 
     @Nullable

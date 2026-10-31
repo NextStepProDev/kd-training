@@ -22,6 +22,7 @@ const MyAccountPage = lazyWithReload(() => import('./pages/MyAccountPage').then(
 const MyTrainingCalendarPage = lazyWithReload(() => import('./pages/MyTrainingCalendarPage').then(m => ({ default: m.MyTrainingCalendarPage })))
 const AdminPage = lazyWithReload(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })))
 const PrivacyPolicyPage = lazyWithReload(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })))
+const TermsPage = lazyWithReload(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })))
 const MarketingUnsubscribePage = lazyWithReload(() => import('./pages/MarketingUnsubscribePage').then(m => ({ default: m.MarketingUnsubscribePage })))
 const NotFoundPage = lazyWithReload(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="polityka-prywatnosci" element={<PrivacyPolicyPage />} />
+            <Route path="regulamin" element={<TermsPage />} />
             <Route path="wypisz-sie" element={<MarketingUnsubscribePage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />

@@ -141,9 +141,10 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/me/consents")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"acceptedPrivacy\":true,\"acceptedMarketing\":true}"))
+                .content("{\"acceptedPrivacy\":true,\"acceptedTerms\":true,\"acceptedMarketing\":true}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.privacyAccepted").value(true))
+            .andExpect(jsonPath("$.termsAccepted").value(true))
             .andExpect(jsonPath("$.marketingConsent").value(true));
 
         User refreshed = userRepository.findById(user.getId()).orElseThrow();
@@ -164,12 +165,13 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/me/consents")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"acceptedPrivacy\":false,\"acceptedMarketing\":false}"))
+                .content("{\"acceptedPrivacy\":false,\"acceptedTerms\":false,\"acceptedMarketing\":false}"))
             .andExpect(status().isBadRequest());
 
         // Privacy policy is mandatory: declining must not save any consent.
         User refreshed = userRepository.findById(user.getId()).orElseThrow();
         assertFalse(refreshed.hasPrivacyAccepted());
+        assertFalse(refreshed.hasTermsAccepted());
         assertFalse(refreshed.hasMarketingConsent());
     }
 

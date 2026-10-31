@@ -15,12 +15,12 @@ export function getMissingProfileFields(
   return REQUIRED_PROFILE_FIELDS.filter((field) => !(user[field] ?? '').trim())
 }
 
-// Google accounts also land here to finalize the privacy policy consent (GDPR) —
-// email/password registration enforces it immediately, OAuth does not. So we show the
-// completion screen when required fields are missing OR the privacy policy consent has not yet been given.
+// Google accounts also land here to accept the privacy policy (GDPR) and the terms of service —
+// email/password registration enforces both immediately, OAuth does not. So we show the
+// completion screen when required fields are missing OR either acceptance has not yet been given.
 export function needsProfileCompletion(
-  user: Pick<User, 'firstName' | 'lastName' | 'phone' | 'privacyAccepted'> | null | undefined
+  user: Pick<User, 'firstName' | 'lastName' | 'phone' | 'privacyAccepted' | 'termsAccepted'> | null | undefined
 ): boolean {
   if (!user) return false
-  return getMissingProfileFields(user).length > 0 || !user.privacyAccepted
+  return getMissingProfileFields(user).length > 0 || !user.privacyAccepted || !user.termsAccepted
 }

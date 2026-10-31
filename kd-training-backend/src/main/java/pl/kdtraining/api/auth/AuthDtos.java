@@ -14,6 +14,7 @@ public final class AuthDtos {
         @Nullable @Pattern(regexp = "^(\\d{9}|\\+\\d{1,4}\\d{9})$", message = "{validation.phone.format}") String phone,
         @Nullable String preferredLanguage,
         @AssertTrue(message = "{validation.privacy.required}") boolean acceptedPrivacy,
+        @AssertTrue(message = "{validation.terms.required}") boolean acceptedTerms,
         @Nullable Boolean acceptedMarketing
     ) {}
 

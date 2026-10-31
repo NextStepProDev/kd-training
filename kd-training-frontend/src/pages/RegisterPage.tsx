@@ -28,10 +28,12 @@ export function RegisterPage() {
     phone: '',
   })
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedMarketing, setAcceptedMarketing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const [privacyError, setPrivacyError] = useState<string | null>(null)
+  const [termsError, setTermsError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -64,17 +66,19 @@ export function RegisterPage() {
       else errs.password = pwErr
     }
     const privErr = !acceptedPrivacy ? t('register.privacyRequired') : null
-    return { errs, privErr }
+    const termsErr = !acceptedTerms ? t('register.termsRequired') : null
+    return { errs, privErr, termsErr }
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    const { errs, privErr } = validate()
+    const { errs, privErr, termsErr } = validate()
     setFieldErrors(errs)
     setPrivacyError(privErr)
-    if (Object.keys(errs).length > 0 || privErr) return
+    setTermsError(termsErr)
+    if (Object.keys(errs).length > 0 || privErr || termsErr) return
 
     setLoading(true)
     try {
@@ -86,6 +90,7 @@ export function RegisterPage() {
         phone: form.phone.replace(/\s/g, ''),
         preferredLanguage: i18n.language,
         acceptedPrivacy,
+        acceptedTerms,
         acceptedMarketing,
       })
       setSuccess(true)
@@ -262,6 +267,30 @@ export function RegisterPage() {
               </label>
             </div>
             {privacyError && <p id="acceptPrivacy-error" className="text-xs text-rose-400/80 mt-1">{privacyError}</p>}
+          </div>
+
+          <div>
+            <div className="flex items-start gap-2">
+              <input
+                id="acceptTerms"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => { setAcceptedTerms(e.target.checked); setTermsError(null) }}
+                className={clsx(
+                  'mt-0.5 h-4 w-4 rounded bg-surface-800 text-primary-500 focus:ring-2',
+                  termsError ? 'border-rose-500 focus:ring-rose-500' : 'border-surface-600 focus:ring-primary-500',
+                )}
+                aria-invalid={!!termsError}
+                aria-describedby={termsError ? 'acceptTerms-error' : undefined}
+              />
+              <label htmlFor="acceptTerms" className={clsx('text-sm', termsError ? 'text-rose-300' : 'text-surface-300')}>
+                {t('register.acceptTermsPrefix')}{' '}
+                <Link to="/regulamin" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                  {t('register.termsLink')}
+                </Link>
+              </label>
+            </div>
+            {termsError && <p id="acceptTerms-error" className="text-xs text-rose-400/80 mt-1">{termsError}</p>}
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-surface-700/60 bg-surface-800/40 p-3">

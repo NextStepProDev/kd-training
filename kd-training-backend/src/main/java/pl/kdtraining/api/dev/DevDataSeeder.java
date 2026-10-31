@@ -57,10 +57,11 @@ public class DevDataSeeder implements CommandLineRunner {
     private void seedAdmins() {
         for (String email : adminEmailConfig.getAdminEmails()) {
             if (userRepository.existsByEmail(email)) continue;
-            User admin = new User(email, "Admin", "Dev", null);
+            User admin = new User(email, "Admin", "Dev", "500100000");
             admin.setPasswordHash(passwordEncoder.encode(DEV_PASSWORD));
             admin.setRole(UserRole.ADMIN);
             admin.markEmailVerified();
+            acceptPolicies(admin);
             userRepository.save(admin);
             log.info("DEV-SEEDER: admin {} (password: {})", email, DEV_PASSWORD);
         }
@@ -84,11 +85,19 @@ public class DevDataSeeder implements CommandLineRunner {
         User u = new User(email, firstName, lastName, phone);
         u.setPasswordHash(passwordEncoder.encode(DEV_PASSWORD));
         u.markEmailVerified();
+        acceptPolicies(u);
         if (marketingConsent) {
             u.setMarketingConsentAt(Instant.now());
         }
         u.setAthlete(athlete);
         userRepository.save(u);
         log.info("DEV-SEEDER: user {} (password: {})", email, DEV_PASSWORD);
+    }
+
+    // As registration does: without these the profile-completion gate would hold every seeded
+    // account, not just Piotr's missing phone.
+    private static void acceptPolicies(User u) {
+        u.setPrivacyAcceptedAt(Instant.now());
+        u.setTermsAcceptedAt(Instant.now());
     }
 }

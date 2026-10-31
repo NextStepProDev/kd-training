@@ -43,7 +43,7 @@
 Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, terminy). Dokładając je, wzoruj się na Fire: osobny `GET /og/...` + blok `location` w nginx przepisujący **wyłącznie** scrapery social.
 
 ### SEO (brak auth)
-`GET /sitemap.xml` (`SitemapController` — dziś dwie stałe strony: `/` i `/polityka-prywatnosci`). Build frontu odpala `scripts/prerender.mjs` (`npm run build` = `tsc -b && vite build && prerender`) — dosypuje statyczne `<head>` dla tych samych tras; przy błędzie loguje `[prerender] skipped` i zostawia zwykły SPA fallback, więc build się nie wywala.
+`GET /sitemap.xml` (`SitemapController` — dziś trzy stałe strony: `/`, `/polityka-prywatnosci` i `/regulamin`). Build frontu odpala `scripts/prerender.mjs` (`npm run build` = `tsc -b && vite build && prerender`) — dosypuje statyczne `<head>` dla tych samych tras; przy błędzie loguje `[prerender] skipped` i zostawia zwykły SPA fallback, więc build się nie wywala.
 
 > ⚠️ **GOTCHA — CSP w `nginx.conf` musi wymieniać hosty YouTube, a `frame-src` trzeba napisać wprost.** Biblioteka filmów ładuje miniatury z `img.youtube.com` (przekierowanie na `i.ytimg.com`) i odtwarzacz w `<iframe>` z `www.youtube-nocookie.com`. Bez `img-src`/`frame-src` dla tych hostów podopieczny widzi pustą ramkę zamiast filmu, a trener połamane miniatury — **tylko na produkcji**, bo dev server Vite nie wysyła CSP w ogóle, więc lokalnie i w testach wszystko wygląda dobrze. Brak `frame-src` jest szczególnie zdradliwy: ramki spadają wtedy na `default-src 'self'` i milczą. Pilnuje tego sekcja 4 w `kd-training-hub/seo-smoke.sh` (odpalana na końcu `deploy.yml`) — dokładając zewnętrzny zasób, dopisz host do CSP i do tego testu.
 

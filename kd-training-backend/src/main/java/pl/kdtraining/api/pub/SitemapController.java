@@ -32,6 +32,7 @@ public class SitemapController {
 
         addUrl(sb, siteUrl + "/", today, "daily", "1.0");
         addUrl(sb, siteUrl + "/polityka-prywatnosci", today, "yearly", "0.3");
+        addUrl(sb, siteUrl + "/regulamin", today, "yearly", "0.3");
 
         sb.append("</urlset>");
 

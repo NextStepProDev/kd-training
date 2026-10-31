@@ -211,6 +211,13 @@ public class UserService {
             }
             user.setPrivacyAcceptedAt(Instant.now());
         }
+        // Terms of service: the same rule — mandatory until accepted, never re-asked.
+        if (!user.hasTermsAccepted()) {
+            if (!request.acceptedTerms()) {
+                throw new IllegalArgumentException(msg.get("validation.terms.required"));
+            }
+            user.setTermsAcceptedAt(Instant.now());
+        }
         // Marketing voluntary — we set it only when checked and not yet granted.
         if (request.acceptedMarketing() && !user.hasMarketingConsent()) {
             user.setMarketingConsentAt(Instant.now());
@@ -248,7 +255,7 @@ public class UserService {
             user.getRole() == UserRole.ADMIN,
             adminEmailConfig.isAdminEmail(user.getEmail()),
             user.isEmailVerified(),
-            user.hasPrivacyAccepted(), user.hasMarketingConsent(),
+            user.hasPrivacyAccepted(), user.hasTermsAccepted(), user.hasMarketingConsent(),
             user.isAthlete(), user.hasTrainingConsent(),
             user.getPreferredLanguage(), user.getPasswordHash() != null,
             user.getOauthProvider() != null, avatarUrl, user.getCreatedAt()

@@ -6,6 +6,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -127,6 +130,39 @@ class LocalFileStorageServiceTest {
 
         storageService.delete("instructors", filename);
         assertFalse(storageService.exists("instructors", filename));
+    }
+
+    @Test
+    void shouldKeepTheFileWhenTheTransactionThatDeletedItRollsBack() throws Exception {
+        // A row change that rolls back must find its file still there: deleting at once left an
+        // avatar or photo row pointing at bytes that were already gone.
+        String filename = storageService.store("instructors", upload("photo.jpg", "image/jpeg", image("jpg")));
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            storageService.delete("instructors", filename);
+            assertTrue(storageService.exists("instructors", filename), "Nothing may be unlinked before the commit");
+
+            TransactionSynchronizationUtils.invokeAfterCompletion(
+                TransactionSynchronizationManager.getSynchronizations(), TransactionSynchronization.STATUS_ROLLED_BACK);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+        assertTrue(storageService.exists("instructors", filename), "A rollback keeps the file");
+    }
+
+    @Test
+    void shouldDeleteTheFileOnceTheTransactionCommits() throws Exception {
+        String filename = storageService.store("instructors", upload("photo.jpg", "image/jpeg", image("jpg")));
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            storageService.delete("instructors", filename);
+            assertTrue(storageService.exists("instructors", filename));
+
+            TransactionSynchronizationUtils.triggerAfterCommit();
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+        assertFalse(storageService.exists("instructors", filename), "After the commit the file goes");
     }
 
     @Test

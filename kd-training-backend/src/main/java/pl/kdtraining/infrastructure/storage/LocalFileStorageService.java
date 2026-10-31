@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -130,14 +132,37 @@ public class LocalFileStorageService implements FileStorageService {
         return rootLocation.resolve(folder).resolve(filename);
     }
 
+    /**
+     * Inside a transaction the unlink waits for the COMMIT. Every caller deletes as part of a row
+     * change (a replaced avatar, a withdrawn photo, a deleted account), and deleting at once meant a
+     * rollback kept the row and lost the bytes — a broken image nobody can fix from the UI. A crash
+     * between commit and unlink leaves an orphan instead, which the orphan sweep exists to collect:
+     * the cheaper of the two failures. Outside a transaction the file goes at once, as before.
+     */
     @Override
     public void delete(String folder, String filename) {
         Path path = resolve(folder, filename);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new DeferredDelete(path, folder, filename));
+            return;
+        }
+        unlink(path, folder, filename);
+    }
+
+    private static void unlink(Path path, String folder, String filename) {
         try {
             Files.deleteIfExists(path);
             log.info("Deleted file: {}/{}", folder, filename);
         } catch (IOException e) {
             log.error("Failed to delete file: {}/{}", folder, filename, e);
+        }
+    }
+
+    /** An unlink waiting for its transaction to commit; a rollback simply never runs it. */
+    private record DeferredDelete(Path path, String folder, String filename) implements TransactionSynchronization {
+        @Override
+        public void afterCommit() {
+            unlink(path, folder, filename);
         }
     }
 

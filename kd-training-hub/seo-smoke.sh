@@ -119,6 +119,12 @@ else
   else
     fail "CSP blocks the YouTube player (frame-src youtube-nocookie.com missing)"
   fi
+  # The CSP successor of X-Frame-Options: without it, browsers that read only CSP let any site frame us.
+  if echo "$CSP" | grep -q "frame-ancestors 'self'"; then
+    pass "CSP frame-ancestors forbids framing by other sites"
+  else
+    fail "CSP lets other sites frame the app (frame-ancestors 'self' missing)"
+  fi
 fi
 
 echo "---"

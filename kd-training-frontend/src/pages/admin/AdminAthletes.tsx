@@ -50,7 +50,7 @@ export function AdminAthletes({ openAthlete, onOpen }: {
         <button
           type="button"
           onClick={() => onOpen(null)}
-          className="mb-4 flex items-center gap-2 text-sm text-surface-400 transition-colors hover:text-primary-400"
+          className="mb-4 flex items-center gap-2 text-sm text-surface-400 transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('athletes.back')}
@@ -59,7 +59,7 @@ export function AdminAthletes({ openAthlete, onOpen }: {
           <Avatar src={openAthlete.avatarUrl} name={`${openAthlete.firstName} ${openAthlete.lastName}`}
             className="h-12 w-12" />
           <div>
-            <h2 className="text-lg font-semibold text-surface-100">
+            <h2 className="text-display text-2xl text-white">
               {openAthlete.firstName} {openAthlete.lastName}
             </h2>
             <p className="text-sm text-surface-400">{openAthlete.email}</p>
@@ -77,9 +77,9 @@ export function AdminAthletes({ openAthlete, onOpen }: {
   return (
     <section>
       <div className="mb-4 flex items-center gap-2">
-        <Dumbbell className="h-5 w-5 text-primary-400" />
+        <Dumbbell className="h-6 w-6 text-surface-400" />
         <div>
-          <h2 className="text-lg font-semibold text-surface-100">{t('athletes.title')}</h2>
+          <h2 className="text-display text-2xl text-white">{t('athletes.title')}</h2>
           <p className="text-sm text-surface-400">{t('athletes.subtitle')}</p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export function AdminAthletes({ openAthlete, onOpen }: {
               <button
                 type="button"
                 onClick={() => onOpen(athlete)}
-                className="flex w-full items-center gap-3 rounded-lg border border-surface-800 bg-surface-800/50 px-4 py-3 text-left transition-colors hover:border-primary-600/50 hover:bg-surface-800/70"
+                className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.07] bg-surface-900 px-4 py-3.5 text-left transition-colors hover:border-white/25"
               >
                 <Avatar src={athlete.avatarUrl} name={`${athlete.firstName} ${athlete.lastName}`}
                   className="h-9 w-9" />
@@ -110,7 +110,7 @@ export function AdminAthletes({ openAthlete, onOpen }: {
                 {athlete.unreadCount > 0 && (
                   <span
                     aria-label={t('athletes.unread', { count: athlete.unreadCount })}
-                    className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-rose-500/15 px-2 py-0.5 text-sm font-semibold text-rose-300"
+                    className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-white px-2 py-0.5 text-sm font-semibold text-surface-950"
                   >
                     {athlete.unreadCount}
                   </span>

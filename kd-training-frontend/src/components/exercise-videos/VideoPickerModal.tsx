@@ -47,7 +47,7 @@ export function VideoPickerModal({
                 <button
                   type="button"
                   onClick={() => { onPick(video); onClose() }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-surface-800 bg-surface-800/50 p-2 text-left transition-colors hover:border-primary-600/50"
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/[0.07] bg-surface-850 p-2 text-left transition-colors hover:border-white/25"
                 >
                   <img src={video.thumbnailUrl} alt="" loading="lazy"
                     className="h-12 w-20 shrink-0 rounded object-cover" />

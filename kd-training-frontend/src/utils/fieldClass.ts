@@ -19,6 +19,13 @@ const SURFACE = `${BASE} ${OK}`
 /** Default field padding — admin panels, modals, settings. */
 export const inputClass = `w-full px-3 py-2 ${SURFACE}`
 
+/**
+ * Room on the left for a leading icon (the magnifier in a search box). Its own variant rather than
+ * `${inputClass} pl-9`: `px-3` and `pl-9` on one element resolve by stylesheet order, not by the
+ * order they are written in.
+ */
+export const inputClassWithIcon = `w-full py-2 pl-9 pr-3 ${SURFACE}`
+
 /** Roomier padding, used by the standalone auth/consent forms. */
 export const inputClassLg = `w-full px-4 py-2.5 ${SURFACE}`
 

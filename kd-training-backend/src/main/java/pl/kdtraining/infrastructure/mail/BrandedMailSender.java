@@ -12,7 +12,10 @@ import pl.kdtraining.infrastructure.i18n.MessageService;
  * emails can quietly look different.
  * <p>
  * The header carries the brand name as TEXT, not an image: there is no logo yet, and mail clients
- * block remote images by default anyway, so text is what most recipients would see first.
+ * block remote images by default anyway, so text is what most recipients would see first. It asks
+ * for the site's poster face (Anton) and falls back to Impact, then Arial Black: most clients load
+ * no web fonts, Impact is the condensed heavy face most desktops have, and Arial Black keeps the
+ * name heavy where Impact is missing. Colours follow the site's graphite.
  * <p>
  * Sending delegates to {@link MailDispatcher}, so every email gets the same retrying on transient SMTP
  * failures.
@@ -61,18 +64,18 @@ public class BrandedMailSender {
                 : content;
         return """
             <html>
-            <body style="font-family: Arial, sans-serif; background-color: #0a0a0a; color: #e5e5e5; padding: 20px; margin: 0;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #171717; border-radius: 12px; overflow: hidden;">
-                    <div style="background-color: #000000; padding: 24px 30px; text-align: center; border-bottom: 1px solid #404040;">
-                        <a href="%s" style="color: #ffffff; text-decoration: none; font-size: 22px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">%s</a>
+            <body style="font-family: Arial, sans-serif; background-color: #141414; color: #e3e3e3; padding: 20px; margin: 0;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #1b1b1b; border-radius: 16px; overflow: hidden;">
+                    <div style="background-color: #141414; padding: 28px 30px; text-align: center; border-bottom: 1px solid #2a2a2a;">
+                        <a href="%s" style="color: #ffffff; text-decoration: none; font-family: Anton, Impact, 'Arial Black', sans-serif; font-size: 28px; font-weight: normal; letter-spacing: 4px; text-transform: uppercase;">%s</a>
                     </div>
                     <div style="padding: 30px;">
                         %s
-                        <hr style="border-color: #404040; margin: 20px 0;" />
-                        <p style="font-size: 12px; color: #a3a3a3; text-align: center; margin: 4px 0;">
+                        <hr style="border: none; border-top: 1px solid #383838; margin: 24px 0 16px;" />
+                        <p style="font-size: 12px; color: #b0b0b0; text-align: center; margin: 4px 0;">
                             <a href="%s" style="color: #ffffff; text-decoration: underline;">%s</a>
                         </p>
-                        <p style="font-size: 12px; color: #a3a3a3; text-align: center; margin: 4px 0;">%s</p>
+                        <p style="font-size: 12px; color: #b0b0b0; text-align: center; margin: 4px 0;">%s</p>
                     </div>
                 </div>
             </body>

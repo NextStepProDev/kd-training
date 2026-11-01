@@ -23,6 +23,10 @@ const CALENDAR = { from: iso(today), to: iso(today), trainings: [], deletions: [
 async function expectNoViolations(page: Page) {
   // Wait for the page's own content rather than a fixed delay: an audit of a spinner proves nothing.
   await expect(page.locator('main h1').first()).toBeVisible()
+  // And for the page to settle: on a cold first run the web fonts and lazy chunks were still arriving
+  // when axe measured, and one run in several failed a page that passes once it has finished loading.
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => document.fonts.ready)
   const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze()
   // Ids and targets in the message, so a failure says what to fix without opening a trace.
   expect(violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(' | ')}`)).toEqual([])

@@ -33,8 +33,8 @@ class SharedMailTemplateTest {
 
     /** The 600px shell — the part every branded email must have in common. */
     private static final String SHELL =
-            "<div style=\"max-width: 600px; margin: 0 auto; background-color: #171717;"
-                    + " border-radius: 12px; overflow: hidden;\">";
+            "<div style=\"max-width: 600px; margin: 0 auto; background-color: #1b1b1b;"
+                    + " border-radius: 16px; overflow: hidden;\">";
 
     /** The brand travels as text in the header, not as an image (see BrandedMailSender). */
     private static final String BRAND = BrandedMailSender.BRAND_NAME;

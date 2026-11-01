@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Seo } from '../components/seo/Seo'
 import { GOOGLE_LOGIN_ENABLED } from '../config/features'
 import { CONTACT_EMAIL } from '../config/site'
+import { PageHeader } from '../components/ui/PageHeader'
 
 const LAST_UPDATED = '26 października 2026'
 
@@ -37,28 +38,18 @@ export function PrivacyPolicyPage() {
   }, [hash])
 
   return (
-    <div className="min-h-screen bg-surface-950">
+    <div>
       <Seo
         title="Polityka prywatności"
         description="Polityka prywatności KD Training — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują."
         path="/polityka-prywatnosci"
       />
-      <div className="relative overflow-hidden bg-gradient-to-b from-surface-900 to-surface-950 border-b border-surface-800">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-primary-700 rounded-full blur-3xl" />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 py-16 sm:py-24 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-surface-100 mb-3">
-            Polityka prywatności
-          </h1>
-          <p className="text-surface-400 text-lg max-w-xl mx-auto">
-            Transparentność i bezpieczeństwo Twoich danych to nasz priorytet.
-          </p>
-        </div>
+      <div className="mx-auto max-w-3xl px-4 pt-14 sm:pt-20">
+        <PageHeader kicker="Informacje prawne" title="Polityka prywatności" description="Transparentność i bezpieczeństwo Twoich danych to nasz priorytet." />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16 space-y-6">
+      {/* max-w-3xl: a legal text is read line by line, and past ~80 characters the eye loses the next line. */}
+      <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14 space-y-6">
 
         <div className="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
           <p className="text-surface-300 leading-relaxed">
@@ -474,7 +465,7 @@ function Section({ id, title, children }: { id?: string; title: string; children
   return (
     // scroll-mt keeps the heading clear of the fixed navbar when reached through a #hash link
     <div id={id} className="scroll-mt-24 bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
-      <h2 className="text-xl font-semibold text-surface-100 mb-5">{title}</h2>
+      <h2 className="text-display text-2xl text-white mb-5">{title}</h2>
       {children}
     </div>
   )

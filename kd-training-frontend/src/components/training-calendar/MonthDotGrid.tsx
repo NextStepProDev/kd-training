@@ -5,11 +5,15 @@ import type { PersonalTraining } from '../../types'
 /** Beyond this the dots stop being countable and a number says it better. */
 const MAX_DOTS = 4
 
-/** Same three states the cards carry, reduced to what survives at 6 pixels. */
+/**
+ * Same three states the cards carry, reduced to what survives at 6 pixels — and told apart by fill
+ * and brightness, not hue: the site is black and white, and so is anyone reading it colour-blind.
+ * Done is solid white, planned a grey dot, missed an empty ring.
+ */
 const statusDot: Record<PersonalTraining['status'], string> = {
-  PLANNED: 'bg-surface-300',
-  COMPLETED: 'bg-emerald-400',
-  MISSED: 'bg-rose-400',
+  PLANNED: 'bg-surface-500',
+  COMPLETED: 'bg-white',
+  MISSED: 'border border-surface-400 bg-transparent',
 }
 
 interface MonthDotGridProps {
@@ -59,16 +63,16 @@ export function MonthDotGrid({
               onClick={() => onSelectDay(date)}
               aria-label={`${labels.openDay} ${date}`}
               className={clsx(
-                'relative flex aspect-square flex-col items-center justify-start gap-1 rounded-lg',
-                'border border-surface-800 bg-surface-900/60 p-1 transition-colors',
-                'hover:border-primary-600/50 focus-visible:border-primary-600/50',
-                outside && 'opacity-40',
-                isToday && 'ring-1 ring-primary-500/50',
-                pasteArmed && 'cursor-copy border-dashed border-primary-600/50',
+                'relative flex aspect-square flex-col items-center justify-start gap-1 rounded-xl',
+                'border p-1 transition-colors',
+                // Today is the one filled cell: the eye lands on it before reading a single number.
+                isToday ? 'border-white bg-white' : 'border-white/[0.07] bg-surface-900 hover:border-white/25 focus-visible:border-white/40',
+                outside && 'opacity-35',
+                pasteArmed && 'cursor-copy border-dashed border-white/40',
               )}
             >
               <span className={clsx('text-xs font-semibold leading-none',
-                isToday ? 'text-primary-400' : 'text-surface-200')}>
+                isToday ? 'text-surface-950' : 'text-surface-200')}>
                 {dayOfMonth(date)}
               </span>
 
@@ -76,9 +80,12 @@ export function MonthDotGrid({
               <span className="flex flex-wrap items-center justify-center gap-0.5">
                 {trainings.slice(0, MAX_DOTS).map(training => (
                   // A task is a square, a training a circle. At six pixels the shape is the only
-                  // thing that still reads — the colour is already spent on the status.
+                  // thing that still reads — fill and brightness are already spent on the status.
                   <span key={training.id}
                     className={clsx('h-1.5 w-1.5', statusDot[training.status],
+                      // On today's white cell the light states would vanish, so they invert there.
+                      isToday && (training.status === 'COMPLETED' ? '!bg-surface-950' : '!border-surface-600'),
+                      isToday && training.status === 'PLANNED' && '!bg-surface-600',
                       training.kind === 'TASK' ? 'rounded-[1px]' : 'rounded-full')} />
                 ))}
                 {total > MAX_DOTS && (
@@ -91,7 +98,8 @@ export function MonthDotGrid({
               {unread && (
                 <span
                   aria-label={labels.unread}
-                  className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-400"
+                  className={clsx('absolute right-1 top-1 h-2 w-2 rounded-full ring-2',
+                    isToday ? 'bg-surface-950 ring-white' : 'bg-white ring-surface-900')}
                 />
               )}
             </button>
@@ -100,7 +108,7 @@ export function MonthDotGrid({
       </div>
 
       {pasteArmed && (
-        <p className="mt-2 text-center text-xs text-primary-300">{labels.pasteHere}</p>
+        <p className="mt-2 text-center text-xs text-surface-300">{labels.pasteHere}</p>
       )}
     </div>
   )

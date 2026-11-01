@@ -13,10 +13,11 @@ import type { PersonalTraining, TrainingStatus } from '../../types'
 import { canReshapeTraining, type TrainingCalendarAdapter } from './adapter'
 import { AdminPrivateNote } from '../notes/AdminPrivateNote'
 
+/** Same rule as the cards: done is the solid white one, missed a dashed outline, planned in between. */
 const statusChip: Record<TrainingStatus, string> = {
-  PLANNED: 'bg-surface-800 text-surface-300',
-  COMPLETED: 'bg-emerald-900/30 text-emerald-400',
-  MISSED: 'bg-rose-500/10 text-rose-300',
+  PLANNED: 'border border-white/15 text-surface-200',
+  COMPLETED: 'bg-white text-surface-950',
+  MISSED: 'border border-dashed border-white/25 text-surface-400',
 }
 
 interface TrainingDetailModalProps {
@@ -94,7 +95,7 @@ export function TrainingDetailModal({
           </div>
 
           {training.targetCalories != null && (
-            <p className="text-sm text-sky-300">
+            <p className="text-sm text-surface-200">
               {t('detail.calorieLimit', { value: training.targetCalories })}
             </p>
           )}
@@ -188,15 +189,15 @@ export function TrainingDetailModal({
               <>
                 <Button variant="ghost" size="sm" loading={busy}
                   onClick={() => run(() => onDuplicate(training), 'footer', true)}>
-                  <CopyPlus className="mr-1.5 h-4 w-4" />
+                  <CopyPlus className="h-4 w-4" />
                   {t('detail.duplicate')}
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => onEdit(training)}>
-                  <Pencil className="mr-1.5 h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                   {t('detail.edit')}
                 </Button>
                 <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   {t('detail.delete')}
                 </Button>
               </>

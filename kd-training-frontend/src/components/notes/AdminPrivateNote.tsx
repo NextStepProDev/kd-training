@@ -173,7 +173,7 @@ export function AdminPrivateNote({ anchor }: { anchor: NoteAnchor }) {
             <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{error}</p>
           )}
           <Button variant="ghost" size="sm" onClick={() => { setDraft(''); setEditing(true) }}>
-            <Pencil className="mr-1.5 h-4 w-4" />
+            <Pencil className="h-4 w-4" />
             {t('notes.add')}
           </Button>
         </div>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Seo } from '../components/seo/Seo'
 import { CONTACT_EMAIL } from '../config/site'
+import { PageHeader } from '../components/ui/PageHeader'
 
 const LAST_UPDATED = '31 października 2026'
 
@@ -12,24 +13,18 @@ const LAST_UPDATED = '31 października 2026'
  */
 export function TermsPage() {
   return (
-    <div className="min-h-screen bg-surface-950">
+    <div>
       <Seo
         title="Regulamin"
         description="Regulamin serwisu KD Training — zasady korzystania z konta i strefy podopiecznego."
         path="/regulamin"
       />
-      <div className="relative overflow-hidden bg-gradient-to-b from-surface-900 to-surface-950 border-b border-surface-800">
-        <div className="relative max-w-4xl mx-auto px-4 py-16 sm:py-24 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-surface-100 mb-3">
-            Regulamin
-          </h1>
-          <p className="text-surface-400 text-lg max-w-xl mx-auto">
-            Zasady korzystania z serwisu KD Training.
-          </p>
-        </div>
+      <div className="mx-auto max-w-3xl px-4 pt-14 sm:pt-20">
+        <PageHeader kicker="Informacje prawne" title="Regulamin" description="Zasady korzystania z serwisu KD Training." />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16 space-y-6">
+      {/* max-w-3xl: a legal text is read line by line, and past ~80 characters the eye loses the next line. */}
+      <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14 space-y-6">
 
         <div className="bg-surface-900 border border-surface-700 rounded-2xl p-6 sm:p-8">
           {/* Placeholder until the client's details and a legal review are in. */}
@@ -150,7 +145,7 @@ export function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
-      <h2 className="text-xl font-semibold text-surface-100 mb-5">{title}</h2>
+      <h2 className="text-display text-2xl text-white mb-5">{title}</h2>
       {children}
     </div>
   )

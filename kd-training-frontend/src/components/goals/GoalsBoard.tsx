@@ -23,13 +23,15 @@ const HORIZONS: GoalHorizon[] = ['SHORT', 'MEDIUM', 'LONG']
 /**
  * Six cards in a grid all look alike, and the horizon is the one thing telling them apart. The
  * marking is an edge stripe and an icon, never a fill: the card's surface already says whether the
- * goal is reached, overdue or running, and two colour systems on one rectangle read as neither.
+ * goal is reached, overdue or running, and two marking systems on one rectangle read as neither.
+ * Monochrome like the rest of the site: the stripe steps up in brightness with the horizon, and the
+ * icon (bolt, flag, mountain) is what really names it.
  * The icon carries the same distinction for anyone who does not separate the hues.
  */
 const HORIZON_STYLE: Record<GoalHorizon, { stripe: string; accent: string; Icon: LucideIcon }> = {
-  SHORT: { stripe: 'border-l-primary-500', accent: 'text-primary-400', Icon: Zap },
-  MEDIUM: { stripe: 'border-l-sky-500', accent: 'text-sky-400', Icon: Flag },
-  LONG: { stripe: 'border-l-violet-500', accent: 'text-violet-400', Icon: Mountain },
+  SHORT: { stripe: 'border-l-surface-500', accent: 'text-surface-300', Icon: Zap },
+  MEDIUM: { stripe: 'border-l-surface-300', accent: 'text-surface-200', Icon: Flag },
+  LONG: { stripe: 'border-l-white', accent: 'text-white', Icon: Mountain },
 }
 
 /**
@@ -121,12 +123,12 @@ export function GoalsBoard({ athleteId }: { athleteId: string | null }) {
     g.achievedAt != null && differenceInCalendarDays(parseISO(today), parseISO(g.achievedAt)) <= CELEBRATION_DAYS)
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 text-sm font-medium text-surface-300">
-          <Target className="h-4 w-4 text-primary-400" />
+        <h2 className="flex items-center gap-3 text-display text-3xl text-white">
+          <Target className="h-6 w-6 text-surface-400" />
           {t('goals.title')}
-        </h3>
+        </h2>
         {goals.achieved.length > 0 && (
           <button type="button" onClick={() => setChestOpen(true)}
             className="inline-flex items-center gap-1.5 text-sm text-surface-400 transition-colors hover:text-primary-400">
@@ -218,7 +220,7 @@ function GoalCard({
   if (!goal) {
     return (
       <div className={clsx(
-        'rounded-lg border border-dashed border-surface-700 border-l-2 p-3',
+        'rounded-2xl border border-dashed border-white/15 border-l-2 p-4',
         HORIZON_STYLE[horizon].stripe,
       )}>
         <HorizonLabel horizon={horizon} className="opacity-70" />
@@ -237,13 +239,13 @@ function GoalCard({
 
   return (
     <div className={clsx(
-      'rounded-lg border border-l-2 p-3',
+      'rounded-2xl border border-l-2 p-4',
       HORIZON_STYLE[horizon].stripe,
       achieved
-        ? 'border-emerald-500/40 bg-emerald-900/20'
+        ? 'border-white/30 bg-white/[0.05]'
         : daysLeft != null && daysLeft < 0
-          ? 'border-surface-800 bg-surface-900/60 opacity-70'
-          : 'border-surface-800 bg-surface-900/60',
+          ? 'border-white/[0.07] bg-surface-900 opacity-70'
+          : 'border-white/[0.07] bg-surface-900',
     )}>
       <div className="flex items-start justify-between gap-2">
         <span className="flex items-center gap-1.5">
@@ -251,18 +253,18 @@ function GoalCard({
               nothing on the page said which one — a number with nowhere to go. */}
           {goal.unread && (
             <span aria-label={t('goals.unread')} title={t('goals.unread')}
-              className="h-2 w-2 shrink-0 rounded-full bg-rose-400" />
+              className="h-2 w-2 shrink-0 rounded-full bg-white ring-2 ring-white/20" />
           )}
           <HorizonLabel horizon={horizon} />
         </span>
-        {achieved && <Trophy className="h-4 w-4 shrink-0 text-emerald-400" />}
+        {achieved && <Trophy className="h-4 w-4 shrink-0 text-white" />}
       </div>
       <p className="mt-1 text-sm text-surface-100">{goal.content}</p>
 
       {goal.targetDate && !achieved && (
         <p className={clsx('mt-1 text-xs',
           daysLeft != null && daysLeft < 0 ? 'text-surface-500'
-            : daysLeft === 0 ? 'text-amber-400' : 'text-surface-400')}>
+            : daysLeft === 0 ? 'font-semibold text-white' : 'text-surface-400')}>
           {daysLeft != null && daysLeft < 0
             ? t('goals.overdue')
             : daysLeft === 0
@@ -271,7 +273,7 @@ function GoalCard({
         </p>
       )}
       {achieved && goal.achievedAt && (
-        <p className="mt-1 text-xs text-emerald-400">{formatLongDate(goal.achievedAt)}</p>
+        <p className="mt-1 text-xs text-surface-200">{formatLongDate(goal.achievedAt)}</p>
       )}
 
       {isCoach && !achieved && (
@@ -294,7 +296,7 @@ function GoalCard({
               this, closing every goal at once leaves them with six trophies and nowhere to write
               the next thing until the window runs out. Setting one sends the trophy to the case. */}
           <Button variant="ghost" size="sm" onClick={onEdit}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {t('goals.addNext')}
           </Button>
         </div>

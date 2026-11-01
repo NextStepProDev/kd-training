@@ -22,11 +22,14 @@ function Content({ inert, onClick, className, children }: {
   )
 }
 
-/** Left-border colour carries the status; the card itself stays neutral so a day reads at a glance. */
+/**
+ * The left edge carries the status, by brightness rather than hue (the site is black and white):
+ * done is a white bar, planned a grey one, missed has none and the card itself fades back.
+ */
 const statusBorder: Record<PersonalTraining['status'], string> = {
-  PLANNED: 'border-l-surface-600',
-  COMPLETED: 'border-l-emerald-500',
-  MISSED: 'border-l-rose-500',
+  PLANNED: 'border-l-surface-500',
+  COMPLETED: 'border-l-white',
+  MISSED: 'border-l-transparent',
 }
 
 interface TrainingTileProps {
@@ -65,14 +68,15 @@ export function TrainingTile({
       className={clsx(
         // Named group: the day column around this card carries one too, and an unnamed `group-hover`
         // would match either of them — the day's hover must not speak for every card standing in it.
-        'group/tile relative w-full rounded-lg border border-surface-800 border-l-2 bg-surface-800 text-left',
-        'transition-colors hover:border-primary-600/50',
+        'group/tile relative w-full rounded-xl border border-white/[0.07] border-l-2 text-left',
+        'transition-colors hover:border-white/25',
         statusBorder[training.status],
+        training.status === 'MISSED' ? 'bg-transparent' : 'bg-surface-850',
         // A dashed outline for tasks. The left border still carries the status, so the two say
-        // different things and neither has to give up its colour to the other.
+        // different things and neither has to give up its edge to the other.
         isTask && 'border-dashed',
         cut && 'opacity-50',
-        compact ? 'px-1.5 py-1' : 'p-2',
+        compact ? 'px-1.5 py-1' : 'px-3 py-2.5',
       )}
     >
       {/*
@@ -97,17 +101,22 @@ export function TrainingTile({
             <span
               aria-label={unreadLabel}
               title={unreadLabel}
-              className="h-2 w-2 shrink-0 rounded-full bg-rose-400"
+              className="h-2 w-2 shrink-0 rounded-full bg-white ring-2 ring-white/20"
             />
           )}
           {hasNote && (
-            <NotebookPen aria-label={noteLabel} className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+            <NotebookPen aria-label={noteLabel} className="h-3.5 w-3.5 shrink-0 text-surface-300" />
           )}
           {isTask && (
-            <ClipboardList aria-label={taskLabel} className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+            <ClipboardList aria-label={taskLabel} className="h-3.5 w-3.5 shrink-0 text-surface-300" />
           )}
-          {training.status === 'COMPLETED' && <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400" />}
-          <span className={clsx('font-medium text-surface-100 truncate', compact ? 'text-xs' : 'text-sm')}>
+          {training.status === 'COMPLETED' && (
+            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white">
+              <Check className="h-3 w-3 text-surface-950" strokeWidth={3} />
+            </span>
+          )}
+          <span className={clsx('font-medium truncate', compact ? 'text-xs' : 'text-sm',
+            training.status === 'MISSED' ? 'text-surface-400' : 'text-surface-100')}>
             {training.title}
           </span>
         </span>
@@ -124,12 +133,12 @@ export function TrainingTile({
             {/* "≤ 2200 kcal" rather than a sentence: it has to survive a card two words wide. */}
             {training.targetCalories != null && (
               <span title={caloriesLabel}
-                className="inline-block rounded-full bg-surface-900 px-1.5 py-0.5 text-[11px] text-sky-300">
+                className="inline-block rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-surface-200">
                 ≤ {training.targetCalories} kcal
               </span>
             )}
             {training.rpe != null && (
-              <span className="inline-block rounded-full bg-surface-900 px-1.5 py-0.5 text-[11px] text-surface-300">
+              <span className="inline-block rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-surface-300">
                 RPE {training.rpe}
               </span>
             )}
@@ -171,7 +180,7 @@ export function TrainingTile({
               aria-label={copyLabel}
               title={copyLabel}
               onClick={() => onCopy(training)}
-              className="flex h-6 w-6 items-center justify-center rounded border border-surface-700 bg-surface-900 text-surface-300 hover:text-primary-300"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-surface-900 text-surface-300 hover:text-white"
             >
               <Copy className="h-3.5 w-3.5" />
             </button>
@@ -182,7 +191,7 @@ export function TrainingTile({
               aria-label={cutLabel}
               title={cutLabel}
               onClick={() => onCut(training)}
-              className="flex h-6 w-6 items-center justify-center rounded border border-surface-700 bg-surface-900 text-surface-300 hover:text-primary-300"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-surface-900 text-surface-300 hover:text-white"
             >
               <Scissors className="h-3.5 w-3.5" />
             </button>

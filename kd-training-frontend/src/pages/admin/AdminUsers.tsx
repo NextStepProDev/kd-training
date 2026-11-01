@@ -184,7 +184,7 @@ export function AdminUsers() {
             className="flex-1 px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <Button type="submit" variant="secondary" loading={usersQuery.isFetching}>
-            <Search className="w-4 h-4 mr-2" />
+            <Search className="w-4 h-4" />
             {t('users.search')}
           </Button>
         </form>
@@ -196,7 +196,7 @@ export function AdminUsers() {
             disabled={totalElements === 0}
             onClick={() => openEmail(selectedCount > 0 ? 'SELECTED' : 'MARKETING')}
           >
-            <Mail className="w-4 h-4 mr-2" />
+            <Mail className="w-4 h-4" />
             {t('users.compose')}
           </Button>
           {selectedCount > 0 && (

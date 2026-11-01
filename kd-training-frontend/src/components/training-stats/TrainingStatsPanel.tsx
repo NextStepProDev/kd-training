@@ -49,7 +49,7 @@ export function TrainingStatsPanel({ athleteId }: { athleteId: string | null }) 
 
   return (
     <section className="space-y-4">
-      <h3 className="text-sm font-medium text-surface-300">{t('stats.title')}</h3>
+      <h2 className="text-display text-3xl text-white">{t('stats.title')}</h2>
 
       {stats.overtraining && (
         // Coach-only: a page telling a client they are overreaching turns a conversation starter
@@ -63,7 +63,7 @@ export function TrainingStatsPanel({ athleteId }: { athleteId: string | null }) 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Tile label={t('stats.thisMonth')} value={String(stats.thisMonthCount)}
           hint={trend === 0 ? undefined : (
-            <span className={clsx('inline-flex items-center gap-0.5', trend > 0 ? 'text-emerald-400' : 'text-surface-400')}>
+            <span className={clsx('inline-flex items-center gap-0.5', trend > 0 ? 'text-white' : 'text-surface-400')}>
               {trend > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
               {trend > 0 ? `+${trend}` : trend}
             </span>
@@ -95,9 +95,9 @@ export function TrainingStatsPanel({ athleteId }: { athleteId: string | null }) 
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-surface-800 bg-surface-900/60 p-3">
-      <p className="text-xs uppercase tracking-wide text-surface-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-surface-100">{value}</p>
+    <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4">
+      <p className="kicker !text-[0.65rem] !tracking-[0.2em]">{label}</p>
+      <p className="mt-2 text-display text-4xl text-white">{value}</p>
       {hint && <p className="mt-0.5 text-xs">{hint}</p>}
     </div>
   )
@@ -155,21 +155,24 @@ function RpeDistribution({ stats }: { stats: TrainingStats }) {
   const total = light + medium + hard
 
   return (
-    <div className="rounded-lg border border-surface-800 bg-surface-900/60 p-3">
-      <p className="text-xs uppercase tracking-wide text-surface-500">{t('stats.intensity')}</p>
+    <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4">
+      <p className="kicker !text-[0.65rem] !tracking-[0.2em]">{t('stats.intensity')}</p>
       {total === 0 ? (
         <p className="mt-2 text-sm text-surface-500">{t('stats.noRatings')}</p>
       ) : (
         <>
           <div className="mt-2 flex h-3 overflow-hidden rounded-full">
-            <span className="bg-emerald-600" style={{ width: `${(light / total) * 100}%` }} />
-            <span className="bg-amber-600" style={{ width: `${(medium / total) * 100}%` }} />
-            <span className="bg-rose-600" style={{ width: `${(hard / total) * 100}%` }} />
+            {/* Effort reads as brightness, light to hard — no traffic-light colours on a black-and-white
+                site; the legend below names each band anyway. */}
+            <span className="bg-surface-600" style={{ width: `${(light / total) * 100}%` }} />
+            <span className="bg-surface-400" style={{ width: `${(medium / total) * 100}%` }} />
+            <span className="bg-white" style={{ width: `${(hard / total) * 100}%` }} />
           </div>
           <div className="mt-2 flex flex-wrap gap-3 text-xs text-surface-400">
-            <span>{t('stats.light')}: {light}</span>
-            <span>{t('stats.medium')}: {medium}</span>
-            <span>{t('stats.hard')}: {hard}</span>
+            {/* Swatches, because the bar says which band is which by shade alone. */}
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-surface-600" />{t('stats.light')}: {light}</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-surface-400" />{t('stats.medium')}: {medium}</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-white" />{t('stats.hard')}: {hard}</span>
           </div>
         </>
       )}
@@ -185,8 +188,8 @@ function RpeDistribution({ stats }: { stats: TrainingStats }) {
 function MonthlyAverage({ value }: { value: number }) {
   const { t } = useTranslation('calendar')
   return (
-    <div className="rounded-lg border border-surface-800 bg-surface-900/60 p-3">
-      <p className="text-xs uppercase tracking-wide text-surface-500">{t('stats.monthlyAverage')}</p>
+    <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4">
+      <p className="kicker !text-[0.65rem] !tracking-[0.2em]">{t('stats.monthlyAverage')}</p>
       <p className="mt-2 text-sm text-surface-100">{t('stats.avgPerMonth', { value })}</p>
     </div>
   )
@@ -209,8 +212,8 @@ function Tasks({ stats }: { stats: TrainingStats }) {
   if (windowDue === 0 && thisMonthDue === 0) return null
 
   return (
-    <div className="rounded-lg border border-surface-800 bg-surface-900/60 p-3">
-      <p className="text-xs uppercase tracking-wide text-surface-500">{t('stats.tasks')}</p>
+    <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4">
+      <p className="kicker !text-[0.65rem] !tracking-[0.2em]">{t('stats.tasks')}</p>
 
       <div className="mt-2 flex items-baseline justify-between text-sm">
         <span className="text-surface-400">{t('stats.tasksKeptWindow')}</span>
@@ -222,7 +225,7 @@ function Tasks({ stats }: { stats: TrainingStats }) {
       {completionPercent != null && (
         <div className="mt-2 flex items-center gap-2">
           <span className="h-3 flex-1 overflow-hidden rounded-full bg-surface-800">
-            <span className="block h-full bg-emerald-600" style={{ width: `${completionPercent}%` }} />
+            <span className="block h-full bg-white" style={{ width: `${completionPercent}%` }} />
           </span>
           <span className="text-xs text-surface-400">{completionPercent}%</span>
         </div>
@@ -252,14 +255,14 @@ function Badges({ stats }: { stats: TrainingStats }) {
     <div className="flex flex-wrap items-center gap-2">
       {earnedTotals.map(m => (
         <span key={`t${m}`}
-          className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-xs text-primary-300">
+          className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-surface-950">
           <Award className="h-3.5 w-3.5" />
           {t('stats.badgeTotal', { count: m })}
         </span>
       ))}
       {earnedStreaks.map(m => (
         <span key={`s${m}`}
-          className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-300">
+          className="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-0.5 text-xs text-surface-100">
           <Flame className="h-3.5 w-3.5" />
           {t('stats.badgeStreak', { count: m })}
         </span>

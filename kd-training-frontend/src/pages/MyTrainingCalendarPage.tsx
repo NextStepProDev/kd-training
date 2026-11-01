@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Seo } from '../components/seo/Seo'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useAuth } from '../context/AuthContext'
 import { TrainingCalendar } from '../components/training-calendar/TrainingCalendar'
 import { TrainingConsentGate } from '../components/training-calendar/TrainingConsentGate'
@@ -27,19 +28,16 @@ export function MyTrainingCalendarPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-8">
       <Seo title={t('my.title')} path="/moje-konto/plan-treningowy" />
 
       <Link to="/moje-konto"
-        className="inline-flex items-center gap-2 text-sm text-surface-400 transition-colors hover:text-primary-400">
+        className="inline-flex items-center gap-2 text-sm text-surface-400 transition-colors hover:text-white">
         <ArrowLeft className="h-4 w-4" />
         {t('my.back')}
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-bold text-surface-100">{t('my.title')}</h1>
-        <p className="mt-1 text-sm text-surface-400">{t('my.subtitle')}</p>
-      </div>
+      <PageHeader kicker={t('my.kicker')} title={t('my.title')} description={t('my.subtitle')} />
 
       {/* Consent first: nothing below may fetch before it (the API 409s), and clients who predate
           the consent screen pass through it once, here. */}
@@ -57,7 +55,7 @@ export function MyTrainingCalendarPage() {
           {/* Said once, quietly, at the foot of the page it covers — everything here is shared with
               the coach, and the client should have read that at least once without being told
               repeatedly. */}
-          <p className="border-t border-surface-800 pt-4 text-xs text-surface-500">
+          <p className="border-t border-white/[0.07] pt-4 text-xs text-surface-500">
             {t('my.sharedNotice')}
           </p>
         </>

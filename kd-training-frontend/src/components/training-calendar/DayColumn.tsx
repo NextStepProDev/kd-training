@@ -50,11 +50,14 @@ export function DayColumn({
       className={clsx(
         // Named group: the cards inside carry one of their own, and an unnamed `group-hover` matches
         // ANY `.group` ancestor — hovering the day would then reveal every card's controls at once.
-        'group/day flex flex-col rounded-lg border border-surface-800 bg-surface-900/60 p-1.5',
-        compact ? 'min-h-24 gap-1' : 'min-h-40 gap-2',
-        isToday && 'ring-1 ring-primary-500/40',
-        outside && 'opacity-40',
-        pasteArmed && 'cursor-copy hover:border-primary-600/60',
+        'group/day flex flex-col rounded-2xl border bg-surface-900 p-1.5',
+        isToday ? 'border-white/40' : 'border-white/[0.07]',
+        // Below lg the week stacks into full-width rows, and a 160px floor on each made an empty
+        // day half a phone screen of nothing. The tall floor is for the seven-column desktop grid,
+        // where equal heights keep the row even.
+        compact ? 'min-h-24 gap-1' : 'gap-2 lg:min-h-40',
+        outside && 'opacity-35',
+        pasteArmed && 'cursor-copy hover:border-white/40',
       )}
       // While the clipboard is armed the whole day is the drop target. The cards inside go inert so
       // one tap cannot both paste and open a card.
@@ -63,7 +66,8 @@ export function DayColumn({
       <div className="flex items-baseline justify-between px-0.5">
         <span className="text-xs text-surface-400">
           {showWeekday && <span className="mr-1">{weekdayShort(date)}</span>}
-          <span className={clsx('font-semibold', isToday ? 'text-primary-400' : 'text-surface-200')}>
+          <span className={clsx('font-semibold',
+            isToday ? 'inline-flex min-w-5 justify-center rounded-full bg-white px-1.5 text-surface-950' : 'text-surface-200')}>
             {dayOfMonth(date)}
           </span>
         </span>
@@ -71,7 +75,7 @@ export function DayColumn({
           // Only an ACTUALLY empty weekend day is "free". The flag used to hang on isWeekend alone,
           // so a Saturday session sat under a label saying the day was off, and the label
           // contradicted the card right below it.
-          <span className="text-[10px] uppercase text-surface-600">{labels.weekendFree}</span>
+          <span className="text-[10px] uppercase tracking-wider text-surface-500">{labels.weekendFree}</span>
         )}
       </div>
 
@@ -99,7 +103,7 @@ export function DayColumn({
       </div>
 
       {pasteArmed ? (
-        <span className="mt-auto rounded border border-dashed border-primary-600/50 px-1 py-1 text-center text-[11px] text-primary-300">
+        <span className="mt-auto rounded-lg border border-dashed border-white/30 px-1 py-1 text-center text-[11px] text-surface-200">
           {labels.pasteHere}
         </span>
       ) : (
@@ -108,11 +112,11 @@ export function DayColumn({
           aria-label={`${labels.add} ${date}`}
           onClick={() => onAdd(date)}
           className={clsx(
-            'mt-auto flex items-center justify-center rounded border border-dashed border-surface-700',
+            'mt-auto flex items-center justify-center rounded-lg border border-dashed border-white/15',
             // One `transition` for colour and opacity alike: two transition-* utilities would fight
             // over the same property and the winner would depend on stylesheet order, not on the
             // order written here.
-            'text-surface-500 transition hover:border-primary-600/50 hover:text-primary-400',
+            'text-surface-500 transition hover:border-white/40 hover:text-white',
             // Faded out only where a pointer can bring it back. The base state has to be gated on the
             // input device, not on hover: `hover:` alone leaves the hidden base state standing on a
             // phone, and the week view stacks these same columns at phone width, where this button is

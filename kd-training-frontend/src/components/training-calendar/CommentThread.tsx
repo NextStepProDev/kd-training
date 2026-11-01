@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
+import { textareaClass } from '../../utils/fieldClass'
 import { ImagePlus, Send, X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
@@ -85,7 +86,7 @@ export function CommentThread({ trainingId, adapter }: { trainingId: string; ada
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-surface-300">{t('comments.title')}</h4>
+      <h4 className="kicker">{t('comments.title')}</h4>
 
       {commentsQuery.isLoading ? (
         <LoadingSpinner size="sm" />
@@ -94,16 +95,18 @@ export function CommentThread({ trainingId, adapter }: { trainingId: string; ada
           {commentsQuery.data.map(comment => (
             <li key={comment.id} className={clsx('flex', isMine(comment.fromCoach) ? 'justify-end' : 'justify-start')}>
               <div className={clsx(
-                'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                // Messenger bubbles: my own white on the right, the other side grey on the left, the
+                // corner nearest the sender squared off.
+                'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm',
                 isMine(comment.fromCoach)
-                  ? 'bg-primary-600/20 text-surface-100'
-                  : 'bg-surface-800 text-surface-200',
+                  ? 'rounded-br-md bg-white text-surface-950'
+                  : 'rounded-bl-md bg-surface-800 text-surface-100',
               )}>
                 {comment.body && <p className="whitespace-pre-wrap">{comment.body}</p>}
                 {comment.photo && (
                   <CommentPhoto photo={comment.photo} commentId={comment.id} adapter={adapter} />
                 )}
-                <p className="mt-1 text-[11px] text-surface-500">
+                <p className={clsx('mt-1 text-[11px]', isMine(comment.fromCoach) ? 'text-surface-600' : 'text-surface-400')}>
                   {comment.authorName ?? t('comments.deletedAuthor')}
                   {' · '}
                   {new Date(comment.createdAt).toLocaleString('pl-PL', {
@@ -122,7 +125,7 @@ export function CommentThread({ trainingId, adapter }: { trainingId: string; ada
         <label htmlFor="comment-body" className="sr-only">{t('comments.placeholder')}</label>
         <textarea
           id="comment-body"
-          className="min-h-16 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={`min-h-16 text-sm ${textareaClass}`}
           placeholder={t('comments.placeholder')}
           value={body}
           maxLength={1000}
@@ -130,7 +133,7 @@ export function CommentThread({ trainingId, adapter }: { trainingId: string; ada
         />
 
         {photoPreview && (
-          <div className="flex items-center gap-3 rounded-lg bg-surface-800 p-2">
+          <div className="flex items-center gap-3 rounded-xl bg-surface-800 p-2">
             <img src={photoPreview} alt={t('comments.photoAlt')} className="h-16 w-16 rounded object-cover" />
             <p className="flex-1 text-xs text-surface-400">{t('comments.photoReady')}</p>
             <button
@@ -164,13 +167,13 @@ export function CommentThread({ trainingId, adapter }: { trainingId: string; ada
               onClick={() => fileInputRef.current?.click()}
               disabled={!!photo}
             >
-              <ImagePlus className="mr-1.5 h-4 w-4" />
+              <ImagePlus className="h-4 w-4" />
               {t('comments.addPhoto')}
             </Button>
           </div>
-          <Button type="submit" variant="secondary" size="sm"
+          <Button type="submit" variant="primary" size="sm"
             loading={addMutation.isPending} disabled={!body.trim() && !photo}>
-            <Send className="mr-1.5 h-4 w-4" />
+            <Send className="h-4 w-4" />
             {t('comments.send')}
           </Button>
         </div>

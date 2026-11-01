@@ -38,6 +38,7 @@ class UserServiceTest {
     @Mock private pl.kdtraining.config.AdminEmailConfig adminEmailConfig;
     @Mock private pl.kdtraining.infrastructure.security.PasswordPolicyValidator passwordPolicy;
     @Mock private pl.kdtraining.api.trainingcalendar.TrainingPhotoService trainingPhotoService;
+    @Mock private PasswordAttempts passwordAttempts;
 
     @InjectMocks private UserService service;
 
@@ -132,6 +133,7 @@ class UserServiceTest {
     void shouldThrowWhenCurrentPasswordInvalid() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded-password")).thenReturn(false);
+        when(passwordAttempts.recordFailure(userId)).thenReturn(user);
         when(msg.get("user.password.invalid")).thenReturn("Nieprawidłowe hasło");
 
         assertThrows(IllegalArgumentException.class,
@@ -180,6 +182,7 @@ class UserServiceTest {
     void shouldThrowWhenDeletePasswordInvalid() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded-password")).thenReturn(false);
+        when(passwordAttempts.recordFailure(userId)).thenReturn(user);
         when(msg.get("user.password.invalid")).thenReturn("Nieprawidłowe hasło");
 
         assertThrows(IllegalArgumentException.class,
@@ -189,10 +192,47 @@ class UserServiceTest {
     @Test
     void shouldThrowWhenDeleteWithNullPasswordForPasswordUser() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordAttempts.recordFailure(userId)).thenReturn(user);
         when(msg.get("user.password.invalid")).thenReturn("Nieprawidłowe hasło");
 
         assertThrows(IllegalArgumentException.class,
             () -> service.deleteMe(userId, new DeleteAccountRequest(null)));
+    }
+
+    @Test
+    void shouldRefuseToDeleteTheOnlyAdministratorAccount() {
+        user.setRole(UserRole.ADMIN);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123", "encoded-password")).thenReturn(true);
+        when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
+
+        assertThrows(IllegalStateException.class,
+            () -> service.deleteMe(userId, new DeleteAccountRequest("Password123")));
+        verify(userRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void shouldLetAnAdministratorLeaveWhileAnotherOneRemains() {
+        user.setRole(UserRole.ADMIN);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123", "encoded-password")).thenReturn(true);
+        when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(2L);
+
+        service.deleteMe(userId, new DeleteAccountRequest("Password123"));
+
+        verify(userRepository).deleteById(userId);
+    }
+
+    @Test
+    void shouldRefuseThePasswordChangeWhileTheAccountIsLockedWithoutCheckingThePassword() {
+        for (int i = 0; i < 5; i++) user.incrementFailedLoginAttempts();
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(msg.get(eq("auth.login.locked"), any())).thenReturn("Konto zablokowane");
+
+        assertThrows(IllegalStateException.class,
+            () -> service.changePassword(userId, new ChangePasswordRequest("Password123", "new12345")));
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(passwordAttempts, never()).recordFailure(any());
     }
 
     @Test

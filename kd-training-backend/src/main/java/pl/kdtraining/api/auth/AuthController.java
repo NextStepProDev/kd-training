@@ -32,8 +32,8 @@ public class AuthController {
 
     @PostMapping("/verify-email")
     @Operation(summary = "Verify email address", description = "Verifies the email using token from verification email")
-    public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
-        return ResponseEntity.ok(authService.verifyEmail(token));
+    public ResponseEntity<MessageResponse> verifyEmail(@Valid @RequestBody TokenRequest request) {
+        return ResponseEntity.ok(authService.verifyEmail(request.token()));
     }
 
     @PostMapping("/resend-verification")

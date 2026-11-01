@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 
+    long countByRole(UserRole role);
+
     // Full list (e.g. "send to everyone" email) — not paginated.
     List<User> findAllByOrderByCreatedAtDesc();
 

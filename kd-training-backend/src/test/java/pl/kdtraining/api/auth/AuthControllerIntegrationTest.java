@@ -3,6 +3,8 @@ package pl.kdtraining.api.auth;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.ResultActions;
 import pl.kdtraining.BaseIntegrationTest;
 import pl.kdtraining.domain.auth.AuthToken;
 import pl.kdtraining.domain.auth.AuthTokenRepository;
@@ -19,6 +21,9 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private AuthTokenRepository authTokenRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void shouldRegisterNewUser() throws Exception {
@@ -145,7 +150,8 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         authTokenRepository.save(authToken);
 
         mockMvc.perform(post("/api/auth/verify-email")
-                .param("token", rawToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"" + rawToken + "\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").exists());
 
@@ -156,8 +162,29 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldRejectInvalidVerificationToken() throws Exception {
         mockMvc.perform(post("/api/auth/verify-email")
-                .param("token", "invalid-token"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"invalid-token\"}"))
             .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * The token travels in the body only. As {@code ?token=} on a POST it was written into every
+     * proxy access log on the way in (nginx, Cloudflare), so the query string must no longer work.
+     */
+    @Test
+    void shouldNotAcceptTheVerificationTokenInTheQueryString() throws Exception {
+        User user = new User("verify-query@test.com", "Jan", "Kowalski", null);
+        user.setPasswordHash("hash");
+        userRepository.save(user);
+        String rawToken = jwtService.generateSecureToken();
+        authTokenRepository.save(new AuthToken(user, jwtService.hashToken(rawToken),
+            TokenType.EMAIL_VERIFICATION, Instant.now().plusSeconds(900)));
+
+        mockMvc.perform(post("/api/auth/verify-email")
+                .param("token", rawToken))
+            .andExpect(status().isBadRequest());
+
+        assertFalse(userRepository.findByEmail("verify-query@test.com").orElseThrow().isEmailVerified());
     }
 
     @Test
@@ -195,8 +222,9 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         user.markEmailVerified();
         userRepository.save(user);
 
-        // A well-formed token that was never stored — the shape of one that was logged out or rotated
-        // past its grace window.
+        // A well-formed token that was never stored — the shape of one that was logged out (the row is
+        // deleted) or wiped by "log out everywhere". A rotated one past its grace window is refused
+        // too, but also ends every session — see shouldRevokeEverySessionWhenARotatedRefreshTokenIsReplayed.
         String refreshToken = jwtService.generateRefreshToken(user);
 
         mockMvc.perform(post("/api/auth/refresh")
@@ -232,6 +260,93 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
             .andExpect(status().isNoContent());
+    }
+
+    /**
+     * Logging out deletes the row. Marking it used left it refreshable for the 30-second rotation
+     * grace window, so the session outlived the click on "log out".
+     */
+    @Test
+    void shouldRefuseARefreshTokenRightAfterLogout() throws Exception {
+        User user = verifiedUser("logout-grace@test.com");
+        String refreshToken = storedRefreshToken(user);
+
+        mockMvc.perform(post("/api/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+            .andExpect(status().isNoContent());
+
+        refresh(refreshToken).andExpect(status().isUnauthorized());
+    }
+
+    /**
+     * A rotated token presented again after the grace window is either a stolen copy or the owner
+     * coming back after the thief rotated it — every session of that person ends.
+     */
+    @Test
+    void shouldRevokeEverySessionWhenARotatedRefreshTokenIsReplayed() throws Exception {
+        User user = verifiedUser("reuse@test.com");
+        String rotated = storedRefreshToken(user);
+        String otherSession = storedRefreshToken(user);
+        refresh(rotated).andExpect(status().isOk());
+        jdbcTemplate.update("UPDATE auth_tokens SET used_at = now() - interval '1 minute' WHERE token_hash = ?",
+            jwtService.hashToken(rotated));
+
+        refresh(rotated)
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
+
+        refresh(otherSession).andExpect(status().isUnauthorized());
+        // Including the pair the first rotation issued: nothing of this person's survives.
+        assertEquals(0, jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM auth_tokens WHERE user_id = ? AND token_type = 'REFRESH_TOKEN'",
+            Integer.class, user.getId()));
+    }
+
+    /**
+     * Two tabs share one refresh token and race to rotate it; the loser comes in seconds later with
+     * the rotated one. Inside the grace window that is not reuse and must end nothing.
+     */
+    @Test
+    void shouldNotTreatAReplayInsideTheGraceWindowAsReuse() throws Exception {
+        User user = verifiedUser("grace-tabs@test.com");
+        String shared = storedRefreshToken(user);
+        String otherSession = storedRefreshToken(user);
+        refresh(shared).andExpect(status().isOk());
+
+        refresh(shared).andExpect(status().isOk());
+
+        refresh(otherSession).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldKeepOtherSessionsWhenTheRefreshTokenIsMerelyUnknown() throws Exception {
+        User user = verifiedUser("unknown-token@test.com");
+        String otherSession = storedRefreshToken(user);
+
+        refresh(jwtService.generateRefreshToken(user)).andExpect(status().isUnauthorized());
+
+        refresh(otherSession).andExpect(status().isOk());
+    }
+
+    private User verifiedUser(String email) {
+        User user = new User(email, "Jan", "Kowalski", null);
+        user.setPasswordHash("hash");
+        user.markEmailVerified();
+        return userRepository.save(user);
+    }
+
+    private String storedRefreshToken(User user) {
+        String refreshToken = jwtService.generateRefreshToken(user);
+        authTokenRepository.save(new AuthToken(user, jwtService.hashToken(refreshToken), TokenType.REFRESH_TOKEN,
+            Instant.now().plusMillis(jwtService.getRefreshTokenExpirationMs())));
+        return refreshToken;
+    }
+
+    private ResultActions refresh(String refreshToken) throws Exception {
+        return mockMvc.perform(post("/api/auth/refresh")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refreshToken + "\"}"));
     }
 
     @Test

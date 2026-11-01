@@ -680,8 +680,7 @@ class AuthServiceTest {
 
         authService.logout("refresh");
 
-        assertTrue(storedToken.isUsed());
-        verify(authTokenRepository).save(storedToken);
+        verify(authTokenRepository).delete(storedToken);
     }
 
     @Test

@@ -93,6 +93,108 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
             .andExpect(status().isBadRequest());
     }
 
+    /**
+     * A wrong current password counts against the login lockout. The count is written in its own
+     * transaction: in the caller's it would be rolled back by the very refusal that follows it, and
+     * the limit would never trip — which is why this goes through the real controller and database.
+     */
+    @Test
+    void shouldLockTheAccountAfterFiveWrongCurrentPasswords() throws Exception {
+        User user = new User("lockout-it@test.com", "Jan", "Kowalski", null);
+        user.setPasswordHash(ENCODER.encode("CorrectPassword"));
+        user.setRole(UserRole.USER);
+        user.markEmailVerified();
+        userRepository.save(user);
+        String token = jwtService.generateAccessToken(user);
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(put("/api/user/me/password")
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"currentPassword":"WrongPassword","newPassword":"NewPassword456"}
+                        """))
+                .andExpect(status().is4xxClientError());
+        }
+
+        User stored = userRepository.findById(user.getId()).orElseThrow();
+        assertEquals(5, stored.getFailedLoginAttempts());
+        assertTrue(stored.isAccountLocked());
+
+        // Locked: even the right password is refused now, like at login.
+        mockMvc.perform(put("/api/user/me/password")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"currentPassword":"CorrectPassword","newPassword":"NewPassword456"}
+                    """))
+            .andExpect(status().isConflict());
+        assertTrue(ENCODER.matches("CorrectPassword",
+            userRepository.findById(user.getId()).orElseThrow().getPasswordHash()));
+    }
+
+    @Test
+    void shouldClearEarlierFailedAttemptsWhenTheCurrentPasswordIsRight() throws Exception {
+        User user = new User("lockout-reset-it@test.com", "Jan", "Kowalski", null);
+        user.setPasswordHash(ENCODER.encode("CorrectPassword"));
+        user.setRole(UserRole.USER);
+        user.markEmailVerified();
+        user.incrementFailedLoginAttempts();
+        user.incrementFailedLoginAttempts();
+        userRepository.save(user);
+        String token = jwtService.generateAccessToken(user);
+
+        mockMvc.perform(put("/api/user/me/password")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"currentPassword":"CorrectPassword","newPassword":"NewPassword456"}
+                    """))
+            .andExpect(status().is2xxSuccessful());
+
+        assertEquals(0, userRepository.findById(user.getId()).orElseThrow().getFailedLoginAttempts());
+    }
+
+    @Test
+    void shouldCountAWrongPasswordOnAccountDeletion() throws Exception {
+        User user = new User("delete-wrong-it@test.com", "Jan", "Kowalski", null);
+        user.setPasswordHash(ENCODER.encode("DeleteMe123"));
+        user.setRole(UserRole.USER);
+        user.markEmailVerified();
+        userRepository.save(user);
+        String token = jwtService.generateAccessToken(user);
+
+        mockMvc.perform(delete("/api/user/me")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"Wrong\"}"))
+            .andExpect(status().isBadRequest());
+
+        assertEquals(1, userRepository.findById(user.getId()).orElseThrow().getFailedLoginAttempts());
+    }
+
+    /**
+     * The only admin's account takes every private note about every athlete with it
+     * (admin_private_notes cascades on its author), and leaves nobody able to open the coach panel.
+     */
+    @Test
+    void shouldRefuseToDeleteTheOnlyAdministratorAccount() throws Exception {
+        User admin = new User("only-admin-it@test.com", "Kacper", "Trener", null);
+        admin.setPasswordHash(ENCODER.encode("DeleteMe123"));
+        admin.setRole(UserRole.ADMIN);
+        admin.markEmailVerified();
+        userRepository.save(admin);
+        String token = jwtService.generateAccessToken(admin);
+
+        mockMvc.perform(delete("/api/user/me")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"DeleteMe123\"}"))
+            .andExpect(status().isConflict());
+
+        assertTrue(userRepository.findById(admin.getId()).isPresent());
+    }
+
     @Test
     void shouldDeleteAccount() throws Exception {
         User user = new User("delete-it@test.com", "Jan", "Kowalski", null);

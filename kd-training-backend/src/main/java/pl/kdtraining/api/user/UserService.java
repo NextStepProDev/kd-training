@@ -1,5 +1,6 @@
 package pl.kdtraining.api.user;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,11 +38,13 @@ public class UserService {
     private final AdminEmailConfig adminEmailConfig;
     private final PasswordPolicyValidator passwordPolicy;
     private final TrainingPhotoService trainingPhotoService;
+    private final PasswordAttempts passwordAttempts;
 
     public UserService(UserRepository userRepository, AuthTokenRepository authTokenRepository,
                        AdminUserMailService adminUserMailService, PasswordEncoder passwordEncoder, MessageService msg, JwtAuthenticationFilter jwtAuthenticationFilter,
                        FileStorageService fileStorageService, AdminEmailConfig adminEmailConfig,
-                       PasswordPolicyValidator passwordPolicy, TrainingPhotoService trainingPhotoService) {
+                       PasswordPolicyValidator passwordPolicy, TrainingPhotoService trainingPhotoService,
+                       PasswordAttempts passwordAttempts) {
         this.userRepository = userRepository;
         this.authTokenRepository = authTokenRepository;
         this.adminUserMailService = adminUserMailService;
@@ -52,6 +55,7 @@ public class UserService {
         this.adminEmailConfig = adminEmailConfig;
         this.passwordPolicy = passwordPolicy;
         this.trainingPhotoService = trainingPhotoService;
+        this.passwordAttempts = passwordAttempts;
     }
 
     public UserDtos.UserResponse getMe(UUID userId) {
@@ -79,9 +83,7 @@ public class UserService {
         if (user.getPasswordHash() == null) {
             throw new IllegalStateException(msg.get("user.password.oauth"));
         }
-        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException(msg.get("user.password.invalid"));
-        }
+        requireCurrentPassword(user, request.currentPassword());
         passwordPolicy.validate(request.newPassword(), user.getEmail(), user.getFirstName(), user.getLastName());
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
@@ -97,9 +99,13 @@ public class UserService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException(msg.get("error.user.not.found")));
         if (user.getPasswordHash() != null) {
-            if (request.password() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-                throw new IllegalArgumentException(msg.get("user.password.invalid"));
-            }
+            requireCurrentPassword(user, request.password());
+        }
+        // With the only admin gone nobody can open the coach panel, and the account takes every
+        // private note about every athlete with it (admin_private_notes cascades on its author).
+        // ADMIN_EMAIL would promote a NEW registration, but the notes would not come back.
+        if (user.isAdmin() && userRepository.countByRole(UserRole.ADMIN) <= 1) {
+            throw new IllegalStateException(msg.get("user.delete.last.admin"));
         }
         // We capture the data for the notification before deletion (after delete the entity is detached).
         String fullName = user.getFullName();
@@ -109,6 +115,33 @@ public class UserService {
         // Self-service account deletion — the coach wouldn't otherwise learn about it (when deleting from
         // the admin panel the admin already knows the result).
         adminUserMailService.sendAccountSelfDeletedNotification(fullName, email);
+    }
+
+    /**
+     * The same lockout as login (5 wrong → 15 minutes): refused while locked, counted when wrong,
+     * reset when right. Without it these endpoints were an unlimited password oracle for anyone
+     * holding a stolen access token. The count is written by {@link PasswordAttempts} in its own
+     * transaction — see there.
+     *
+     * <p>The lock is reported before the password is checked, the reverse of login. Login checks
+     * first so the lockout notice cannot reveal that an address has an account; here the caller is
+     * already signed in as this account, so there is nothing left to reveal.
+     */
+    private void requireCurrentPassword(User user, @Nullable String password) {
+        if (user.isAccountLocked()) {
+            throw new IllegalStateException(msg.get("auth.login.locked", user.getRemainingLockoutMinutes()));
+        }
+        if (password == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            User counted = passwordAttempts.recordFailure(user.getId());
+            if (counted.isAccountLocked()) {
+                throw new IllegalStateException(msg.get("auth.login.locked", counted.getRemainingLockoutMinutes()));
+            }
+            throw new IllegalArgumentException(msg.get("user.password.invalid"));
+        }
+        if (user.getFailedLoginAttempts() > 0) {
+            user.resetFailedLoginAttempts();
+            userRepository.save(user);
+        }
     }
 
     /**

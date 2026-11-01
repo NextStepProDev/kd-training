@@ -50,6 +50,11 @@ public class JwtService {
         Instant expiration = now.plusMillis(expirationMs);
 
         return Jwts.builder()
+            // ⚠️ A random id makes every token unique. Without it, two issued for the same person in
+            // the same second (iat has whole-second resolution) were byte-identical — two tabs
+            // refreshing at once stored two rows under one hash, and the next refresh hit a
+            // two-result lookup and answered 500.
+            .id(UUID.randomUUID().toString())
             .issuer(jwtConfig.getIssuer())
             .subject(user.getId().toString())
             .claim(CLAIM_USER_ID, user.getId().toString())

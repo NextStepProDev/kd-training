@@ -26,6 +26,9 @@ public final class AuthDtos {
     public record AuthTokensResponse(String accessToken, String refreshToken, long expiresIn) {}
     public record RefreshTokenRequest(@NotBlank(message = "{validation.refresh.token.required}") String refreshToken) {}
     public record ForgotPasswordRequest(@NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email) {}
+    // A one-time token from an e-mailed link, in the BODY: as ?token= on a POST it landed in every
+    // proxy access log (nginx, Cloudflare). The reset-password request always carried it here.
+    public record TokenRequest(@NotBlank(message = "{validation.token.required}") String token) {}
     public record ResetPasswordRequest(@NotBlank(message = "{validation.token.required}") String token, @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String newPassword) {}
     public record ResendVerificationRequest(@NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email) {}
     public record MessageResponse(String message) {}

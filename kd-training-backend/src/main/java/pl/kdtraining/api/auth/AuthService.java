@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -320,7 +321,11 @@ public class AuthService {
         return new MessageResponse(msg.get("auth.reset.success"));
     }
 
-    @Transactional
+    /**
+     * ⚠️ {@code noRollbackFor}: the reuse branch below revokes every session and THEN throws — under
+     * the default rollback rule the revocation would be undone by the very exception announcing it.
+     */
+    @Transactional(noRollbackFor = InvalidRefreshTokenException.class)
     public AuthTokensResponse refreshTokens(RefreshTokenRequest request) {
         String refreshToken = request.refreshToken();
 
@@ -338,7 +343,10 @@ public class AuthService {
         Instant now = Instant.now();
         AuthToken storedToken = authTokenRepository
             .findRefreshableToken(tokenHash, TokenType.REFRESH_TOKEN, now, now.minus(REFRESH_ROTATION_GRACE))
-            .orElseThrow(() -> new InvalidRefreshTokenException(msg.get("auth.refresh.revoked")));
+            .orElseThrow(() -> {
+                revokeOnReuse(tokenHash);
+                return new InvalidRefreshTokenException(msg.get("auth.refresh.revoked"));
+            });
 
         User user = storedToken.getUser();
 
@@ -349,18 +357,39 @@ public class AuthService {
             authTokenRepository.save(storedToken);
         }
 
-        log.debug("Tokens refreshed for: {}", user.getEmail());
+        log.debug("Tokens refreshed for user {}", user.getId());
         return generateTokens(user);
     }
 
+    /**
+     * A refresh token that is not refreshable but DOES exist and was already used, past the grace
+     * window, is a token replayed after rotation — either a thief using the copy, or the owner
+     * using it after the thief rotated it. Neither can be told from the other, so every session of
+     * that person ends: the owner logs in again, the thief does not get to. (An expired or unknown
+     * token is not reuse and changes nothing.)
+     */
+    private void revokeOnReuse(String tokenHash) {
+        authTokenRepository.findByTokenHashAndTokenType(tokenHash, TokenType.REFRESH_TOKEN)
+            .filter(token -> token.getUsedAt() != null && token.getExpiresAt().isAfter(Instant.now()))
+            .ifPresent(token -> {
+                UUID userId = token.getUser().getId();
+                log.warn("REFRESH-TOKEN-REUSE: rotated refresh token presented again, all sessions revoked for user {}", userId);
+                authTokenRepository.deleteByUserIdAndTokenType(userId, TokenType.REFRESH_TOKEN);
+            });
+    }
+
+    /**
+     * Ends THIS session on the server. The row is deleted, not marked used: a used row stays
+     * refreshable for the rotation grace window, so a logged-out token kept working for another
+     * 30 seconds, and after that a replay of it would read as reuse and end the owner's other
+     * sessions. Idempotent and unauthenticated on purpose: the token is the credential, and a dead
+     * one deletes nothing.
+     */
     @Transactional
     public void logout(String refreshToken) {
         String tokenHash = jwtService.hashToken(refreshToken);
         authTokenRepository.findByTokenHashAndTokenType(tokenHash, TokenType.REFRESH_TOKEN)
-            .ifPresent(token -> {
-                token.markAsUsed();
-                authTokenRepository.save(token);
-            });
+            .ifPresent(authTokenRepository::delete);
     }
 
     private AuthTokensResponse generateTokens(User user) {

@@ -5,7 +5,7 @@
 ## API Endpoints
 
 ### Auth `/api/auth`
-`POST /register` · `POST /login` · `POST /logout` · `POST /verify-email?token=` · `POST /resend-verification` · `POST /forgot-password` · `POST /reset-password` · `POST /refresh`
+`POST /register` · `POST /login` · `POST /logout` · `POST /verify-email` (token w treści) · `POST /resend-verification` · `POST /forgot-password` · `POST /reset-password` · `POST /refresh`
 
 ### User `/api/user` (auth required)
 `GET /me` (zwraca m.in. `privacyAccepted`, `marketingConsent`) · `PUT /me` · `PUT /me/password` · `DELETE /me` (usuwa konto z planem 1:1, zdjęciami z dysku i avatarem; trener dostaje maila „podopieczny usunął konto”) · `PUT /me/marketing` (toggle zgody marketingowej `{enabled}`) · `POST /me/consents` (domknięcie zgód po Google: `{acceptedPrivacy, acceptedMarketing}` — polityka obowiązkowa gdy jeszcze nieudzielona) · `POST /me/avatar` (multipart, kadrowanie po stronie frontu) · `DELETE /me/avatar` · `POST /me/logout-all` (wylogowanie ze wszystkich urządzeń: kasuje własne refresh tokeny + czyści cache filtra JWT; **nie unieważnia natychmiast access tokenów** — sesje gasną do 15 min)

@@ -57,6 +57,7 @@
     }
   },
   "admin": {
+    "kicker": "Panel trenera",
     "title": "Panel administratora",
     "tabs": {
       "athletes": "Podopieczni",

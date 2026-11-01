@@ -44,9 +44,9 @@ export function AdminTrainingTemplates() {
     <section>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <LayoutTemplate className="h-5 w-5 text-primary-400" />
+          <LayoutTemplate className="h-6 w-6 text-surface-400" />
           <div>
-            <h2 className="text-lg font-semibold text-surface-100">{t('templates.title')}</h2>
+            <h2 className="text-display text-2xl text-white">{t('templates.title')}</h2>
             <p className="text-sm text-surface-400">{t('templates.subtitle')}</p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export function AdminTrainingTemplates() {
         <ul className="space-y-2">
           {templatesQuery.data?.map(template => (
             <li key={template.id}
-              className="flex items-center gap-3 rounded-lg border border-surface-800 bg-surface-800/50 px-4 py-3">
+              className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-surface-900 px-4 py-3.5">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-surface-100">{template.title}</p>
                 {template.description && (

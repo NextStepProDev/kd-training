@@ -53,9 +53,9 @@ export function AdminExerciseVideos() {
     <section>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Film className="h-5 w-5 text-primary-400" />
+          <Film className="h-6 w-6 text-surface-400" />
           <div>
-            <h2 className="text-lg font-semibold text-surface-100">{t('videos.title')}</h2>
+            <h2 className="text-display text-2xl text-white">{t('videos.title')}</h2>
             <p className="text-sm text-surface-400">{t('videos.subtitle')}</p>
           </div>
         </div>
@@ -84,7 +84,7 @@ export function AdminExerciseVideos() {
           {videosQuery.data?.content.map(video => (
             <li key={video.id}
               className={clsx(
-                'flex items-center gap-3 rounded-lg border border-surface-800 bg-surface-800/50 p-2',
+                'flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-surface-900 p-2',
                 video.archived && 'opacity-60',
               )}>
               <img src={video.thumbnailUrl} alt="" loading="lazy"
@@ -229,7 +229,7 @@ function VideoFormModal({
         </div>
 
         {videoId && (
-          <div className="overflow-hidden rounded-lg border border-surface-800">
+          <div className="overflow-hidden rounded-xl border border-white/[0.07]">
             <div className="aspect-video">
               <iframe src={youTubeEmbedUrl(videoId)} title={t('videos.preview')}
                 className="h-full w-full" loading="lazy" allowFullScreen />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import clsx from 'clsx'
+import { PageHeader } from '../components/ui/PageHeader'
 import { AdminUsers } from './admin/AdminUsers'
 import { AdminAthletes } from './admin/AdminAthletes'
 import { AdminExerciseVideos } from './admin/AdminExerciseVideos'
@@ -28,19 +29,23 @@ export function AdminPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-surface-100 mb-6">{t('admin.title')}</h1>
+    <div className="max-w-7xl mx-auto px-4 py-10 sm:py-14">
+      <PageHeader kicker={t('admin.kicker')} title={t('admin.title')} className="mb-8" />
 
-      <div className="flex flex-wrap gap-1 mb-8 border-b border-surface-800 pb-1">
+      {/* Segmented pills, the same shape as the calendar's week/month switch. */}
+      <div className="mb-10 inline-flex gap-1 rounded-full border border-white/10 bg-surface-900 p-1">
         {tabs.map(item => (
           <button
             key={item.key}
+            // Two sub-pages behind one URL segment, not an ARIA tab set (no arrow-key handling):
+            // aria-current says which one is open without promising keyboard behaviour it lacks.
+            aria-current={tab === item.key ? 'page' : undefined}
             onClick={() => { setOpenAthlete(null); navigate(`/admin/${item.key}`) }}
             className={clsx(
-              'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors',
+              'rounded-full px-4 py-2 text-sm font-semibold transition-colors',
               tab === item.key
-                ? 'bg-surface-800 text-primary-400 border-b-2 border-primary-500'
-                : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'
+                ? 'bg-white text-surface-950'
+                : 'text-surface-400 hover:text-white'
             )}
           >
             {t(item.ns)}

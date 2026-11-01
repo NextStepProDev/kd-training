@@ -96,10 +96,10 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
       <div className="flex items-center gap-4 mt-4 mb-6">
         <Avatar src={user.avatarUrl} name={`${user.firstName} ${user.lastName}`} className="w-16 h-16" textClassName="text-xl" />
         <div>
-          <h2 className="text-xl font-semibold text-surface-100">{user.firstName} {user.lastName}</h2>
+          <h2 className="text-display text-3xl text-white">{user.firstName} {user.lastName}</h2>
           <p className="text-surface-400 text-sm flex items-center gap-1"><Mail className="w-4 h-4" /> {user.email}</p>
           {user.role === 'ADMIN' && (
-            <span className="inline-flex items-center gap-1 mt-1 text-xs px-2 py-1 rounded-full bg-primary-500/15 text-primary-300">
+            <span className="inline-flex items-center gap-1 mt-2 text-xs px-2 py-1 rounded-full bg-white font-medium text-surface-950">
               <BadgeCheck className="w-3.5 h-3.5" />
               {user.superAdmin ? t('users.superAdmin') : t('users.admin')}
             </span>
@@ -108,15 +108,15 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
       </div>
 
       {/* Profile details (read-only) */}
-      <div className="bg-surface-900 border border-surface-800 rounded-xl p-6 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+      <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-6 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <ProfileRow icon={<Phone className="w-4 h-4" />} label={t('users.phone')} value={user.phone ?? '—'} />
         <ProfileRow
-          icon={user.emailVerified ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-amber-400" />}
+          icon={user.emailVerified ? <CheckCircle className="w-4 h-4 text-white" /> : <XCircle className="w-4 h-4 text-surface-400" />}
           label={t('users.detail.emailVerified')}
           value={user.emailVerified ? t('users.detail.yes') : t('users.detail.no')}
         />
         <ProfileRow
-          icon={user.marketingConsent ? <MailCheck className="w-4 h-4 text-emerald-400" /> : <MailX className="w-4 h-4 text-surface-500" />}
+          icon={user.marketingConsent ? <MailCheck className="w-4 h-4 text-white" /> : <MailX className="w-4 h-4 text-surface-500" />}
           label={t('users.detail.marketing')}
           value={user.marketingConsent ? t('users.detail.yes') : t('users.detail.no')}
         />
@@ -125,7 +125,7 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
       </div>
 
       {/* GDPR access request: one ZIP with everything held about the person, ready to send them. */}
-      <div className="bg-surface-900 border border-surface-800 rounded-xl p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 mt-0.5 shrink-0 text-surface-500" />
           <div>
@@ -140,9 +140,9 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
       </div>
 
       {/* 1-on-1 coaching. Separate from the admin role: it grants no rights, it unlocks a calendar. */}
-      <div className="bg-surface-900 border border-surface-800 rounded-xl p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <Dumbbell className={clsx('w-5 h-5 mt-0.5 shrink-0', user.isAthlete ? 'text-primary-400' : 'text-surface-500')} />
+          <Dumbbell className={clsx('w-5 h-5 mt-0.5 shrink-0', user.isAthlete ? 'text-white' : 'text-surface-500')} />
           <div>
             <p className="font-medium text-surface-100">{t('users.detail.athleteTitle')}</p>
             <p className="text-sm text-surface-400 mt-0.5">
@@ -163,7 +163,7 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
       {/* Erasing the plan is a different act from hiding it, so it gets a different button and a
           different colour. Shown regardless of the athlete flag: an account that already lost the
           flag is precisely the one whose plan data has no other route out of the panel. */}
-      <div className="bg-surface-900 border border-surface-800 rounded-xl p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <Trash2 className="w-5 h-5 mt-0.5 shrink-0 text-surface-500" />
           <div>

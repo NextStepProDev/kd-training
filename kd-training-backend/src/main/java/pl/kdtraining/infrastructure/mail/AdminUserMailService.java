@@ -70,8 +70,8 @@ public class AdminUserMailService {
         String content = """
                         <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
                         <p style="font-size: 16px; line-height: 1.6;">%s</p>
-                        <div style="background-color: #262626; border-left: 4px solid #ffffff; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                            <p style="font-size: 16px; line-height: 1.8; margin: 0; color: #e5e5e5;">%s</p>
+                        <div style="background-color: #2a2a2a; border-left: 4px solid #ffffff; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                            <p style="font-size: 16px; line-height: 1.8; margin: 0; color: #e3e3e3;">%s</p>
                         </div>
                         <p style="font-size: 16px; line-height: 1.6; margin: 24px 0 0;">%s<br/><strong>%s</strong></p>
                         %s
@@ -112,8 +112,8 @@ public class AdminUserMailService {
     private String unsubscribeBlock(String unsubscribeToken) {
         String unsubscribeUrl = mail.siteUrl() + "/wypisz-sie?token=" + unsubscribeToken;
         return """
-                        <hr style="border-color: #404040; margin: 24px 0 12px;" />
-                        <p style="font-size: 12px; color: #a3a3a3; line-height: 1.6; margin: 0;">%s
+                        <hr style="border: none; border-top: 1px solid #383838; margin: 24px 0 12px;" />
+                        <p style="font-size: 12px; color: #b0b0b0; line-height: 1.6; margin: 0;">%s
                             <a href="%s" style="color: #ffffff;">%s</a>
                         </p>
             """.formatted(
@@ -134,7 +134,7 @@ public class AdminUserMailService {
         String content = """
                         <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
                         <p style="font-size: 16px; line-height: 1.6;">%s</p>
-                        <p style="font-size: 14px; line-height: 1.6; color: #a3a3a3; margin-top: 12px;">%s</p>
+                        <p style="font-size: 14px; line-height: 1.6; color: #b0b0b0; margin-top: 12px;">%s</p>
                         <p style="font-size: 16px; line-height: 1.6; margin: 24px 0 0;">%s<br/><strong>%s</strong></p>
             """.formatted(
                 msg.get("email.bulk.greeting", safeFirstName),

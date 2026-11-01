@@ -169,7 +169,10 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 Nawigacja: Strona główna · (Moje konto — zalogowany) · (Panel admina — admin) · (Zaloguj się — gość).
 Marka w nawigacji, stopce i mailach jest **tekstem** („KD Training”) — logo jeszcze nie ma.
-Ikony i obrazek OG (`public/icons`, `favicon.*`, `og-default.png`) to wygenerowane zaślepki „KD”.
+Ikony i obrazek OG (`public/icons`, `favicon.*`, `og-default.png`) to znak „KD” w Antonie na grafitowym tle,
+w stylu strony (01.11.2026) — do podmiany, gdy klient da logo. `favicon.svg` ma litery jako krzywe (przeglądarka nie
+ładuje czcionek do favicony). Maile: nagłówek „KD Training” prosi o Antona, a programy pocztowe bez czcionek
+webowych dostają Impact albo Arial Black.
 
 ---
 
@@ -200,7 +203,7 @@ cd kd-training-backend && ./gradlew bootRun
 cd kd-training-frontend && npm run dev
 ```
 
-Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (weryfikacja konta, reset hasła).
+Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (weryfikacja konta, reset hasła) — profil `dev` kieruje SMTP na `localhost:1027` bez logowania i TLS (do 01.11.2026 tego nie robił i maile szły na domyślny `smtp.gmail.com`; pilnuje `DevProfileMailConfigTest`).
 
 Profil `dev` przy każdym starcie **czyści bazę i odtwarza ją z migracji** (`FlywayConfig`), a
 `DevDataSeeder` zakłada konta z hasłem `dev`: admini z `ADMIN_EMAIL` oraz `jan@dev.pl`, `anna@dev.pl`

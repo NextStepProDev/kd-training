@@ -1,6 +1,19 @@
 spring:
   jpa:
     show-sql: true
+  # MailHog from kd-training-hub/docker-compose.dev.yml (web UI on localhost:8027). Without this the
+  # application.yml default, smtp.gmail.com, applied in dev too.
+  mail:
+    host: localhost
+    port: 1027
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 app:
   site-url: http://localhost:5175

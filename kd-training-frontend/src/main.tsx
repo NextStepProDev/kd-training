@@ -8,6 +8,12 @@ import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import App from './App'
 import { shouldRetryQuery } from './utils/queryFreshness'
+// Self-hosted, never Google Fonts: the CSP allows `font-src 'self'` only, so a font CDN
+// link is silently blocked in production and the site falls back to the system font. Archivo is the
+// width-axis build — the display face is set condensed via font-stretch. Imported here, not from
+// index.css, so selfHostedFonts.test.ts can see them (Vitest reads CSS as an empty module).
+import '@fontsource-variable/archivo/wdth.css'
+import '@fontsource-variable/inter/wght.css'
 import './index.css'
 
 const queryClient = new QueryClient({

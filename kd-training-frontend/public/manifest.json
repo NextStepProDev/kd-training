@@ -4,8 +4,8 @@
   "description": "Trener personalny Kacper Dąbrowski — plan treningowy, materiały i kontakt z trenerem.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#050505",
+  "theme_color": "#050505",
   "lang": "pl",
   "icons": [
     {

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
@@ -116,9 +116,17 @@ function Heatmap({ heatmap, label, legendLabel }: {
       Array.from({ length: 7 }, (_, d) => format(addDays(firstMonday, w * 7 + d), 'yyyy-MM-dd')))
   }, [])
 
+  // Start at today's end of the year. Layout effect, so the first painted frame is already there
+  // instead of jumping from a year ago.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const box = scrollRef.current
+    if (box) box.scrollLeft = box.scrollWidth
+  }, [weeks])
+
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-xs text-surface-400">{label}</p>
         <div className="flex items-center gap-1.5 text-[11px] text-surface-500">
           <span>{legendLabel}</span>
@@ -130,18 +138,23 @@ function Heatmap({ heatmap, label, legendLabel }: {
           ))}
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <div className="flex gap-0.5">
-          {weeks.map((week, i) => (
-            <div key={i} className="flex flex-col gap-0.5">
-              {week.map(day => (
-                <span
-                  key={day}
-                  title={`${day}: ${heatmap[day] ?? 0}`}
-                  className={clsx('h-2.5 w-2.5 rounded-sm', HEAT_CLASSES[heatLevel(heatmap[day] ?? 0)])}
-                />
-              ))}
-            </div>
+      {/* Columns grow to fill the card (a fixed 10px cell filled half of it on a desktop), with an
+          8px floor so a cell stays a cell. Below that floor — a phone — the box scrolls, and it
+          opens on the RIGHT: the newest weeks are what a client looks for, and a box that opened
+          on the left showed a year ago with last week hidden past the edge. */}
+      <div ref={scrollRef} className="overflow-x-auto [scrollbar-width:thin]">
+        <div
+          role="img"
+          aria-label={label}
+          className="grid grid-flow-col grid-rows-7 gap-[3px]"
+          style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(8px, 1fr))` }}
+        >
+          {weeks.flat().map(day => (
+            <span
+              key={day}
+              title={`${day}: ${heatmap[day] ?? 0}`}
+              className={clsx('aspect-square rounded-[2px]', HEAT_CLASSES[heatLevel(heatmap[day] ?? 0)])}
+            />
           ))}
         </div>
       </div>

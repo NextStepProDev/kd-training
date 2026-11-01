@@ -55,6 +55,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Wysyłka do wielu odbiorców to **jedno zadanie** na `mailCampaignExecutor`, nigdy jedno zadanie na osobę.
 - Szkielet HTML maila istnieje **tylko** w `BrandedMailSender` — nie dopisuj lokalnego szablonu „bo ten jeden mail jest inny".
 - Nagłówki `List-Unsubscribe` lecą **wyłącznie** na wysyłce masowej, nigdy na transakcyjnej.
+- Każdy mail to `multipart/alternative`: część tekstową wylicza z HTML-a `MailPlainText` w `MailDispatcher`. Nie pisz osobnej wersji tekstowej — dwie kopie treści się rozjadą.
 
 **SEO i nginx → [`API.md`](API.md)**
 - Gdy wrócą podstrony z podglądem dla botów (przepisanie na `/og/` po user-agencie w `nginx.conf`), lista botów **nigdy** nie zawiera wyszukiwarek — pętla przekierowań = „Redirect error" w Search Console. Dziś podgląd ma tylko strona główna; `seo-smoke.sh` i tak sprawdza, że Googlebot nie dostaje meta-refresh.
@@ -91,6 +92,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - **Migracje SQL są niezmienne** — nawet poprawka komentarza w zaaplikowanym pliku zmienia checksum Flyway i wywala deploy. Wyjątek jeden i tylko teraz: `V1` nie była jeszcze nigdzie wdrożona, więc **do pierwszego deployu na produkcję** wolno ją poprawiać (każda poprawka = reset lokalnej bazy). Od pierwszego deployu — nowa migracja.
 - Nowy pakiet w backendzie = własny `package-info.java` z `@NullMarked`. Adnotacja **nie schodzi do podpakietów** (mówi to javadoc JSpecify), więc bez tego pliku każde `@Nullable` w pakiecie niesie pół umowy: sąsiedzi mają nullowość *nieokreśloną*, a nie „niepustą". Pilnuje `NullMarkedPackagesTest` — druga asercja łapie literówkę w nazwie pakietu, którą `compileJava` przepuszcza bez słowa. Uwaga na skutek uboczny: repozytorium w oznaczonym pakiecie dostaje `MethodInvocationValidator`, więc `null` w argumencie rzuca `IllegalArgumentException` zamiast zwrócić pustkę.
 - Produkt po polsku, kod (komentarze, logi, commity, PR) po angielsku.
+- **Log nie zawiera pełnego adresu e-mail** — id użytkownika albo `MailDispatcher.maskAddress` („j***@gmail.com”). Log rotuje się rozmiarem, nie datą, więc przeżywa usunięcie konta (RODO art. 17). Pilnuje `LogPersonalDataArchTest` (wyjątek: `DevDataSeeder`).
 - PR ruszający backend albo front zawsze z bumpem `VERSION` — bez tego tag obrazu w GHCR jest nadpisywany. `feat:` → minor, reszta → patch. Szczegóły: „Gałęzie, PR-y, commity”.
 - Kopie zapasowe: `rclone copy`, **nigdy** `sync` → [`INFRA.md`](INFRA.md).
 - **Akcje GitHub przypięte do SHA** (`uses: owner/action@<sha> # vX.Y.Z`; Dependabot podbija oba) — tag można przestawić na cudzy kod, a `appleboy/ssh-action` dostaje klucz do serwera. Token domyślnie tylko do odczytu (`packages`/`security-events` wyłącznie w jobach, które ich używają); wersja z formularza Deploy idzie przez `env:` i musi wyglądać jak tag obrazu. Kontenery w `docker-compose.prod.yml` mają `no-new-privileges`. Nowa akcja — od razu z SHA.
@@ -242,9 +244,11 @@ poza tym trybem to startowy (fork z Fire) — PR potrzebuje gałęzi bazowej, a 
   (nie od innej niescalonej gałęzi — push opublikowałby całą jej historię). Nazwy jak typy commitów:
   `feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, `style/`. **Nigdy nie pracujemy na `main`.**
 - **Na `main` tylko przez PR, scalany squashem.** Repo dopuszcza wyłącznie „Squash and merge”
-  (inaczej niż Fire i abcwspinania, które dopuszczają też rebase, a Fire i merge commit). Gałąź
-  po scaleniu **zostaje** — GitHub jej nie kasuje (`delete_branch_on_merge: false`, jak w pozostałych
-  projektach; włączone przez pomyłkę przy zakładaniu repo i wyłączone 26.10.2026). Opisy
+  (inaczej niż Fire i abcwspinania, które dopuszczają też rebase, a Fire i merge commit). Po
+  scaleniu gałąź **kasujemy z GitHuba** (ustalone 01.11.2026). GitHub nie robi tego sam
+  (`delete_branch_on_merge: false`), więc na początku pracy `git fetch --prune` i przegląd gałęzi
+  zdalnych: gałąź, której PR jest scalony (`gh pr list --state merged --head <gałąź>`), idzie do
+  skasowania. Opisy
   commitów gałęzi trafiają do treści commita na `main`, więc mają być kompletne. Po scaleniu
   kolejna poprawka idzie na nową gałąź od `origin/main` — stara po squashu daje pozorne konflikty.
 - **Commit, push i PR robi Mateusz.** Claude podaje w czacie — **dopiero po audycie** — gotowe
@@ -301,7 +305,8 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 
 ### Przed pierwszym wdrożeniem (otwarte)
 1. Domena → podmienić `kdtraining.example` (nginx `server_name` i przekierowania, `robots.txt`,
-   `prerender.mjs`, `.env.example`, `AppConfig`, `application*.yml`, JWT `issuer`).
+   `prerender.mjs`, `.env.example`, `AppConfig`, `application*.yml`, JWT `issuer`,
+   `Canonical` w `public/.well-known/security.txt`).
 2. Dane administratora → polityka prywatności (sekcja 1), `AdminUserDataExportService.readme()`,
    zgody marketingowe (`auth.json`, `settings.json`); adres kontaktowy → `config/site.ts`,
    `calendar.json` (`withdrawNote`).

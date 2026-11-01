@@ -55,6 +55,26 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
             .andExpect(jsonPath("$.totalElements").isNumber());
     }
 
+    /** "%" and "_" from the search box are characters to look for, not LIKE wildcards. */
+    @Test
+    void shouldSearchForWildcardCharactersAsThemselves() throws Exception {
+        createUser("alice@test.com", "Alicja", "Kowalska", UserRole.USER);
+        createUser("under_score@test.com", "Jan", "Nowak", UserRole.USER);
+
+        mockMvc.perform(get("/api/admin/users")
+                .param("search", "%")
+                .header("Authorization", "Bearer " + adminToken()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(0));
+
+        mockMvc.perform(get("/api/admin/users")
+                .param("search", "_")
+                .header("Authorization", "Bearer " + adminToken()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(1))
+            .andExpect(jsonPath("$.content[0].email").value("under_score@test.com"));
+    }
+
     @Test
     void shouldSearchUsersByPhrase() throws Exception {
         createUser("alice@test.com", "Alicja", "Kowalska", UserRole.USER);

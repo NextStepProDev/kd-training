@@ -156,7 +156,7 @@ public class ExerciseVideoService {
             return "";
         }
         String stripped = Normalizer.normalize(query.trim(), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        return stripped.replace('ł', 'l').replace('Ł', 'L').toLowerCase(Locale.ROOT);
+        return Strings.escapeLike(stripped.replace('ł', 'l').replace('Ł', 'L').toLowerCase(Locale.ROOT));
     }
 
 

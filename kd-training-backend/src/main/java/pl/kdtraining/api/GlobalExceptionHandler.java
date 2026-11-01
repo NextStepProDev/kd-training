@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import pl.kdtraining.infrastructure.i18n.MessageService;
 import pl.kdtraining.infrastructure.storage.ImageDecodeBusyException;
@@ -146,6 +147,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleMaxUploadSize(MaxUploadSizeExceededException e) {
         log.warn("Upload size exceeded: {}", e.getMessage());
         return error(HttpStatus.CONTENT_TOO_LARGE, "PAYLOAD_TOO_LARGE", msg.get("file.too.large"));
+    }
+
+    /**
+     * An upload endpoint reached without a multipart body ("Current request is not a multipart
+     * request") — 400, not the 500 plus stack trace the catch-all gave it. Found in NSP Climbing by
+     * calling every operation in the API spec with junk. The size limit is a subclass with its own,
+     * more specific handler above (413), and still wins.
+     */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Map<String, Object>> handleNotMultipart(MultipartException e) {
+        log.warn("Not a usable multipart request: {}", e.getMessage());
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", msg.get("error.request.body.invalid"));
     }
 
     /**

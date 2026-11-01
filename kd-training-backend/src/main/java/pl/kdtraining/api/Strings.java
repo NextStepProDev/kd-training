@@ -24,4 +24,14 @@ public final class Strings {
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
+
+    /**
+     * Search text made safe to put inside a {@code LIKE '%…%'}: {@code %} and {@code _} are
+     * wildcards, so "100%" or "a_b" matched far more than themselves. Backslash is the escape, so
+     * it is escaped first. ⚠️ The query must say {@code ESCAPE '\'} itself: Hibernate does not
+     * leave Postgres's default backslash escape in force, and without the clause "_" found nothing.
+     */
+    public static String escapeLike(String value) {
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
 }

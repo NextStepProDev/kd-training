@@ -11,9 +11,10 @@ import org.springframework.stereotype.Component;
 import pl.kdtraining.config.AppConfig;
 
 /**
- * A shared point for sending HTML emails with retries (best-effort). Called from the {@code @Async}
- * methods of the mail services, so the retry loop runs on the {@code mailExecutor} pool thread and does not block
- * the user's request.
+ * A shared point for sending HTML emails with retries (best-effort). Every message is
+ * multipart/alternative: the HTML plus a plain-text twin derived by {@link MailPlainText}.
+ * Called from the {@code @Async} methods of the mail services, so the retry loop runs on the
+ * {@code mailExecutor} pool thread and does not block the user's request.
  * <p>
  * Transient SMTP errors (a brief Gmail unavailability, network) are the most common — a few spaced-out attempts
  * catch most of them. After the attempts are exhausted the email is dropped, but logged at ERROR level with a fixed
@@ -76,10 +77,17 @@ public class MailDispatcher {
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 var message = mailSender.createMimeMessage();
-                var helper = new MimeMessageHelper(message, true);
+                var helper = new MimeMessageHelper(message, true, "UTF-8");
                 helper.setTo(to);
                 helper.setSubject(subject);
-                helper.setText(htmlBody, true);
+                // multipart/alternative: clients render the HTML, the plain twin is for text-only
+                // readers and for spam filters that score an HTML-only message (MIME_HTML_ONLY).
+                String plain = plainTextOrNull(htmlBody);
+                if (plain != null) {
+                    helper.setText(plain, htmlBody);
+                } else {
+                    helper.setText(htmlBody, true);
+                }
                 helper.setFrom(appConfig.getMail().getFrom());
                 if (unsubscribeUrl != null) {
                     // Inside the retry loop on purpose: every attempt builds a fresh MimeMessage, so headers
@@ -92,24 +100,50 @@ public class MailDispatcher {
                 }
                 mailSender.send(message);
                 if (attempt > 1) {
-                    log.info("Email sent to {} on attempt {}/{}", to, attempt, maxAttempts);
+                    log.info("Email sent to {} on attempt {}/{}", maskAddress(to), attempt, maxAttempts);
                 } else {
-                    log.info("Email sent to: {}", to);
+                    log.info("Email sent to: {}", maskAddress(to));
                 }
                 return;
             } catch (MailException | jakarta.mail.MessagingException e) {
                 if (attempt < maxAttempts) {
                     long delay = backoffMs[Math.min(attempt - 1, backoffMs.length - 1)];
                     log.warn("Email to {} failed (attempt {}/{}), retrying in {} ms: {}",
-                            to, attempt, maxAttempts, delay, e.getMessage());
+                            maskAddress(to), attempt, maxAttempts, delay, e.getMessage());
                     if (!sleep(delay)) {
                         return; // interrupted while waiting
                     }
                 } else {
-                    log.error("MAIL_DELIVERY_FAILED to={} after {} attempts", to, maxAttempts, e);
+                    log.error("MAIL_DELIVERY_FAILED to={} after {} attempts", maskAddress(to), maxAttempts, e);
                 }
             }
         }
+    }
+
+    /**
+     * The plain part is a nicety; the mail is not. A converter bug must cost the alternative,
+     * never the message — the dispatcher's whole contract is that nothing here throws.
+     */
+    private static @Nullable String plainTextOrNull(String html) {
+        try {
+            return MailPlainText.fromHtml(html);
+        } catch (RuntimeException | StackOverflowError e) {
+            log.warn("Could not derive the plain-text part, sending HTML only", e);
+            return null;
+        }
+    }
+
+    /**
+     * "j***@gmail.com". The server log outlives account deletion (it rotates by size, not by date),
+     * so a full address there is personal data the erasure cannot reach. The domain is what a
+     * delivery problem is diagnosed by, so it stays.
+     */
+    public static String maskAddress(String address) {
+        int at = address.lastIndexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        return address.charAt(0) + "***" + address.substring(at);
     }
 
     /** @return false when the thread was interrupted while waiting. */

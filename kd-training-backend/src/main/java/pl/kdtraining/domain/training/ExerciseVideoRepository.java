@@ -21,7 +21,7 @@ public interface ExerciseVideoRepository extends JpaRepository<ExerciseVideo, UU
      */
     @Query("""
         SELECT v FROM ExerciseVideo v
-        WHERE (:query = '' OR v.searchText LIKE CONCAT('%', :query, '%'))
+        WHERE (:query = '' OR v.searchText LIKE CONCAT('%', :query, '%') ESCAPE '\\')
           AND (:includeArchived = true OR v.archivedAt IS NULL)
         ORDER BY v.name ASC
         """)
@@ -33,7 +33,7 @@ public interface ExerciseVideoRepository extends JpaRepository<ExerciseVideo, UU
     @Query("""
         SELECT v FROM ExerciseVideo v
         WHERE v.archivedAt IS NULL
-          AND (:query = '' OR v.searchText LIKE CONCAT('%', :query, '%'))
+          AND (:query = '' OR v.searchText LIKE CONCAT('%', :query, '%') ESCAPE '\\')
         ORDER BY v.name ASC
         """)
     List<ExerciseVideo> suggest(@Param("query") String query, Pageable pageable);

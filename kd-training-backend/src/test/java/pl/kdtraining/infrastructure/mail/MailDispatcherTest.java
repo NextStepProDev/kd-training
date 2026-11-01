@@ -14,6 +14,7 @@ import pl.kdtraining.config.AppConfig;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +33,8 @@ class MailDispatcherTest {
         appConfig.getMail().setFrom("noreply@test.com");
         // Zero backoff — test without real waiting.
         dispatcher = new MailDispatcher(mailSender, appConfig, 3, new long[]{0, 0});
-        when(mailSender.createMimeMessage()).thenAnswer(inv -> new MimeMessage((Session) null));
+        // Lenient: the address-masking test is static and never builds a message.
+        lenient().when(mailSender.createMimeMessage()).thenAnswer(inv -> new MimeMessage((Session) null));
     }
 
     @Test
@@ -118,5 +120,46 @@ class MailDispatcherTest {
         assertArrayEquals(new String[]{"List-Unsubscribe=One-Click"},
                 retried.getHeader("List-Unsubscribe-Post"));
         assertNotNull(retried.getHeader("List-Unsubscribe"));
+    }
+
+    @Test
+    void shouldSendThePlainTextAlternativeBeforeTheUntouchedHtml() throws Exception {
+        var sent = ArgumentCaptor.forClass(MimeMessage.class);
+        String html = "<html><body><p>Cześć Anna!</p>"
+                + "<a href=\"https://kdtraining.example/verify-email?token=abc\">Potwierdź adres</a></body></html>";
+
+        dispatcher.sendHtml("to@test.com", "Temat", html);
+
+        verify(mailSender).send(sent.capture());
+        MimeMessage message = sent.getValue();
+        message.saveChanges();
+        var parts = new java.util.ArrayList<jakarta.mail.Part>();
+        collectLeaves(message, parts);
+
+        var types = new java.util.ArrayList<String>();
+        for (var part : parts) {
+            types.add(part.getContentType().split(";")[0].trim().toLowerCase());
+        }
+        // Order matters: clients show the LAST alternative they can render, so HTML must follow plain.
+        assertEquals(java.util.List.of("text/plain", "text/html"), types);
+        assertEquals("Cześć Anna!\n\nPotwierdź adres (https://kdtraining.example/verify-email?token=abc)\n",
+                parts.get(0).getContent());
+        assertEquals(html, parts.get(1).getContent());
+    }
+
+    @Test
+    void shouldKeepOnlyTheFirstLetterAndTheDomainOfAnAddressInTheLog() {
+        assertEquals("j***@gmail.com", MailDispatcher.maskAddress("jan.kowalski@gmail.com"));
+        assertEquals("***", MailDispatcher.maskAddress("not-an-address"));
+    }
+
+    private static void collectLeaves(jakarta.mail.Part part, java.util.List<jakarta.mail.Part> out) throws Exception {
+        if (part.getContent() instanceof jakarta.mail.Multipart multipart) {
+            for (int i = 0; i < multipart.getCount(); i++) {
+                collectLeaves(multipart.getBodyPart(i), out);
+            }
+        } else {
+            out.add(part);
+        }
     }
 }

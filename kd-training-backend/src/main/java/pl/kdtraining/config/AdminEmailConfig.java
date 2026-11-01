@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import pl.kdtraining.infrastructure.mail.MailDispatcher;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -37,7 +38,8 @@ public class AdminEmailConfig {
         if (adminEmails.isEmpty()) {
             log.warn("No admin emails configured (app.admin.email). First admin must be set manually.");
         } else {
-            log.info("Admin auto-promotion configured for: {}", adminEmails);
+            log.info("Admin auto-promotion configured for: {}",
+                    adminEmails.stream().map(MailDispatcher::maskAddress).toList());
         }
     }
 

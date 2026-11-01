@@ -247,6 +247,16 @@ siedzi**: otwarcie kilku treningów pod rząd to kilkanaście GET-ów i nie ma p
 
 Zasady, które łatwo po cichu złamać przy kolejnej zmianie. Każda ma test, który to wyłapie.
 
+**Stan treningu niesie jasność i kształt, nie kolor** (od 01.11.2026, redesign czarno-biały). Zrobiony =
+biel (biały pasek na kafelku, biała kropka w siatce, biały chip), zaplanowany = szarość, pominięty =
+pusty kontur / przerywana ramka i wyblakła karta. To samo w ocenie wysiłku (`RpeInput`) i w pasku
+intensywności: trzy stopnie jasności zamiast zielony–żółty–czerwony. Kolor zostaje **wyłącznie** dla
+ostrzeżeń i błędów (sygnał przetrenowania, komunikaty `rose`). Zielony i czerwony obok siebie nie są
+czytelne dla części osób z daltonizmem, a strona jest czarno-biała z założenia klienta. Mapa aktywności
+pilnuje swojego odpowiednika: `heatmapScale.test.ts` sprawdza, że dzień z treningiem nie zlewa się z tłem.
+Kalendarz otwiera się na **miesiącu** na każdym ekranie (na telefonie i tablecie to siatka z kropkami),
+decyzja Mateusza z 01.11.2026 — wcześniej telefon startował na tygodniu.
+
 **Zadanie i trening to dwa wiersze, nigdy jeden.** Kuszące jest dopięcie „limitu kcal" jako pola do treningu — jedno okno, jedno odhaczenie. Wtedy dzień, w którym trening wyszedł, a dieta nie, nie ma jak się zapisać: cokolwiek pokaże checkbox, będzie kłamstwem o połowie dnia. Stąd `kind` na wierszu, dwa kafelki w dniu i dwa niezależne odhaczenia. `kind` jest ustawiany przy tworzeniu i nie ma go w `UpdateTrainingRequest` — przełączenie odhaczonego treningu na zadanie musiałoby po cichu skasować RPE, żeby wiersz przeszedł CHECK-i. Zadanie odhacza się bez RPE (walidacja zależy od wiersza, więc siedzi w serwisie, nie w adnotacji), a statystyki treningowe zadań nie widzą — mają własny blok `tasks`.
 
 **Plan trenera jest dla podopiecznego tylko do odczytu — usuwanie też.** Recepta jest istotą prowadzenia: plan, który podopieczny może po cichu przepisać, przestaje nim być — trener czyta wtedy własne polecenia, zmienione, bez żadnego sygnału. Usuwanie siedzi w tej samej blokadzie, bo „skasuj i dodaj po swojemu" omija zakaz edycji. Zostaje odhaczanie (RPE + notatka) i komentarze — to akty, dla których plan istnieje. Blokada wisi na `created_by_admin`, ustawianym raz przy tworzeniu; `last_modified_by_admin` przeskakuje przy każdym odhaczeniu i nie nadaje się na właściciela wpisu. W paście kolejność jest istotna: **najpierw rozstrzygnięcie adresata (404 za cudzy kalendarz), dopiero potem 409** — inaczej odpowiedź zdradziłaby, że źródło istnieje. Front chowa przyciski (`canReshapeTraining` w `adapter.ts`, decyzja per kafelek, nie per rola) i pisze dlaczego — sam ubytek przycisków wygląda jak zepsuta karta.

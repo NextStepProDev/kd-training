@@ -128,7 +128,7 @@ export function CommentPhoto({
               </div>
             ) : (
               <Button variant="secondary" size="sm" onClick={() => setConfirmingDelete(true)}>
-                <Trash2 className="mr-1.5 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 {t('comments.photoDelete')}
               </Button>
             )

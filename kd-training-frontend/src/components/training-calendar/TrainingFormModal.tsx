@@ -267,7 +267,7 @@ export function TrainingFormModal({
             {materials.length < MAX_MATERIALS && (
               <div className="space-y-2">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setPickerOpen(true)}>
-                  <Film className="mr-1.5 h-4 w-4" />
+                  <Film className="h-4 w-4" />
                   {t('materials.addVideo')}
                 </Button>
                 <div className="flex flex-wrap items-center gap-2">

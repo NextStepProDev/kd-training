@@ -77,7 +77,7 @@ export function DaySheet({
         ) : (
           <Button variant="ghost" size="sm" className="w-full"
             onClick={() => { onClose(); onAdd(date) }}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {labels.add}
           </Button>
         )}

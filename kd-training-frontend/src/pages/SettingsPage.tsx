@@ -11,6 +11,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { AvatarCropper } from '../components/ui/AvatarCropper'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { inputClassMuted as inputClass } from '../utils/fieldClass'
+import { PageHeader } from '../components/ui/PageHeader'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -191,10 +192,10 @@ export function SettingsPage() {
 
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-surface-100 mb-8">{t('title')}</h1>
+    <div className="max-w-2xl mx-auto px-4 py-12 sm:py-16">
+      <PageHeader kicker={t('kicker')} title={t('title')} className="mb-10" />
 
-      <section className="bg-surface-900 rounded-xl p-6 border border-surface-800 mb-6">
+      <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">
         <h2 className="text-lg font-semibold text-surface-100 mb-4">{t('avatar.title')}</h2>
         <div className="flex items-center gap-5">
           <button
@@ -215,12 +216,12 @@ export function SettingsPage() {
           </button>
           <div className="flex flex-col gap-2">
             <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-              <Camera className="w-4 h-4 mr-1.5" />
+              <Camera className="w-4 h-4" />
               {user?.avatarUrl ? t('avatar.change') : t('avatar.upload')}
             </Button>
             {user?.avatarUrl && (
               <Button type="button" variant="secondary" onClick={handleAvatarRemove} loading={avatarRemoving}>
-                <Trash2 className="w-4 h-4 mr-1.5" />
+                <Trash2 className="w-4 h-4" />
                 {t('avatar.remove')}
               </Button>
             )}
@@ -240,7 +241,7 @@ export function SettingsPage() {
         <AvatarCropper imageSrc={cropSrc} onCancel={closeCropper} onSave={handleAvatarSave} />
       )}
 
-      <section className="bg-surface-900 rounded-xl p-6 border border-surface-800 mb-6">
+      <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">
         <button
           type="button"
           onClick={() => {
@@ -251,7 +252,7 @@ export function SettingsPage() {
           aria-expanded={showProfileForm}
           className="w-full flex items-center justify-between text-left cursor-pointer group"
         >
-          <h2 className="text-lg font-semibold text-surface-100 group-hover:text-primary-300 transition-colors">{t('profile.title')}</h2>
+          <h2 className="text-lg font-semibold text-surface-100 group-hover:text-white transition-colors">{t('profile.title')}</h2>
           <ChevronDown className={`w-5 h-5 text-surface-400 group-hover:text-primary-300 transition-all ${showProfileForm ? 'rotate-180' : ''}`} />
         </button>
         {showProfileForm && (
@@ -278,7 +279,7 @@ export function SettingsPage() {
       </section>
 
       {user?.hasPassword && (
-        <section className="bg-surface-900 rounded-xl p-6 border border-surface-800 mb-6">
+        <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">
           <button
             type="button"
             onClick={() => {
@@ -289,7 +290,7 @@ export function SettingsPage() {
             aria-expanded={showPasswordForm}
             className="w-full flex items-center justify-between text-left cursor-pointer group"
           >
-            <h2 className="text-lg font-semibold text-surface-100 group-hover:text-primary-300 transition-colors">{t('password.title')}</h2>
+            <h2 className="text-lg font-semibold text-surface-100 group-hover:text-white transition-colors">{t('password.title')}</h2>
             <ChevronDown className={`w-5 h-5 text-surface-400 group-hover:text-primary-300 transition-all ${showPasswordForm ? 'rotate-180' : ''}`} />
           </button>
           {showPasswordForm && (
@@ -318,7 +319,7 @@ export function SettingsPage() {
         </section>
       )}
 
-      <section className="bg-surface-900 rounded-xl p-6 border border-surface-800 mb-6">
+      <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">
         <h2 className="text-lg font-semibold text-surface-100 mb-1">{t('marketing.title')}</h2>
         <p className="text-sm text-surface-400 mb-4">{t('marketing.description')}</p>
         <div className="flex items-center justify-between gap-4">
@@ -349,11 +350,11 @@ export function SettingsPage() {
         </Link>
       </section>
 
-      <section className="bg-surface-900 rounded-xl p-6 border border-surface-800 mb-6">
+      <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">
         <h2 className="text-lg font-semibold text-surface-100 mb-1">{t('sessions.title')}</h2>
         <p className="text-sm text-surface-400 mb-4">{t('sessions.description')}</p>
         <Button type="button" variant="secondary" onClick={() => setShowLogoutAllConfirm(true)}>
-          <LogOut className="w-4 h-4 mr-1.5" />
+          <LogOut className="w-4 h-4" />
           {t('sessions.button')}
         </Button>
       </section>
@@ -368,7 +369,7 @@ export function SettingsPage() {
         loading={logoutAllLoading}
       />
 
-      <section className="bg-surface-900 rounded-xl p-6 border border-rose-500/20">
+      <section className="rounded-2xl border border-rose-500/20 bg-surface-900 p-6 sm:p-7">
         <h2 className="text-lg font-semibold text-rose-400 mb-4">{t('danger.title')}</h2>
         {!showDeleteConfirm ? (
           <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>

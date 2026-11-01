@@ -5,7 +5,8 @@ import { ArrowRight, ClipboardList, Pencil, User as UserIcon } from 'lucide-reac
 import { useAuth } from '../context/AuthContext'
 import { myTrainingApi } from '../api/user'
 import { Seo } from '../components/seo/Seo'
-import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { buttonClass } from '../components/ui/buttonClass'
 import { Avatar } from '../components/ui/Avatar'
 import { SHORT_STALE_MS } from '../utils/queryFreshness'
 
@@ -31,73 +32,69 @@ export function MyAccountPage() {
   if (!user) return null
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16 space-y-10">
       <Seo title={t('title')} path="/moje-konto" />
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-5 sm:gap-7 animate-rise">
         <Avatar
           src={user.avatarUrl}
           name={user.firstName}
-          className="w-20 h-20"
+          className="w-20 h-20 sm:w-24 sm:h-24 ring-1 ring-white/10"
           textClassName="text-2xl"
         />
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-surface-100">{t('title')}</h1>
-          <p className="text-surface-400 mt-2">{t('greeting', { name: user.firstName })}</p>
+        <div className="min-w-0">
+          <p className="kicker">{t('greeting', { name: user.firstName })}</p>
+          <h1 className="mt-3 text-display text-4xl sm:text-5xl text-white">{t('title')}</h1>
         </div>
       </div>
 
+      {/* For coaching clients — the 1-on-1 plan, first: it is what a client opens this page for. */}
+      {user.isAthlete && (
+        // Only for 1-on-1 clients. The flag rides along on /me, so showing the tile costs no
+        // extra request — and people without a coach never see a door they cannot open.
+        <AccountTile
+          to="/moje-konto/plan-treningowy"
+          icon={<ClipboardList className="w-6 h-6" />}
+          title={tCalendar('my.tileTitle')}
+          description={tCalendar('my.tileDescription')}
+          count={summaryQuery.data?.unreadCount || undefined}
+          countLabel={summaryQuery.data?.unreadCount ? tCalendar('my.tileBadge') : undefined}
+          cta={tCalendar('my.tileCta')}
+        />
+      )}
+
       {/* Profile */}
-      <section className="bg-surface-900 rounded-xl p-6 border border-surface-800">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-surface-100">
-            <UserIcon className="w-5 h-5 text-primary-400" />
+      <Card padding="lg">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+            <UserIcon className="w-5 h-5 text-surface-400" />
             {t('profile.title')}
           </h2>
-          <Link to="/settings">
-            <Button variant="secondary" className="!px-3 !py-1.5 text-sm">
-              <Pencil className="w-4 h-4 mr-1.5" />
-              {t('profile.edit')}
-            </Button>
+          <Link to="/settings" className={buttonClass('secondary', 'sm')}>
+            <Pencil className="w-4 h-4" />
+            {t('profile.edit')}
           </Link>
         </div>
 
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-surface-500">{t('profile.firstName')}</dt>
-            <dd className="text-surface-100 mt-0.5">{user.firstName}</dd>
+            <dt className="kicker !tracking-[0.2em]">{t('profile.firstName')}</dt>
+            <dd className="text-surface-100 mt-1.5">{user.firstName}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-surface-500">{t('profile.lastName')}</dt>
-            <dd className="text-surface-100 mt-0.5">{user.lastName}</dd>
+            <dt className="kicker !tracking-[0.2em]">{t('profile.lastName')}</dt>
+            <dd className="text-surface-100 mt-1.5">{user.lastName}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-surface-500">{t('profile.email')}</dt>
-            <dd className="text-surface-100 mt-0.5 break-all">{user.email}</dd>
+            <dt className="kicker !tracking-[0.2em]">{t('profile.email')}</dt>
+            <dd className="text-surface-100 mt-1.5 break-all">{user.email}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-surface-500">{t('profile.phone')}</dt>
-            <dd className="text-surface-100 mt-0.5">{user.phone || t('profile.noPhone')}</dd>
+            <dt className="kicker !tracking-[0.2em]">{t('profile.phone')}</dt>
+            <dd className="text-surface-100 mt-1.5">{user.phone || t('profile.noPhone')}</dd>
           </div>
         </dl>
-      </section>
-
-      {/* For coaching clients — the 1-on-1 plan */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Only for 1-on-1 clients. The flag rides along on /me, so showing the tile costs no
-            extra request — and people without a coach never see a door they cannot open. */}
-        {user.isAthlete && (
-          <AccountTile
-            to="/moje-konto/plan-treningowy"
-            icon={<ClipboardList className="w-6 h-6" />}
-            title={tCalendar('my.tileTitle')}
-            description={tCalendar('my.tileDescription')}
-            count={summaryQuery.data?.unreadCount || undefined}
-            countLabel={summaryQuery.data?.unreadCount ? tCalendar('my.tileBadge') : undefined}
-            cta={tCalendar('my.tileCta')}
-          />
-        )}
-      </div>
+      </Card>
     </div>
   )
 }
@@ -113,29 +110,33 @@ interface AccountTileProps {
   cta: string
 }
 
+/**
+ * The way into the training plan: a wide, photographic-feeling card with the unread count as the one
+ * solid element on it, so new messages from the coach are the first thing seen.
+ */
 function AccountTile({ to, icon, title, description, count, countLabel, cta }: AccountTileProps) {
   return (
     <Link
       to={to}
-      className="group relative flex flex-col rounded-xl border border-surface-800 bg-surface-900 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-600/50 hover:bg-surface-800/60 hover:shadow-lg hover:shadow-primary-950/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400"
+      className="group grain relative block overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(120%_120%_at_0%_0%,#333_0%,#1b1b1b_60%)] p-6 sm:p-8 shadow-glow transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary-600/15 text-primary-400 transition-colors group-hover:bg-primary-600/25">
-          {icon}
-        </span>
-        {count != null && (
-          <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-primary-600/15 px-2 py-0.5 text-sm font-semibold text-primary-300">
-            {count}
+      <div className="relative z-10">
+        <div className="flex items-start justify-between gap-3">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+            {icon}
           </span>
-        )}
-      </div>
-      <h3 className="mt-4 text-lg font-bold text-surface-100">{title}</h3>
-      <p className="mt-1 text-sm text-surface-400">{description}</p>
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-xs text-surface-500">{countLabel ?? ''}</span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-400 transition-transform group-hover:translate-x-0.5">
+          {count != null && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-semibold text-surface-950">
+              {count}
+              {countLabel && <span className="font-medium">{countLabel}</span>}
+            </span>
+          )}
+        </div>
+        <h2 className="mt-8 text-display text-3xl sm:text-4xl text-white">{title}</h2>
+        <p className="mt-3 max-w-md text-surface-300">{description}</p>
+        <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white">
           {cta}
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
         </span>
       </div>
     </Link>

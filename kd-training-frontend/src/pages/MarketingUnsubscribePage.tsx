@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { MailX, CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
 
@@ -33,24 +34,24 @@ export function MarketingUnsubscribePage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 text-center">
-      <div className="bg-surface-900 border border-surface-800 rounded-xl p-8">
+    <div className={authStageClass}>
+      <div className={`${authCardClass} text-center`}>
         {status === 'done' ? (
           <>
-            <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-surface-100 mb-2">{t('unsubscribe.doneTitle')}</h1>
+            <CheckCircle className="w-12 h-12 text-white mx-auto mb-4" />
+            <h1 className="text-display text-3xl text-white mb-3">{t('unsubscribe.doneTitle')}</h1>
             <p className="text-surface-400">{t('unsubscribe.doneText')}</p>
           </>
         ) : !token ? (
           <>
-            <XCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-surface-100 mb-2">{t('unsubscribe.invalidTitle')}</h1>
+            <XCircle className="w-12 h-12 text-surface-400 mx-auto mb-4" />
+            <h1 className="text-display text-3xl text-white mb-3">{t('unsubscribe.invalidTitle')}</h1>
             <p className="text-surface-400">{t('unsubscribe.invalidText')}</p>
           </>
         ) : (
           <>
-            <MailX className="w-12 h-12 text-primary-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-surface-100 mb-2">{t('unsubscribe.title')}</h1>
+            <MailX className="w-12 h-12 text-surface-300 mx-auto mb-4" />
+            <h1 className="text-display text-3xl text-white mb-3">{t('unsubscribe.title')}</h1>
             <p className="text-surface-400 mb-6">{t('unsubscribe.text')}</p>
             {status === 'error' && (
               <p className="text-sm text-rose-400/80 mb-4">{t('unsubscribe.error')}</p>

@@ -83,6 +83,7 @@
     "unread_other": "{{count}} nowych rzeczy"
   },
   "my": {
+    "kicker": "Strefa podopiecznego",
     "title": "Mój plan treningowy",
     "subtitle": "Twoje treningi indywidualne i zadania. Odhacz zrobione — przy treningu oceń też wysiłek.",
     "back": "Wróć do konta",

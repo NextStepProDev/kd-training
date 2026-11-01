@@ -12,10 +12,11 @@ export function heatLevel(count: number): HeatLevel {
   return count === 1 ? 1 : 2
 }
 
+/** Brightness steps on the graphite page: an empty day is barely there, a busy one is white. */
 export const HEAT_CLASSES: Record<HeatLevel, string> = {
   0: 'bg-surface-800',
-  1: 'bg-primary-900',
-  2: 'bg-primary-500',
+  1: 'bg-surface-500',
+  2: 'bg-white',
 }
 
 /** Labelled swatches beat "less → more", which says nothing about what a shade means. */

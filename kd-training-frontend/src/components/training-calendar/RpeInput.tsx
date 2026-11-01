@@ -1,11 +1,14 @@
 import clsx from 'clsx'
 
-/** Bands match how the coach reads the number: easy / working / hard. */
+/**
+ * Bands match how the coach reads the number: easy / working / hard — told apart by brightness, the
+ * same three steps as the intensity bar in the stats, so the two read alike.
+ */
 function bandClass(value: number, selected: boolean): string {
   if (!selected) return 'bg-surface-800 text-surface-400 hover:bg-surface-700'
-  if (value <= 4) return 'bg-emerald-600 text-white'
-  if (value <= 7) return 'bg-amber-600 text-white'
-  return 'bg-rose-600 text-white'
+  if (value <= 4) return 'bg-surface-600 text-white'
+  if (value <= 7) return 'bg-surface-400 text-surface-950'
+  return 'bg-white text-surface-950'
 }
 
 interface RpeInputProps {

@@ -25,7 +25,7 @@ export function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <GlobalLoadingBar />
-      {!isHome && <Navbar />}
+      <Navbar overlay={isHome} />
       <main className="flex-1">
         <div key={location.pathname}>
           <Outlet />

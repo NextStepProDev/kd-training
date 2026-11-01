@@ -130,13 +130,18 @@ describe('TrainingCalendar', () => {
     await waitFor(() => expect(screen.getAllByRole('button', { name: /^Dodaj trening/ })).toHaveLength(42))
   })
 
-  it('opens on the week view on a phone', async () => {
-    // A month at phone width is a grid of dots. Someone opening the calendar to see today's session
-    // should not have to tap to find it, so the small screen starts on the week instead.
+  it('opens on the month dot grid on a phone, and the week is one tap away', async () => {
+    // The phone used to open on the week so that "what am I doing today" needed no tap. The owner
+    // chose the month instead (2026-11-01): the whole plan at a glance, today marked in the grid,
+    // a day's trainings one tap away in its sheet.
     mockCompactViewport()
+    const user = userEvent.setup()
 
     renderCalendar(stubAdapter([training()]))
 
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /^Pokaż dzień/ })).toHaveLength(42))
+
+    await user.click(screen.getByRole('button', { name: 'Tydzień' }))
     await waitFor(() => expect(screen.getAllByRole('button', { name: /^Dodaj trening/ })).toHaveLength(7))
     await screen.findByText('Siła')
   })
@@ -149,14 +154,13 @@ describe('TrainingCalendar', () => {
     mockViewport(width)
     const user = userEvent.setup()
     renderCalendar(stubAdapter([training()]))
-    await screen.findByRole('button', { name: 'Miesiąc' })
 
-    // The week stacks into full-width rows: seven day headers, no seven-column grid
-    await waitFor(() => expect(screen.getAllByRole('button', { name: /^Dodaj trening/ })).toHaveLength(7))
-
-    // And the month is the dot grid with its day sheet, exactly as on a phone
-    await user.click(screen.getByRole('button', { name: 'Miesiąc' }))
+    // The month is the dot grid with its day sheet, exactly as on a phone
     await waitFor(() => expect(screen.getAllByRole('button', { name: /^Pokaż dzień/ })).toHaveLength(42))
+
+    // And the week stacks into full-width rows: seven day headers, no seven-column grid
+    await user.click(screen.getByRole('button', { name: 'Tydzień' }))
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /^Dodaj trening/ })).toHaveLength(7))
   })
 
   it('keeps the seven-column grid from 1024px up', async () => {

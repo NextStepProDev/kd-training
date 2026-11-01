@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import i18n from '../../i18n'
 import { Button } from './Button'
+import { authCardClass, authStageClass } from '../auth/authCard'
 
 interface Props {
   children: ReactNode
@@ -31,8 +32,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       const t = i18n.t.bind(i18n)
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800 text-center">
+        <div className={authStageClass}>
+          <div className={`${authCardClass} text-center`}>
             <h2 className="text-xl font-bold text-surface-100 mb-2">
               {t('boundary.title', { ns: 'errors' })}
             </h2>

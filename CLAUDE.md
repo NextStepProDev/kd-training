@@ -154,7 +154,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Ścieżka | Komponent | Opis |
 |---------|-----------|------|
-| `/` | HomePage | Wizytówka — **zaślepka** do czasu treści i projektu od klienta |
+| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Treningi i opieka, Z pracy, Umów trening. Teksty z briefu; prezentacja Kacpra i zdjęcia to **zaślepki** |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
@@ -310,7 +310,9 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 2. Dane administratora → polityka prywatności (sekcja 1), `AdminUserDataExportService.readme()`,
    zgody marketingowe (`auth.json`, `settings.json`); adres kontaktowy → `config/site.ts`,
    `calendar.json` (`withdrawNote`).
-3. Treść i projekt wizytówki, logo, ikony, `og-default.png` (dziś zaślepki).
+3. Treść wizytówki: prezentacja Kacpra (`home.about.body` w `locales/pl/common.json`, dziś oznaczona
+   zaślepka), zdjęcia do `public/images/` + nazwy w `HOME_PHOTOS` (`config/site.ts`; puste = zaślepka
+   bez żadnego zapytania). Do tego logo, ikony, `og-default.png` (dziś zaślepki).
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
    `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
    `TermsPage.tsx` to szkic do podmiany po danych usługodawcy i weryfikacji prawnej.

@@ -5,6 +5,7 @@ import { resetPassword } from '../api/auth'
 import { Button } from '../components/ui/Button'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { inputClassMuted } from '../utils/fieldClass'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -44,8 +45,8 @@ export function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800 text-center">
+      <div className={authStageClass}>
+        <div className={`${authCardClass} text-center`}>
           <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -62,8 +63,8 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800">
+    <div className={authStageClass}>
+      <div className={authCardClass}>
         <h1 className="text-2xl font-bold text-surface-100 mb-6 text-center">{t('resetPassword.title')}</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">

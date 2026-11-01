@@ -37,13 +37,11 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
   // day cell can hold a dot, not a card, so the content moves into a sheet behind a tap.
   const compactViewport = useCompactViewport()
 
-  // Which view the calendar opens on, decided once on mount. A wide screen gets the month: planning
-  // happens in blocks longer than a week, and the range costs the same three queries either way. A
-  // phone opens on the week, because there the month is a grid of dots — someone reaching for "what
-  // am I doing today" should not have to tap to find out. Deliberately not reactive to a later
-  // resize: this is a starting point, and yanking the view out from under a reader who rotated the
-  // phone would be worse than a stale choice they can change with the switch above.
-  const [view, setView] = useState<CalendarView>(() => (compactViewport ? 'week' : 'month'))
+  // The calendar opens on the month everywhere. On a wide screen planning happens in blocks longer
+  // than a week; on a phone the month is the dot grid, the whole plan at a glance with today marked,
+  // and a day's trainings one tap away in its sheet. (The phone used to open on the week so that
+  // "what am I doing today" needed no tap — the owner chose the overview instead, 2026-11-01.)
+  const [view, setView] = useState<CalendarView>('month')
 
   const [anchor, setAnchor] = useState(todayIso())
   const [formDate, setFormDate] = useState<string | null>(null)

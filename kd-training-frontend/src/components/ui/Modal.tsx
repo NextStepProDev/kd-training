@@ -128,7 +128,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         className={`relative w-full ${SIZE_CLASS[size]} max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-surface-900 shadow-glow animate-rise focus:outline-none`}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-white/[0.07] bg-surface-900/95 backdrop-blur">
-          <h2 id={titleId} className="font-display text-lg font-semibold tracking-tight text-white">{title}</h2>
+          <h2 id={titleId} className="text-lg font-semibold tracking-tight text-white">{title}</h2>
           <button
             onClick={onClose}
             aria-label={t('actions.close')}

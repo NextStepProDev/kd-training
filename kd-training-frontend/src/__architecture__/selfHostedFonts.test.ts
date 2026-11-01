@@ -28,7 +28,7 @@ describe('self-hosted fonts', () => {
   })
 
   it('shouldBundleTheDisplayAndTextFaces', () => {
-    expect(files['/src/main.tsx']).toContain("import '@fontsource-variable/archivo/wdth.css'")
+    expect(files['/src/main.tsx']).toContain("import '@fontsource/anton/index.css'")
     expect(files['/src/main.tsx']).toContain("import '@fontsource-variable/inter/wght.css'")
   })
 })

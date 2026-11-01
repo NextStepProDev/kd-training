@@ -2,34 +2,35 @@
 
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Archivo Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Anton", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 
-  /* Neutral ramp, deepened for the dark "cinematic" look. 500 is the muted-text step (used ~80
-     times) and stays at least 4.5:1 against 900 and 950, so secondary text passes WCAG AA. */
+  /* Neutral ramp: deep graphite, not black. Pure #050505 read as a hole rather than a surface
+     ("za czarno", 2026-11-01). 500 is the muted-text step (used ~80 times) and stays above 5:1
+     against 950, 900 and 850, so secondary text passes WCAG AA on every surface. */
   --color-surface-50: #fafafa;
   --color-surface-100: #f2f2f2;
   --color-surface-200: #e3e3e3;
-  --color-surface-300: #cfcfcf;
-  --color-surface-400: #a6a6a6;
-  --color-surface-500: #808080;
-  --color-surface-600: #4a4a4a;
-  --color-surface-700: #2e2e2e;
-  --color-surface-800: #1c1c1c;
-  --color-surface-850: #151515;
-  --color-surface-900: #0f0f0f;
-  --color-surface-950: #050505;
+  --color-surface-300: #d4d4d4;
+  --color-surface-400: #b0b0b0;
+  --color-surface-500: #939393;
+  --color-surface-600: #555555;
+  --color-surface-700: #383838;
+  --color-surface-800: #2a2a2a;
+  --color-surface-850: #212121;
+  --color-surface-900: #1b1b1b;
+  --color-surface-950: #141414;
   /* Accent scale, monochrome on purpose: the client asked for black and white. Kept as a scale
      (rather than inlining white) so a real accent colour from the design is a one-place change. */
   --color-primary-50: #ffffff;
   --color-primary-100: #fafafa;
   --color-primary-200: #f2f2f2;
   --color-primary-300: #e3e3e3;
-  --color-primary-400: #cfcfcf;
-  --color-primary-500: #a6a6a6;
-  --color-primary-600: #4a4a4a;
-  --color-primary-700: #2e2e2e;
-  --color-primary-800: #1c1c1c;
-  --color-primary-900: #0f0f0f;
+  --color-primary-400: #d4d4d4;
+  --color-primary-500: #b0b0b0;
+  --color-primary-600: #555555;
+  --color-primary-700: #383838;
+  --color-primary-800: #2a2a2a;
+  --color-primary-900: #1b1b1b;
   /* Medal tones, used only inside the trophy case. Lightened from the real metals so they hold up
      on the dark surface — raw gold and bronze go muddy at this background. */
   --color-medal-gold: #e5c76b;
@@ -46,21 +47,29 @@
   }
 }
 
-/* Condensed uppercase headline — the one typographic signature of the site. Sizes are set where
-   it is used; line-height and tracking belong to the face, so they live here. */
+/* Tall condensed poster headline (Anton) — the one typographic signature of the site. Anton has a
+   single weight, so nothing small is set in it: labels, numbers and dialog titles stay in Inter.
+   Sizes are set where it is used; line-height and tracking belong to the face, so they live here. */
 @utility text-display {
   font-family: var(--font-display);
-  font-stretch: 75%;
-  font-weight: 800;
+  font-weight: 400;
   text-transform: uppercase;
-  line-height: 0.92;
-  letter-spacing: -0.005em;
+  line-height: 0.95;
+  letter-spacing: 0.005em;
+}
+
+/* The outlined half of a headline ("KACPER" solid, "DĄBROWSKI" as a contour). */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-surface-50);
+  @media (width >= 40rem) {
+    -webkit-text-stroke-width: 2px;
+  }
 }
 
 /* Small spaced-out label above a headline ("Trener personalny", "01"). */
 @utility kicker {
-  font-family: var(--font-display);
-  font-stretch: 100%;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -87,6 +96,9 @@
 
 body {
   @apply bg-surface-950 text-surface-100 antialiased;
+  /* A soft light from above the page, so the graphite has a direction instead of reading flat. */
+  background-image: radial-gradient(90% 55% at 50% -10%, rgb(255 255 255 / 0.07), transparent 70%);
+  background-repeat: no-repeat;
   font-feature-settings: "cv11", "ss01";
 }
 

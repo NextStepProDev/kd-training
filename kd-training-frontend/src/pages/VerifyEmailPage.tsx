@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { verifyEmail } from '../api/auth'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
 
 export function VerifyEmailPage() {
   const { t } = useTranslation('auth')
@@ -31,8 +32,8 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800 text-center">
+    <div className={authStageClass}>
+      <div className={`${authCardClass} text-center`}>
         {status === 'success' ? (
           <>
             <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">

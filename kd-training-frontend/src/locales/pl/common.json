@@ -6,6 +6,8 @@
     "settings": "Ustawienia",
     "myAccount": "Moje konto",
     "admin": "Panel admina",
+    "brandHome": "KD Training — strona główna",
+    "menu": "Menu",
     "openMenu": "Otwórz menu",
     "closeMenu": "Zamknij menu"
   },
@@ -17,7 +19,42 @@
     "seoDescription": "Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.",
     "login": "Zaloguj się",
     "myAccount": "Moje konto",
-    "contact": "Napisz do mnie"
+    "contact": "Napisz do mnie",
+    "scroll": "Przewiń w dół",
+    "heroPhotoAlt": "Kacper Dąbrowski podczas treningu",
+    "about": {
+      "kicker": "01",
+      "title": "O mnie",
+      "body": "Tu pojawi się krótka prezentacja: kim jestem, jak pracuję i z kim. [Treść od Kacpra — do uzupełnienia przed startem.]"
+    },
+    "offer": {
+      "kicker": "02",
+      "title": "Treningi i opieka",
+      "items": [
+        {
+          "title": "Trening personalny 1:1",
+          "body": "Indywidualne treningi pod okiem trenera, w stałych terminach ustalonych razem."
+        },
+        {
+          "title": "Twoja strefa podopiecznego",
+          "body": "Po zalogowaniu masz swój plan, historię treningów oraz wskazówki, zdjęcia i filmy przygotowane tylko dla Ciebie."
+        },
+        {
+          "title": "Kontakt z trenerem",
+          "body": "Pytanie między treningami? Zadajesz je w swojej strefie i tam dostajesz odpowiedź."
+        }
+      ]
+    },
+    "work": {
+      "kicker": "03",
+      "title": "Z pracy",
+      "photoAlt": "Kacper Dąbrowski podczas pracy z podopiecznym — zdjęcie {{n}}"
+    },
+    "cta": {
+      "kicker": "04",
+      "title": "Umów trening",
+      "body": "Napisz, czego szukasz — odpiszę i ustalimy termin."
+    }
   },
   "admin": {
     "title": "Panel administratora",

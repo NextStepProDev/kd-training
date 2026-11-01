@@ -6,6 +6,8 @@ import { consumeRedirectPath } from '../utils/redirect'
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 import { Button } from '../components/ui/Button'
 import { inputClassMuted } from '../utils/fieldClass'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
+import { Brand } from '../components/layout/Brand'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -39,10 +41,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800">
+    <div className={authStageClass}>
+      <div className={authCardClass}>
         <div className="text-center mb-6">
-          <p className="text-2xl font-bold uppercase tracking-[0.2em] text-white">KD Training</p>
+          <Brand size="lg" />
           <p className="text-surface-400 mt-1">{t('login.title')}</p>
         </div>
 

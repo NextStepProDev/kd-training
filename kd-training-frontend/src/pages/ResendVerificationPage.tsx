@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { resendVerification } from '../api/auth'
 import { Button } from '../components/ui/Button'
 import { inputClassMuted } from '../utils/fieldClass'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -30,8 +31,8 @@ export function ResendVerificationPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800">
+    <div className={authStageClass}>
+      <div className={authCardClass}>
         <h1 className="text-2xl font-bold text-surface-100 mb-2 text-center">{t('resendVerification.title')}</h1>
         <p className="text-surface-400 text-sm text-center mb-6">{t('resendVerification.description')}</p>
 

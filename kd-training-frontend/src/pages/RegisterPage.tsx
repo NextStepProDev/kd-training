@@ -2,20 +2,19 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
+import { inputClassInvalid, inputClassMuted } from '../utils/fieldClass'
 import { registerUser } from '../api/auth'
 import { validatePassword, validatePhone, validateName, validateEmail } from '../utils/validation'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { Button } from '../components/ui/Button'
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
+import { authCardClass, authStageClass } from '../components/auth/authCard'
+import { Brand } from '../components/layout/Brand'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
 type FieldKey = 'firstName' | 'lastName' | 'email' | 'phone' | 'password' | 'confirmPassword'
 
-const inputBase =
-  'w-full px-3 py-2 bg-surface-800 border rounded-lg text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:border-transparent'
-const inputNormal = 'border-surface-700 focus:ring-primary-500'
-const inputError = 'border-rose-500 focus:ring-rose-500'
 
 export function RegisterPage() {
   const { t, i18n } = useTranslation('auth')
@@ -102,8 +101,8 @@ export function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800 text-center">
+      <div className={authStageClass}>
+        <div className={`${authCardClass} text-center`}>
           <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -126,10 +125,10 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8">
-      <div className="bg-surface-900 rounded-xl p-8 max-w-md w-full border border-surface-800">
+    <div className={authStageClass}>
+      <div className={authCardClass}>
         <div className="text-center mb-6">
-          <p className="text-2xl font-bold uppercase tracking-[0.2em] text-white">KD Training</p>
+          <Brand size="lg" />
           <p className="text-surface-400 mt-1">{t('register.title')}</p>
         </div>
 
@@ -146,7 +145,7 @@ export function RegisterPage() {
                 minLength={3}
                 value={form.firstName}
                 onChange={(e) => updateField('firstName', e.target.value)}
-                className={clsx(inputBase, fieldErrors.firstName ? inputError : inputNormal)}
+                className={fieldErrors.firstName ? inputClassInvalid : inputClassMuted}
                 aria-invalid={!!fieldErrors.firstName}
                 aria-describedby={fieldErrors.firstName ? 'firstName-error' : undefined}
               />
@@ -163,7 +162,7 @@ export function RegisterPage() {
                 minLength={3}
                 value={form.lastName}
                 onChange={(e) => updateField('lastName', e.target.value)}
-                className={clsx(inputBase, fieldErrors.lastName ? inputError : inputNormal)}
+                className={fieldErrors.lastName ? inputClassInvalid : inputClassMuted}
                 aria-invalid={!!fieldErrors.lastName}
                 aria-describedby={fieldErrors.lastName ? 'lastName-error' : undefined}
               />
@@ -181,7 +180,7 @@ export function RegisterPage() {
               required
               value={form.email}
               onChange={(e) => updateField('email', e.target.value)}
-              className={clsx(inputBase, fieldErrors.email ? inputError : inputNormal)}
+              className={fieldErrors.email ? inputClassInvalid : inputClassMuted}
               placeholder={t('register.emailPlaceholder')}
               aria-invalid={!!fieldErrors.email}
               aria-describedby={fieldErrors.email ? 'email-error' : undefined}
@@ -199,7 +198,7 @@ export function RegisterPage() {
               required
               value={form.phone}
               onChange={(e) => updateField('phone', e.target.value)}
-              className={clsx(inputBase, fieldErrors.phone ? inputError : inputNormal)}
+              className={fieldErrors.phone ? inputClassInvalid : inputClassMuted}
               placeholder={t('register.phonePlaceholder')}
               aria-invalid={!!fieldErrors.phone}
               aria-describedby={fieldErrors.phone ? 'phone-error' : undefined}
@@ -218,7 +217,7 @@ export function RegisterPage() {
               minLength={10}
               value={form.password}
               onChange={(e) => updateField('password', e.target.value)}
-              className={clsx(inputBase, fieldErrors.password ? inputError : inputNormal)}
+              className={fieldErrors.password ? inputClassInvalid : inputClassMuted}
               aria-invalid={!!fieldErrors.password}
               aria-describedby={fieldErrors.password ? 'password-error' : undefined}
             />
@@ -238,7 +237,7 @@ export function RegisterPage() {
               required
               value={form.confirmPassword}
               onChange={(e) => updateField('confirmPassword', e.target.value)}
-              className={clsx(inputBase, fieldErrors.confirmPassword ? inputError : inputNormal)}
+              className={fieldErrors.confirmPassword ? inputClassInvalid : inputClassMuted}
               aria-invalid={!!fieldErrors.confirmPassword}
               aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
             />

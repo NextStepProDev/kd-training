@@ -2,15 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
+import { inputClass, inputClassInvalid } from '../../utils/fieldClass'
 import { useAuth } from '../../context/AuthContext'
 import { authApi } from '../../api/client'
 import { Button } from '../ui/Button'
 import { getMissingProfileFields, type ProfileField } from '../../utils/profileCompletion'
 
-const inputBase =
-  'w-full px-3 py-2 bg-surface-800 border rounded-lg text-surface-100 focus:outline-none focus:ring-2'
-const inputNormal = 'border-surface-700 focus:ring-primary-500'
-const inputError = 'border-rose-500 focus:ring-rose-500'
 
 const FIELD_INPUT_TYPE: Record<ProfileField, string> = { firstName: 'text', lastName: 'text', phone: 'tel' }
 const FIELD_AUTOCOMPLETE: Record<ProfileField, string> = { firstName: 'given-name', lastName: 'family-name', phone: 'tel' }
@@ -119,7 +116,7 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
               autoComplete={FIELD_AUTOCOMPLETE[field]}
               value={values[field]}
               onChange={(e) => setField(field, e.target.value)}
-              className={clsx(inputBase, fieldError ? inputError : inputNormal)}
+              className={fieldError ? inputClassInvalid : inputClass}
               autoFocus={index === 0}
               aria-invalid={!!fieldError}
               aria-describedby={fieldError ? `completion-${field}-error` : undefined}

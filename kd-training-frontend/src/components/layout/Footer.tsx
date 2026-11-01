@@ -21,7 +21,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="kicker mb-4">{t('footer.contact')}</h4>
+            {/* h2, not h4: the page above ends on an h2, and a jump of two levels reads to a screen
+                reader as a section that is missing. */}
+            <h2 className="kicker mb-4">{t('footer.contact')}</h2>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="group inline-flex items-center gap-2 text-base text-surface-100 hover:text-white transition-colors"

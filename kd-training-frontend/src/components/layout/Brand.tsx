@@ -15,6 +15,10 @@ export function Brand({ size = 'md', className }: BrandProps) {
   return (
     <span className={clsx('inline-flex items-baseline gap-[0.45em] uppercase leading-none text-white', SIZES[size], className)}>
       <span className="font-display tracking-[0.08em] text-[1.25em]">KD</span>
+      {/* A real space between the two words: the gap is drawn by flex, but the accessible name is read
+          from the text, and without it the wordmark was announced as "KDTraining" — a name the
+          home link's "KD Training — strona główna" label then failed to contain. */}
+      {' '}
       <span className="font-light tracking-[0.32em] text-surface-300">Training</span>
     </span>
   )

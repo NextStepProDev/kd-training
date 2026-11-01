@@ -41,7 +41,7 @@ export function TermsPage() {
           ]} />
           <p className="text-surface-400 text-sm mt-3 leading-relaxed">
             Kontakt z Usługodawcą:{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary-400 hover:text-primary-300 transition-colors">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors">
               {CONTACT_EMAIL}
             </a>
           </p>
@@ -114,7 +114,7 @@ export function TermsPage() {
         <Section title="§10. Dane osobowe">
           <p className="text-surface-400 leading-relaxed">
             Zasady przetwarzania danych osobowych opisuje{' '}
-            <Link to="/polityka-prywatnosci" className="text-primary-400 hover:text-primary-300 underline">
+            <Link to="/polityka-prywatnosci" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               Polityka prywatności
             </Link>.
           </p>

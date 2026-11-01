@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { ATHLETE, STATS, isoDate, signInAs } from './support/session'
 
 /**
  * The year-long activity map on the client's plan page. A year is 53 week columns: at a fixed 10px
@@ -11,50 +12,10 @@ import { test, expect, type Page } from '@playwright/test'
  */
 
 const today = new Date()
-const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-const ATHLETE = {
-  id: 'b0000000-0000-0000-0000-000000000001',
-  email: 'anna@example.test',
-  firstName: 'Anna',
-  lastName: 'Nowak',
-  phone: '500100200',
-  role: 'USER',
-  isAdmin: false,
-  superAdmin: false,
-  privacyAccepted: true,
-  termsAccepted: true,
-  marketingConsent: false,
-  isAthlete: true,
-  trainingConsent: true,
-  preferredLanguage: 'pl',
-  hasPassword: true,
-  avatarUrl: null,
-  createdAt: '2026-01-01T10:00:00Z',
-}
-
-const STATS = {
-  thisMonthCount: 3, prevMonthCount: 2, totalCount: 40, firstActivityDate: '2026-01-05',
-  currentStreakWeeks: 2, bestStreakWeeks: 5, avgPerMonth: 4,
-  heatmap: { [iso(today)]: 2 },
-  attendancePercent: 80, avgRpeOverall: 7, avgRpeRecent: 7,
-  rpeDistribution: { light: 1, medium: 2, hard: 1 },
-  tasks: { thisMonthDone: 0, thisMonthDue: 0, windowDone: 0, windowDue: 0, completionPercent: null },
-}
+const iso = isoDate
 
 async function signInAsAthlete(page: Page) {
-  await page.route(/^https?:\/\/[^/]+\/api\//, route => {
-    const path = new URL(route.request().url()).pathname
-    if (path === '/api/user/me') return route.fulfill({ json: ATHLETE })
-    if (path === '/api/user/my-training/stats') return route.fulfill({ json: STATS })
-    return route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
-  })
-  await page.addInitScript(() => {
-    localStorage.setItem('p1_access_token', 'stub')
-    localStorage.setItem('p1_refresh_token', 'stub')
-    localStorage.setItem('p1_expires_at', String(Date.now() + 3_600_000))
-  })
+  await signInAs(page, ATHLETE, { '/api/user/my-training/stats': STATS })
 }
 
 test.describe('Mapa aktywności', () => {

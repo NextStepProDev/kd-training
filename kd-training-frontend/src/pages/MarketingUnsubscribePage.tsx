@@ -61,7 +61,7 @@ export function MarketingUnsubscribePage() {
             </Button>
           </>
         )}
-        <Link to="/" className="inline-block mt-6 text-sm text-primary-400 hover:text-primary-300">
+        <Link to="/" className="inline-block mt-6 text-sm text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
           {t('unsubscribe.backHome')}
         </Link>
       </div>

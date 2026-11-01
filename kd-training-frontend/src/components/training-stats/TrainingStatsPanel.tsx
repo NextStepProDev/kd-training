@@ -142,7 +142,8 @@ function Heatmap({ heatmap, label, legendLabel }: {
           8px floor so a cell stays a cell. Below that floor — a phone — the box scrolls, and it
           opens on the RIGHT: the newest weeks are what a client looks for, and a box that opened
           on the left showed a year ago with last week hidden past the edge. */}
-      <div ref={scrollRef} className="overflow-x-auto [scrollbar-width:thin]">
+      {/* Focusable and named, so the arrow keys can scroll it where it overflows (a phone). */}
+      <div ref={scrollRef} tabIndex={0} role="region" aria-label={label} className="overflow-x-auto [scrollbar-width:thin]">
         <div
           role="img"
           aria-label={label}

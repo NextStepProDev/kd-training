@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { dayOfMonth, isOutsideMonth, todayIso, weekdayShort } from '../../utils/calendarRange'
+import { dayOfMonth, formatLongDate, isOutsideMonth, todayIso, weekdayShort } from '../../utils/calendarRange'
 import type { PersonalTraining } from '../../types'
 
 /** Beyond this the dots stop being countable and a number says it better. */
@@ -61,7 +61,9 @@ export function MonthDotGrid({
               key={date}
               type="button"
               onClick={() => onSelectDay(date)}
-              aria-label={`${labels.openDay} ${date}`}
+              // The date spelled out, so the cell's visible number ("2") is part of its name — "Pokaż
+              // dzień 2026-11-02" read the ISO string aloud and did not contain the "2" on screen.
+              aria-label={`${labels.openDay} ${formatLongDate(date)}`}
               className={clsx(
                 'relative flex aspect-square flex-col items-center justify-start gap-1 rounded-xl',
                 'border p-1 transition-colors',

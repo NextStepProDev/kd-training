@@ -149,7 +149,7 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
                 />
                 <label htmlFor="completionPrivacy" className={clsx('text-sm', privacyError ? 'text-rose-300' : 'text-surface-300')}>
                   {t('register.acceptPrivacyPrefix', { ns: 'auth' })}{' '}
-                  <Link to="/polityka-prywatnosci" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                  <Link to="/polityka-prywatnosci" target="_blank" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
                     {t('register.privacyLink', { ns: 'auth' })}
                   </Link>
                 </label>
@@ -178,7 +178,7 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
                 />
                 <label htmlFor="completionTerms" className={clsx('text-sm', termsError ? 'text-rose-300' : 'text-surface-300')}>
                   {t('register.acceptTermsPrefix', { ns: 'auth' })}{' '}
-                  <Link to="/regulamin" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                  <Link to="/regulamin" target="_blank" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
                     {t('register.termsLink', { ns: 'auth' })}
                   </Link>
                 </label>

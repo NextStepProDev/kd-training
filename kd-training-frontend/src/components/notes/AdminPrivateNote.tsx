@@ -147,7 +147,7 @@ export function AdminPrivateNote({ anchor }: { anchor: NoteAnchor }) {
           </p>
           {(clipped || expanded) && (
             <button type="button" onClick={() => setExpanded(v => !v)}
-              className="text-xs text-primary-400 hover:text-primary-300">
+              className="text-xs text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {expanded ? t('notes.showLess') : t('notes.showAll')}
             </button>
           )}

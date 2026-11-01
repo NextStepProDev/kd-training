@@ -81,6 +81,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - `fetchApi` ponawia **tylko** `GET`/`HEAD`. Ponowiony zapis tworzy drugi wpis.
 - `staleTime: 0` jest błędem (lawina żądań przy powrocie na kartę) — jest `SHORT_STALE_MS` z `utils/queryFreshness.ts`.
 - Surowy `<input type="date">` poza `components/ui/DateInput` wywala build.
+- Kluczowe ekrany przechodzą **axe** (WCAG 2.1 AA, telefon i komputer) — `e2e/a11y.spec.ts`. Nowy ekran dopisz do listy; fałszywe sesje i odpowiedzi API są w `e2e/support/session.ts`. Przycisk z samą ikoną zawsze dostaje `aria-label`, link w tekście jest podkreślony (nie tylko jaśniejszy).
 
 **Obrazy i CI → [`INFRA.md`](INFRA.md)**
 - Obraz **pakuje** artefakt, który przeszedł testy (`app.jar` / `dist/` jadą z joba testowego artefaktem workflow). **`Dockerfile`, który kompiluje aplikację, to regres** — testowana i wdrażana byłaby inna kompilacja. Ręczny `docker build` wymaga wcześniej `./gradlew clean bootJar && cp build/libs/*.jar app.jar` (front: `npm run build`).

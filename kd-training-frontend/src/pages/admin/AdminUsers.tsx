@@ -342,6 +342,8 @@ export function AdminUsers() {
                             <Button
                               variant="danger"
                               size="sm"
+                              aria-label={t('users.deleteAccount', { name: `${u.firstName} ${u.lastName}` })}
+                              title={t('users.deleteAccount', { name: `${u.firstName} ${u.lastName}` })}
                               onClick={() => { setNotifyOnDelete(true); setToDelete(u) }}
                             >
                               <Trash2 className="w-4 h-4" />

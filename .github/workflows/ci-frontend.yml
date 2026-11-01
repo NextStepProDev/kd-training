@@ -97,6 +97,9 @@ jobs:
           # Default is `warn`: an empty upload would go green here and fail two jobs later as
           # "artifact not found", nowhere near the cause.
           if-no-files-found: error
+          # The default skips dot-directories, so public/.well-known/security.txt would never reach
+          # the image while the build stayed green.
+          include-hidden-files: true
           # 7 days, not 1: re-running the docker job is now a download, so a bundle that has expired
           # turns "Re-run failed jobs" into "artifact not found" days after the fact. Storage is
           # free on a public repository, so the shorter window buys nothing.
@@ -137,6 +140,12 @@ jobs:
           if [ ! -f kd-training-frontend/dist/index.html ] || [ ! -d kd-training-frontend/dist/assets ]; then
             echo "::error::dist/index.html or dist/assets is missing after download-artifact — the artifact layout changed."
             ls -R kd-training-frontend/dist | head -20
+            exit 1
+          fi
+          # Dot-directories travel only with include-hidden-files on the upload; without it the image
+          # ships with no security.txt and nothing else notices.
+          if [ ! -f kd-training-frontend/dist/.well-known/security.txt ]; then
+            echo "::error::dist/.well-known/security.txt is missing — check include-hidden-files on the upload."
             exit 1
           fi
           echo "bundle: $(find kd-training-frontend/dist -type f | wc -l) files"

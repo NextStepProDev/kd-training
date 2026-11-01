@@ -17,6 +17,7 @@ import pl.kdtraining.domain.user.UserRepository;
 import pl.kdtraining.domain.user.UserRole;
 import pl.kdtraining.infrastructure.i18n.MessageService;
 import pl.kdtraining.infrastructure.mail.AuthMailService;
+import pl.kdtraining.infrastructure.mail.MailDispatcher;
 import pl.kdtraining.infrastructure.security.JwtService;
 import pl.kdtraining.infrastructure.security.PasswordPolicyValidator;
 
@@ -123,7 +124,7 @@ public class AuthService {
 
         if (adminEmailConfig.isAdminEmail(user.getEmail())) {
             user.setRole(UserRole.ADMIN);
-            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during registration", user.getEmail());
+            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during registration", MailDispatcher.maskAddress(user.getEmail()));
         }
 
         try {
@@ -132,10 +133,10 @@ public class AuthService {
             // Two submissions of the same address racing past the existence check above (a double click,
             // or the client retrying a request that already landed) hit the users.email UNIQUE index.
             // Report it as the ordinary "this e-mail is taken" 400, not a 500.
-            log.debug("Registration lost the race on a duplicate e-mail: {}", user.getEmail());
+            log.debug("Registration lost the race on a duplicate e-mail: {}", MailDispatcher.maskAddress(user.getEmail()));
             throw new IllegalArgumentException(msg.get("auth.email.exists"));
         }
-        log.info("User registered: {}", user.getEmail());
+        log.info("User registered: {}", MailDispatcher.maskAddress(user.getEmail()));
 
         sendVerificationEmail(user);
 
@@ -179,7 +180,7 @@ public class AuthService {
         boolean passwordMatches = passwordEncoder.matches(request.password(), user.getPasswordHash());
 
         if (user.isAccountLocked()) {
-            log.warn("Login attempt for locked account: {}", request.email());
+            log.warn("Login attempt for locked account: user {}", user.getId());
             if (passwordMatches) {
                 throw new IllegalStateException(msg.get("auth.login.locked", user.getRemainingLockoutMinutes()));
             }
@@ -187,12 +188,12 @@ public class AuthService {
         }
 
         if (!passwordMatches) {
-            log.debug("Invalid password attempt for: {}", request.email());
+            log.debug("Invalid password attempt for user {}", user.getId());
             // Increment failed attempts and potentially lock the account
             user.incrementFailedLoginAttempts();
             userRepository.save(user);
             if (user.isAccountLocked()) {
-                log.warn("Account locked due to failed attempts: {}", request.email());
+                log.warn("Account locked due to failed attempts: user {}", user.getId());
                 throw new IllegalStateException(msg.get("auth.login.locked", user.getRemainingLockoutMinutes()));
             }
             throw new IllegalArgumentException(msg.get("auth.login.invalid"));
@@ -211,10 +212,10 @@ public class AuthService {
         if (!user.isAdmin() && adminEmailConfig.isAdminEmail(user.getEmail())) {
             user.setRole(UserRole.ADMIN);
             userRepository.save(user);
-            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during login", user.getEmail());
+            log.info("AUTO-ADMIN-PROMOTION: user {} promoted to ADMIN during login", user.getId());
         }
 
-        log.info("User logged in: {}", user.getEmail());
+        log.info("User logged in: {}", user.getId());
         return generateTokens(user);
     }
 
@@ -235,7 +236,7 @@ public class AuthService {
         authMailService.sendWelcomeEmail(user);
         authMailService.sendNewUserAdminNotification(user);
 
-        log.info("Email verified for: {}", user.getEmail());
+        log.info("Email verified for user {}", user.getId());
         return new MessageResponse(msg.get("auth.verify.success"));
     }
 
@@ -317,7 +318,7 @@ public class AuthService {
 
         authMailService.sendPasswordChangedNotification(user);
 
-        log.info("Password reset for: {}", user.getEmail());
+        log.info("Password reset for user {}", user.getId());
         return new MessageResponse(msg.get("auth.reset.success"));
     }
 

@@ -195,6 +195,16 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         assertTrue(userRepository.findById(admin.getId()).isPresent());
     }
 
+    /** An upload route hit without a multipart body is the caller's mistake: 400, not 500. */
+    @Test
+    void shouldAnswerBadRequestToAnAvatarUploadWithoutAMultipartBody() throws Exception {
+        mockMvc.perform(post("/api/user/me/avatar")
+                .header("Authorization", "Bearer " + userToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isBadRequest());
+    }
+
     @Test
     void shouldDeleteAccount() throws Exception {
         User user = new User("delete-it@test.com", "Jan", "Kowalski", null);

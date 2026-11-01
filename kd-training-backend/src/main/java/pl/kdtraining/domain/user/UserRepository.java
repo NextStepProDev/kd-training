@@ -30,9 +30,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // Search by a fragment of first name, last name, or email (case-insensitive), paginated.
     @Query("""
         SELECT u FROM User u
-        WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :q, '%'))
-           OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :q, '%'))
-           OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :q, '%'))
+        WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\'
+           OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\'
+           OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\'
         """)
     Page<User> searchByPhrase(@Param("q") String q, Pageable pageable);
 
@@ -47,9 +47,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("""
         SELECT u FROM User u
-        WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :q, '%'))
-            OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :q, '%'))
-            OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :q, '%')))
+        WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\'
+            OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\'
+            OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '\\')
           AND LOWER(u.email) NOT IN :excluded
         """)
     Page<User> searchByPhraseExcludingEmails(@Param("q") String q,

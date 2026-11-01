@@ -102,6 +102,18 @@ class ExerciseVideoIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void shouldSearchTheLibraryForAPercentSignAsItself() throws Exception {
+        // "%" from the search box is a character to look for, not a LIKE wildcard matching everything.
+        String admin = adminToken();
+        addVideo(admin, "Ćwiczenie na barki", "https://youtu.be/" + ID);
+
+        mockMvc.perform(get("/api/admin/exercise-videos").param("query", "%")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
+    }
+
+    @Test
     void shouldRefuseToDeleteAVideoInUseAndOfferArchivingInstead() throws Exception {
         // The client's history must keep the demonstration that went with a session they already did.
         String admin = adminToken();

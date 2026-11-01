@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("JWT authentication successful for user: {}", user.getEmail());
+            log.debug("JWT authentication successful for user {}", user.getId());
 
         } catch (Exception e) {
             log.debug("Failed to process JWT token: {}", e.getMessage());

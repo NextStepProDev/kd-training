@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kdtraining.api.NotFoundException;
+import pl.kdtraining.api.Strings;
 import pl.kdtraining.api.admin.AdminUserDtos.*;
 import pl.kdtraining.api.trainingcalendar.TrainingPhotoService;
 import pl.kdtraining.config.AdminEmailConfig;
@@ -71,9 +72,9 @@ public class AdminUserService {
         boolean blank = search == null || search.isBlank();
         Page<User> result = hidden.isEmpty()
                 ? (blank ? userRepository.findAll(pageable)
-                         : userRepository.searchByPhrase(search.trim(), pageable))
+                         : userRepository.searchByPhrase(Strings.escapeLike(search.trim()), pageable))
                 : (blank ? userRepository.findAllExcludingEmails(hidden, pageable)
-                         : userRepository.searchByPhraseExcludingEmails(search.trim(), hidden, pageable));
+                         : userRepository.searchByPhraseExcludingEmails(Strings.escapeLike(search.trim()), hidden, pageable));
 
         List<AdminUserResponse> content = result.getContent().stream().map(this::toResponse).toList();
         return new PagedUsersResponse(

@@ -12,6 +12,7 @@ import pl.kdtraining.domain.user.User;
 import pl.kdtraining.domain.user.UserRepository;
 import pl.kdtraining.domain.user.UserRole;
 import pl.kdtraining.infrastructure.mail.AuthMailService;
+import pl.kdtraining.infrastructure.mail.MailDispatcher;
 
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         user.setPreferredLanguage(detectLanguage());
         user.setRole(adminEmailConfig.isAdminEmail(email) ? UserRole.ADMIN : UserRole.USER);
         if (user.isAdmin()) {
-            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during OAuth2 registration", email);
+            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during OAuth2 registration", MailDispatcher.maskAddress(email));
         }
         User savedUser = userRepository.save(user);
         authMailService.sendWelcomeEmail(savedUser);
@@ -95,7 +96,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         if (!user.isAdmin() && adminEmailConfig.isAdminEmail(user.getEmail())) {
             user.setRole(UserRole.ADMIN);
             userRepository.save(user);
-            log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during OAuth2 login", user.getEmail());
+            log.info("AUTO-ADMIN-PROMOTION: user {} promoted to ADMIN during OAuth2 login", user.getId());
         }
     }
 

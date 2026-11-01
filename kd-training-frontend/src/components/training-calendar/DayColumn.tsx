@@ -50,13 +50,16 @@ export function DayColumn({
       className={clsx(
         // Named group: the cards inside carry one of their own, and an unnamed `group-hover` matches
         // ANY `.group` ancestor — hovering the day would then reveal every card's controls at once.
-        'group/day flex flex-col rounded-2xl border bg-surface-900 p-1.5',
+        'group/day flex flex-col rounded-2xl border p-1.5',
         isToday ? 'border-white/40' : 'border-white/[0.07]',
+        // A day outside the shown month recedes by its frame, not by fading everything in it: the
+        // old opacity took the trainings inside down to 2:1 contrast, and they are still real
+        // sessions somebody may need to read.
+        outside ? 'border-dashed bg-transparent' : 'bg-surface-900',
         // Below lg the week stacks into full-width rows, and a 160px floor on each made an empty
         // day half a phone screen of nothing. The tall floor is for the seven-column desktop grid,
         // where equal heights keep the row even.
         compact ? 'min-h-24 gap-1' : 'gap-2 lg:min-h-40',
-        outside && 'opacity-35',
         pasteArmed && 'cursor-copy hover:border-white/40',
       )}
       // While the clipboard is armed the whole day is the drop target. The cards inside go inert so
@@ -67,7 +70,8 @@ export function DayColumn({
         <span className="text-xs text-surface-400">
           {showWeekday && <span className="mr-1">{weekdayShort(date)}</span>}
           <span className={clsx('font-semibold',
-            isToday ? 'inline-flex min-w-5 justify-center rounded-full bg-white px-1.5 text-surface-950' : 'text-surface-200')}>
+            isToday ? 'inline-flex min-w-5 justify-center rounded-full bg-white px-1.5 text-surface-950'
+              : outside ? 'text-surface-500' : 'text-surface-200')}>
             {dayOfMonth(date)}
           </span>
         </span>

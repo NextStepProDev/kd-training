@@ -323,18 +323,23 @@ export function SettingsPage() {
         <h2 className="text-lg font-semibold text-surface-100 mb-1">{t('marketing.title')}</h2>
         <p className="text-sm text-surface-400 mb-4">{t('marketing.description')}</p>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-surface-300">{t('marketing.toggle')}</span>
+          <span id="marketing-toggle-label" className="text-surface-300">{t('marketing.toggle')}</span>
           <button
             type="button"
             role="switch"
             aria-checked={user?.marketingConsent ?? false}
+            aria-labelledby="marketing-toggle-label"
             onClick={handleMarketingToggle}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-              user?.marketingConsent ? 'bg-primary-600' : 'bg-surface-600'
+              // On is the white track. Both states used to be a mid grey (primary-600 and
+              // surface-600 are the same value in the monochrome palette), so on and off looked alike.
+              user?.marketingConsent ? 'bg-white' : 'bg-surface-600'
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
+                user?.marketingConsent ? 'bg-surface-950' : 'bg-white'
+              } ${
                 user?.marketingConsent ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -344,7 +349,7 @@ export function SettingsPage() {
         <Link
           to="/polityka-prywatnosci"
           target="_blank"
-          className="inline-block mt-2 text-xs text-primary-400 hover:text-primary-300 underline"
+          className="inline-block mt-2 text-xs text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
         >
           {t('marketing.privacyLink')}
         </Link>

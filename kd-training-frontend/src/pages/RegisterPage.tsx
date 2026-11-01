@@ -112,11 +112,11 @@ export function RegisterPage() {
           <p className="text-surface-300 mb-3">{t('register.successMessage')}</p>
           <p className="text-sm text-surface-500 mb-6">
             {t('register.successHint')}{' '}
-            <Link to="/resend-verification" className="text-primary-400 hover:text-primary-300">
+            <Link to="/resend-verification" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {t('login.resendVerification')}
             </Link>
           </p>
-          <Link to="/logowanie" className="text-primary-400 hover:text-primary-300 font-medium">
+          <Link to="/logowanie" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white font-medium">
             {t('register.goToLogin')}
           </Link>
         </div>
@@ -129,7 +129,7 @@ export function RegisterPage() {
       <div className={authCardClass}>
         <div className="text-center mb-6">
           <Brand size="lg" />
-          <p className="text-surface-400 mt-1">{t('register.title')}</p>
+          <h1 className="text-surface-400 mt-1">{t('register.title')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -260,7 +260,7 @@ export function RegisterPage() {
               />
               <label htmlFor="acceptPrivacy" className={clsx('text-sm', privacyError ? 'text-rose-300' : 'text-surface-300')}>
                 {t('register.acceptPrivacyPrefix')}{' '}
-                <Link to="/polityka-prywatnosci" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                <Link to="/polityka-prywatnosci" target="_blank" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
                   {t('register.privacyLink')}
                 </Link>
               </label>
@@ -284,7 +284,7 @@ export function RegisterPage() {
               />
               <label htmlFor="acceptTerms" className={clsx('text-sm', termsError ? 'text-rose-300' : 'text-surface-300')}>
                 {t('register.acceptTermsPrefix')}{' '}
-                <Link to="/regulamin" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                <Link to="/regulamin" target="_blank" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
                   {t('register.termsLink')}
                 </Link>
               </label>
@@ -319,7 +319,7 @@ export function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-surface-400">
           {t('register.hasAccount')}{' '}
-          <Link to="/logowanie" className="text-primary-400 hover:text-primary-300">
+          <Link to="/logowanie" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
             {t('register.login')}
           </Link>
         </p>

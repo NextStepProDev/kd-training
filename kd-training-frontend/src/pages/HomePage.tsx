@@ -120,7 +120,13 @@ export function HomePage() {
           <SectionTitle kicker={t('home.work.kicker')}>{t('home.work.title')}</SectionTitle>
         </div>
         <div className="mx-auto mt-12 max-w-7xl pb-24 sm:pb-32 md:px-6 lg:px-8">
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:grid md:grid-cols-4 md:overflow-visible md:px-0 [scrollbar-width:none]">
+          {/* A keyboard has to be able to scroll the strip too: focusable, and named as a region. */}
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={t('home.work.title')}
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:grid md:grid-cols-4 md:overflow-visible md:px-0 [scrollbar-width:none]"
+          >
             {workSlots.map((src, i) => (
               <PhotoSlot
                 key={i}

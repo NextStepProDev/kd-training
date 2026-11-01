@@ -45,7 +45,7 @@ export function LoginPage() {
       <div className={authCardClass}>
         <div className="text-center mb-6">
           <Brand size="lg" />
-          <p className="text-surface-400 mt-1">{t('login.title')}</p>
+          <h1 className="text-surface-400 mt-1">{t('login.title')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,17 +93,17 @@ export function LoginPage() {
         <div className="mt-6 space-y-2 text-center text-sm">
           <p className="text-surface-400">
             {t('login.noAccount')}{' '}
-            <Link to="/rejestracja" className="text-primary-400 hover:text-primary-300">
+            <Link to="/rejestracja" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {t('login.register')}
             </Link>
           </p>
           <p className="text-surface-400">
-            <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300">
+            <Link to="/forgot-password" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {t('login.forgotPassword')}
             </Link>
           </p>
           <p className="text-surface-400">
-            <Link to="/resend-verification" className="text-primary-400 hover:text-primary-300">
+            <Link to="/resend-verification" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {t('login.resendVerification')}
             </Link>
           </p>

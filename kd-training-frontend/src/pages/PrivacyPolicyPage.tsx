@@ -72,7 +72,7 @@ export function PrivacyPolicyPage() {
             <p className="font-semibold text-surface-200">[Dane administratora — do uzupełnienia]</p>
             <p>
               E-mail:{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary-400 hover:text-primary-300 transition-colors">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors">
                 {CONTACT_EMAIL}
               </a>
             </p>
@@ -401,7 +401,7 @@ export function PrivacyPolicyPage() {
           </div>
           <p className="text-surface-400 text-sm mt-6 leading-relaxed">
             Aby skorzystać z któregokolwiek z powyższych praw, napisz do nas na adres{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary-400 hover:text-primary-300 transition-colors">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors">
               {CONTACT_EMAIL}
             </a>.
             Przysługuje Ci również prawo wniesienia skargi do organu nadzorczego — Prezesa Urzędu Ochrony Danych Osobowych
@@ -440,7 +440,7 @@ export function PrivacyPolicyPage() {
           <div className="mt-4 flex flex-col gap-2">
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+              className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors font-medium"
             >
               {CONTACT_EMAIL}
             </a>

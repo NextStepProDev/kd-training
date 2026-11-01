@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TrainingCalendar } from './TrainingCalendar'
 import type { TrainingCalendarAdapter } from './adapter'
-import { todayIso, weekRange } from '../../utils/calendarRange'
+import { formatLongDate, todayIso, weekRange } from '../../utils/calendarRange'
 import type { CalendarRange, DeletedTrainingNotice, PersonalTraining } from '../../types'
 
 // The calendar always opens on the current week, so fixtures have to live there rather than on a
@@ -201,7 +201,7 @@ describe('TrainingCalendar', () => {
     renderCalendar(stubAdapter([training({ startTime: '17:00', endTime: '18:30' })]))
     await user.click(await screen.findByRole('button', { name: 'Miesiąc' }))
 
-    await user.click(await screen.findByRole('button', { name: `Pokaż dzień ${TODAY}` }))
+    await user.click(await screen.findByRole('button', { name: `Pokaż dzień ${formatLongDate(TODAY)}` }))
 
     const sheet = await screen.findByRole('dialog')
     expect(within(sheet).getByText('Siła')).toBeInTheDocument()

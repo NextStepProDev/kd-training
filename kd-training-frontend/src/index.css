@@ -1,39 +1,93 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Archivo Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Neutral ramp, deepened for the dark "cinematic" look. 500 is the muted-text step (used ~80
+     times) and stays at least 4.5:1 against 900 and 950, so secondary text passes WCAG AA. */
   --color-surface-50: #fafafa;
-  --color-surface-100: #f5f5f5;
-  --color-surface-200: #e5e5e5;
-  --color-surface-300: #d4d4d4;
-  --color-surface-400: #a3a3a3;
-  --color-surface-500: #737373;
-  --color-surface-600: #525252;
-  --color-surface-700: #404040;
-  --color-surface-800: #262626;
-  --color-surface-900: #171717;
-  --color-surface-950: #0a0a0a;
+  --color-surface-100: #f2f2f2;
+  --color-surface-200: #e3e3e3;
+  --color-surface-300: #cfcfcf;
+  --color-surface-400: #a6a6a6;
+  --color-surface-500: #808080;
+  --color-surface-600: #4a4a4a;
+  --color-surface-700: #2e2e2e;
+  --color-surface-800: #1c1c1c;
+  --color-surface-850: #151515;
+  --color-surface-900: #0f0f0f;
+  --color-surface-950: #050505;
   /* Accent scale, monochrome on purpose: the client asked for black and white. Kept as a scale
      (rather than inlining white) so a real accent colour from the design is a one-place change. */
   --color-primary-50: #ffffff;
   --color-primary-100: #fafafa;
-  --color-primary-200: #f5f5f5;
-  --color-primary-300: #e5e5e5;
-  --color-primary-400: #d4d4d4;
-  --color-primary-500: #a3a3a3;
-  --color-primary-600: #525252;
-  --color-primary-700: #404040;
-  --color-primary-800: #262626;
-  --color-primary-900: #171717;
+  --color-primary-200: #f2f2f2;
+  --color-primary-300: #e3e3e3;
+  --color-primary-400: #cfcfcf;
+  --color-primary-500: #a6a6a6;
+  --color-primary-600: #4a4a4a;
+  --color-primary-700: #2e2e2e;
+  --color-primary-800: #1c1c1c;
+  --color-primary-900: #0f0f0f;
   /* Medal tones, used only inside the trophy case. Lightened from the real metals so they hold up
      on the dark surface — raw gold and bronze go muddy at this background. */
   --color-medal-gold: #e5c76b;
   --color-medal-silver: #c9d1d9;
   --color-medal-bronze: #d08b56;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-glow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 48px -24px rgb(0 0 0 / 0.9);
+
+  --animate-rise: rise 0.8s var(--ease-out-expo) both;
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* Condensed uppercase headline — the one typographic signature of the site. Sizes are set where
+   it is used; line-height and tracking belong to the face, so they live here. */
+@utility text-display {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.005em;
+}
+
+/* Small spaced-out label above a headline ("Trener personalny", "01"). */
+@utility kicker {
+  font-family: var(--font-display);
+  font-stretch: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-surface-400);
+}
+
+/* Film grain over a photo or a placeholder. An inline SVG (data: URI, allowed by img-src) — no
+   request, no image to ship. Purely decorative: pointer-events off, above the content via z-index. */
+@utility grain {
+  position: relative;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.09;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 }
 
 body {
   @apply bg-surface-950 text-surface-100 antialiased;
+  font-feature-settings: "cv11", "ss01";
 }
 
 @layer base {
@@ -41,6 +95,11 @@ body {
   :focus-visible {
     outline: 2px solid var(--color-primary-400);
     outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-surface-100);
+    color: var(--color-surface-950);
   }
 }
 
@@ -67,4 +126,6 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   .global-loading-sweep { animation-duration: 2s; }
+  /* Entrance animations are decoration; for this audience they just appear. */
+  .animate-rise { animation: none; }
 }

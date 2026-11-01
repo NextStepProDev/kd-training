@@ -114,28 +114,30 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
 
   if (!isOpen) return null
 
+  // A bottom sheet on a phone (within thumb reach, no floating box between 16px gutters), a centred
+  // dialog from `sm` up.
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative bg-surface-900 rounded-xl border border-surface-700 shadow-xl ${SIZE_CLASS[size]} w-full max-h-[90vh] overflow-y-auto focus:outline-none`}
+        className={`relative w-full ${SIZE_CLASS[size]} max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-surface-900 shadow-glow animate-rise focus:outline-none`}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-surface-800 bg-surface-900">
-          <h2 id={titleId} className="text-lg font-semibold text-surface-100">{title}</h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-white/[0.07] bg-surface-900/95 backdrop-blur">
+          <h2 id={titleId} className="font-display text-lg font-semibold tracking-tight text-white">{title}</h2>
           <button
             onClick={onClose}
             aria-label={t('actions.close')}
-            className="text-surface-400 hover:text-surface-200 transition-colors"
+            className="-mr-2 rounded-full p-2 text-surface-400 transition-colors hover:bg-white/5 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
   )

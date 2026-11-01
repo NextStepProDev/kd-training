@@ -38,8 +38,8 @@ export function GlobalLoadingBar() {
           className="global-loading-sweep absolute top-0 h-full rounded-r-full"
           style={{
             background:
-              'linear-gradient(90deg, rgba(251,146,60,0) 0%, #fb923c 50%, #ea580c 100%)',
-            boxShadow: '0 0 8px rgba(249,115,22,0.7)',
+              'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, #ffffff 100%)',
+            boxShadow: '0 0 8px rgba(255,255,255,0.45)',
           }}
         />
       )}

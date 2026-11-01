@@ -6,12 +6,11 @@
  * design decision, it is a copy that drifted: retuning the focus ring or the border meant finding every
  * one of them, and a missed paste shows up as a single field that looks subtly wrong.
  *
- * The variants below are the ones actually in use, and render identically to the strings they replaced.
- * `inputClassMuted` in particular is a real difference (the auth forms tone their placeholders down and
- * drop the border on focus), not an oversight to be unified away here.
+ * The variants below are the ones actually in use. `inputClassMuted` is a real difference (the auth
+ * forms tone their placeholders down), not an oversight to be unified away here.
  */
 const SURFACE =
-  'bg-surface-800 border border-surface-700 rounded-lg text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'bg-surface-950/60 border border-white/10 rounded-xl text-surface-100 transition-colors hover:border-white/20 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/10'
 
 /** Default field padding — admin panels, modals, settings. */
 export const inputClass = `w-full px-3 py-2 ${SURFACE}`
@@ -19,8 +18,8 @@ export const inputClass = `w-full px-3 py-2 ${SURFACE}`
 /** Roomier padding, used by the standalone auth/consent forms. */
 export const inputClassLg = `w-full px-4 py-2.5 ${SURFACE}`
 
-/** Auth forms: muted placeholder, and the border gives way to the ring on focus. */
-export const inputClassMuted = `${inputClass} placeholder-surface-500 focus:border-transparent`
+/** Auth forms: muted placeholder. */
+export const inputClassMuted = `${inputClass} placeholder-surface-500`
 
 /** Multi-line, user-resizable. */
 export const textareaClass = `${inputClass} resize-y`

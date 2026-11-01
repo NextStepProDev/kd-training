@@ -214,4 +214,16 @@ class JwtServiceTest {
         idField.setAccessible(true);
         idField.set(user, id);
     }
+
+    @Test
+    void shouldNeverIssueTheSameTokenTwice() {
+        // Two refreshes in the same second (two tabs, the grace window that exists for them) built
+        // byte-identical tokens: same claims, iat in whole seconds, no jti. Both got stored, so the
+        // next refresh found two rows for one hash and answered 500 instead of tokens.
+        String first = jwtService.generateRefreshToken(testUser);
+        String second = jwtService.generateRefreshToken(testUser);
+
+        assertNotEquals(first, second);
+        assertNotEquals(jwtService.hashToken(first), jwtService.hashToken(second));
+    }
 }

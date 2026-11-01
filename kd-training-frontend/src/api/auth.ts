@@ -82,7 +82,8 @@ export function loginUser(data: LoginRequest): Promise<AuthTokensResponse> {
 }
 
 export function verifyEmail(token: string): Promise<MessageResponse> {
-  return authFetch(`/verify-email?token=${encodeURIComponent(token)}`, {})
+  // In the body, never the URL: a query string lands in every proxy's access log.
+  return authFetch('/verify-email', { token })
 }
 
 export function resendVerification(email: string): Promise<MessageResponse> {

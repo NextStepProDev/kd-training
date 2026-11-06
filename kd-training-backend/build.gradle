@@ -74,7 +74,7 @@ dependencies {
 
     implementation 'org.jspecify:jspecify:1.0.1'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
 
     implementation 'net.coobird:thumbnailator:0.4.21'
 

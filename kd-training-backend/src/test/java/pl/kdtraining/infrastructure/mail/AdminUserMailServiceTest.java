@@ -36,7 +36,7 @@ class AdminUserMailServiceTest {
         when(msg.get(anyString())).thenReturn("text");
         when(msg.get(anyString(), any())).thenReturn("text");
         when(msg.get("email.bulk.signature")).thenReturn("Pozdrawiam,");
-        when(msg.get("email.footer")).thenReturn("KD Training");
+        when(msg.get("email.footer")).thenReturn("Mocny Grzbiet");
 
         service = new AdminUserMailService(new BrandedMailSender(mailDispatcher, appConfig, msg),
                 adminEmailConfig, msg);
@@ -49,7 +49,7 @@ class AdminUserMailServiceTest {
         verify(mailDispatcher).sendHtml(eq("jan@test.com"), anyString(), bodyCaptor.capture());
         String body = bodyCaptor.getValue();
         assertTrue(body.contains("Pozdrawiam,"));
-        assertTrue(body.contains("KD Training"));
+        assertTrue(body.contains("Mocny Grzbiet"));
         assertFalse(body.contains("/wypisz-sie"), "mail serwisowy (token null) nie ma linku rezygnacji");
     }
 

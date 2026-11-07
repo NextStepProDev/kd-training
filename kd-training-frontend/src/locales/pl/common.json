@@ -6,7 +6,7 @@
     "settings": "Ustawienia",
     "myAccount": "Moje konto",
     "admin": "Panel admina",
-    "brandHome": "KD Training — strona główna",
+    "brandHome": "Mocny Grzbiet — strona główna",
     "menu": "Menu",
     "openMenu": "Otwórz menu",
     "closeMenu": "Zamknij menu"
@@ -14,26 +14,46 @@
   "home": {
     "kicker": "Trener personalny",
     "title": "Kacper Dąbrowski",
-    "subtitle": "Trening personalny, indywidualny plan i stały kontakt z trenerem — w jednym miejscu.",
+    "subtitle": "Bóle kręgosłupa, stawy, powrót po urazie, oddech i postawa. Przywracanie sprawności pod stałą opieką.",
     "seoTitle": "Kacper Dąbrowski — trener personalny",
-    "seoDescription": "Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.",
+    "seoDescription": "Kacper Dąbrowski, trener personalny. Bóle kręgosłupa, drętwienie kończyn, stawy i ich mobilność, powrót po urazie, oddech i postawa.",
     "login": "Zaloguj się",
     "myAccount": "Moje konto",
     "contact": "Napisz do mnie",
     "scroll": "Przewiń w dół",
-    "heroPhotoAlt": "Kacper Dąbrowski podczas treningu",
+    "heroPhotoAlt": "Ćwiczenie na kółkach gimnastycznych w studiu",
     "about": {
       "kicker": "01",
       "title": "O mnie",
-      "body": "Tu pojawi się krótka prezentacja: kim jestem, jak pracuję i z kim. [Treść od Kacpra — do uzupełnienia przed startem.]"
+      "body": "Nazywam się Kacper Dąbrowski, od lat zajmuję się pracą z pacjentem w zakresie przywracania sprawności fizycznej. Zajmuję się bólami kręgosłupa, drętwieniem kończyn, zwapnieniami stawów oraz ich mobilnością. Nadzoruję i wyznaczam kierunki działania po przebytych urazach, monitoruję zmiany i postępy podopiecznych w zakresie powrotu do zdrowia. Oprócz tego realizuję działania w zakresie oddechowym, w którym uwzględniam aktualne umiejętności pacjenta. Realizuję te założenia przez odpowiednie wyprofilowanie postawy ciała przy uwzględnieniu ustawienia żeber, talerza miedniczego, a także pronacji stóp."
     },
     "offer": {
       "kicker": "02",
-      "title": "Treningi i opieka",
+      "title": "Czym się zajmuję",
       "items": [
         {
-          "title": "Trening personalny 1:1",
-          "body": "Indywidualne treningi pod okiem trenera, w stałych terminach ustalonych razem."
+          "title": "Kręgosłup",
+          "body": "Bóle kręgosłupa i drętwienie kończyn. Praca nad przywróceniem sprawności fizycznej."
+        },
+        {
+          "title": "Stawy i mobilność",
+          "body": "Zwapnienia stawów i ich ruchomość."
+        },
+        {
+          "title": "Powrót po urazie",
+          "body": "Wyznaczam kierunki działania po przebytym urazie i monitoruję postępy w powrocie do zdrowia."
+        },
+        {
+          "title": "Oddech i postawa",
+          "body": "Praca z oddechem dopasowana do Twoich aktualnych umiejętności i ustawienie postawy: żebra, miednica, stopy."
+        },
+        {
+          "title": "Indywidualnie lub w parach",
+          "body": "Treningi w moim studiu, w stałych terminach ustalonych razem."
+        },
+        {
+          "title": "Konsultacje",
+          "body": "Konsultacje na bieżąco, także telefoniczne."
         },
         {
           "title": "Twoja strefa podopiecznego",
@@ -48,12 +68,17 @@
     "work": {
       "kicker": "03",
       "title": "Z pracy",
-      "photoAlt": "Kacper Dąbrowski podczas pracy z podopiecznym — zdjęcie {{n}}"
+      "photos": [
+        "Ćwiczenie na poręczach",
+        "Ćwiczenie na kółkach gimnastycznych",
+        "Stanie na głowie przy drabinkach",
+        "Logo Mocny Grzbiet na ścianie studia"
+      ]
     },
     "cta": {
       "kicker": "04",
       "title": "Umów trening",
-      "body": "Napisz, czego szukasz — odpiszę i ustalimy termin."
+      "body": "Napisz, czego szukasz — odpiszę i ustalimy termin. Cenę ustalamy indywidualnie."
     }
   },
   "admin": {
@@ -73,7 +98,7 @@
     "close": "Zamknij"
   },
   "footer": {
-    "copyright": "© {{year}} KD Training. Wszelkie prawa zastrzeżone.",
+    "copyright": "© {{year}} Mocny Grzbiet. Wszelkie prawa zastrzeżone.",
     "description": "Trener personalny Kacper Dąbrowski — treningi indywidualne, plan i materiały dla podopiecznych.",
     "contact": "Kontakt",
     "privacy": "Polityka prywatności",

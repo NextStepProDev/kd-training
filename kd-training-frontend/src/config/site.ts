@@ -5,13 +5,14 @@
 export const CONTACT_EMAIL = 'kontakt@kdtraining.example'
 
 /**
- * Photos for the home page, under public/images/. Empty until the client sends them: every slot then
- * shows the designed placeholder and the browser makes no request for a file that is not there.
- * Adding a photo is dropping the file in public/images/ and naming it here.
+ * Photos for the home page, under public/images/: the client's own, resized and stripped of camera
+ * metadata before they went in (the repository is public). A slot without a file shows the designed
+ * placeholder and the browser makes no request for it. The alt text of each "work" photo sits at the
+ * same index in home.work.photos (common.json), so the two lists change together.
  */
 export const HOME_PHOTOS: { hero?: string; work: string[] } = {
-  hero: undefined,
-  work: [],
+  hero: '/images/hero.jpg',
+  work: ['/images/work-1.jpg', '/images/work-2.jpg', '/images/work-3.jpg', '/images/work-4.jpg'],
 }
 
 /** How many tiles the "Z pracy" gallery shows; placeholders fill whatever the photos do not. */

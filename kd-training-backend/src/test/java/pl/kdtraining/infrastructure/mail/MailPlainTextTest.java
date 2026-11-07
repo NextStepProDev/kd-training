@@ -16,7 +16,7 @@ class MailPlainTextTest {
         <body style="font-family: Arial, sans-serif; padding: 20px;">
             <div style="max-width: 600px;">
                 <div style="text-align: center;">
-                    <a href="https://kdtraining.example" style="display: inline-block;"><img src="cid:logo" alt="KD Training" style="height: 80px;" /></a>
+                    <a href="https://kdtraining.example" style="display: inline-block;"><img src="cid:logo" alt="Mocny Grzbiet" style="height: 80px;" /></a>
                 </div>
                 <div style="padding: 20px 30px 30px;">
                 <h1 style="color: #0a0a0a;">Cześć Anna!</h1>
@@ -33,7 +33,7 @@ class MailPlainTextTest {
                 </div>
                 <hr style="border: none;">
                 <p style="font-size: 12px;">
-                    KD Training<br>
+                    Mocny Grzbiet<br>
                     Trening personalny
                 </p>
                 </div>
@@ -54,7 +54,7 @@ class MailPlainTextTest {
 
             ----------
 
-            KD Training
+            Mocny Grzbiet
             Trening personalny
             """, MailPlainText.fromHtml(TEMPLATE));
     }

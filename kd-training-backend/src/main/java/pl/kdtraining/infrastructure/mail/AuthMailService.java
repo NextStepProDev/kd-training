@@ -179,7 +179,7 @@ public class AuthMailService {
 
 
     /**
-     * Account mail carries no section, so it always renders in KD Training branding. The sign-off is left
+     * Account mail carries no section, so it always renders in Mocny Grzbiet branding. The sign-off is left
      * to the shared rule: skipped when the content already closes warmly („Do zobaczenia" in the welcome
      * mail) or signs off itself.
      * <p>

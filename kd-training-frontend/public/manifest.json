@@ -1,7 +1,7 @@
 {
-  "name": "KD Training",
-  "short_name": "KD Training",
-  "description": "Trener personalny Kacper Dąbrowski — plan treningowy, materiały i kontakt z trenerem.",
+  "name": "Mocny Grzbiet",
+  "short_name": "Mocny Grzbiet",
+  "description": "Kacper Dąbrowski, trener personalny. Plan treningowy, materiały i kontakt z trenerem.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#141414",

@@ -11,8 +11,8 @@ import pl.kdtraining.infrastructure.i18n.MessageService;
  * messages ({@link AdminUserMailService}). One skeleton, so restyling is one edit and no class of
  * emails can quietly look different.
  * <p>
- * The header carries the brand name as TEXT, not an image: there is no logo yet, and mail clients
- * block remote images by default anyway, so text is what most recipients would see first. It asks
+ * The header carries the brand name as TEXT, not an image, even though the site now has a logo: mail
+ * clients block remote images by default, so text is what most recipients would see first. It asks
  * for the site's poster face (Anton) and falls back to Impact, then Arial Black: most clients load
  * no web fonts, Impact is the condensed heavy face most desktops have, and Arial Black keeps the
  * name heavy where Impact is missing. Colours follow the site's graphite.
@@ -23,7 +23,7 @@ import pl.kdtraining.infrastructure.i18n.MessageService;
 @Component
 public class BrandedMailSender {
 
-    static final String BRAND_NAME = "KD Training";
+    static final String BRAND_NAME = "Mocny Grzbiet";
 
     private final MailDispatcher mailDispatcher;
     private final AppConfig appConfig;
@@ -50,7 +50,7 @@ public class BrandedMailSender {
     }
 
     /**
-     * @param signOff whether to add the „Pozdrawiam, KD Training" sign-off. Skipped for emails that
+     * @param signOff whether to add the „Pozdrawiam, Mocny Grzbiet" sign-off. Skipped for emails that
      *                already end with a warm closing („Do zobaczenia!") or have their own sign-off.
      */
     public String template(String content, boolean signOff) {

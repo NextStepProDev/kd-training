@@ -16,11 +16,11 @@ export function TermsPage() {
     <div>
       <Seo
         title="Regulamin"
-        description="Regulamin serwisu KD Training — zasady korzystania z konta i strefy podopiecznego."
+        description="Regulamin serwisu Mocny Grzbiet — zasady korzystania z konta i strefy podopiecznego."
         path="/regulamin"
       />
       <div className="mx-auto max-w-3xl px-4 pt-14 sm:pt-20">
-        <PageHeader kicker="Informacje prawne" title="Regulamin" description="Zasady korzystania z serwisu KD Training." />
+        <PageHeader kicker="Informacje prawne" title="Regulamin" description="Zasady korzystania z serwisu Mocny Grzbiet." />
       </div>
 
       {/* max-w-3xl: a legal text is read line by line, and past ~80 characters the eye loses the next line. */}
@@ -36,7 +36,7 @@ export function TermsPage() {
 
         <Section title="§1. Postanowienia ogólne">
           <Paragraphs items={[
-            'Regulamin określa zasady korzystania z serwisu internetowego KD Training (dalej: „Serwis”), w tym rodzaje i zakres usług świadczonych drogą elektroniczną, warunki ich świadczenia oraz tryb postępowania reklamacyjnego.',
+            'Regulamin określa zasady korzystania z serwisu internetowego Mocny Grzbiet (dalej: „Serwis”), w tym rodzaje i zakres usług świadczonych drogą elektroniczną, warunki ich świadczenia oraz tryb postępowania reklamacyjnego.',
             'Usługodawcą jest: [Dane usługodawcy — do uzupełnienia].',
           ]} />
           <p className="text-surface-400 text-sm mt-3 leading-relaxed">

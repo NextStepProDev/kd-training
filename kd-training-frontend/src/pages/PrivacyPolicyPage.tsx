@@ -41,7 +41,7 @@ export function PrivacyPolicyPage() {
     <div>
       <Seo
         title="Polityka prywatności"
-        description="Polityka prywatności KD Training — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują."
+        description="Polityka prywatności serwisu Mocny Grzbiet — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują."
         path="/polityka-prywatnosci"
       />
       <div className="mx-auto max-w-3xl px-4 pt-14 sm:pt-20">
@@ -207,7 +207,7 @@ export function PrivacyPolicyPage() {
         <Section title="4. Marketing — wiadomości handlowe">
           <p className="text-surface-300 leading-relaxed mb-4">
             Jeżeli udzielisz <span className="text-surface-200 font-medium">odrębnej, dobrowolnej zgody marketingowej</span>,
-            będziemy okazjonalnie wysyłać Ci informacje o nowych materiałach i usługach KD Training na adres
+            będziemy okazjonalnie wysyłać Ci informacje o nowych materiałach i usługach Mocnego Grzbietu na adres
             e-mail przypisany do konta. Zgoda obejmuje łącznie:
           </p>
           <DataList items={[

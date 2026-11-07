@@ -10,7 +10,23 @@ interface SendUserEmailRequest {
   userIds?: string[]
 }
 
+export interface Invitation {
+  id: string
+  email: string
+  createdAt: string
+  expiresAt: string
+}
+
 export const adminApi = {
+  // Invitations: the only way to create an account
+  getInvitations: () =>
+    fetchApi<Invitation[]>('/admin/invitations'),
+  /** Also "send again": a new invitation to the same address replaces the old one. */
+  invite: (email: string) =>
+    fetchApi<Invitation>('/admin/invitations', { method: 'POST', body: JSON.stringify({ email }) }),
+  cancelInvitation: (id: string) =>
+    fetchApi<void>(`/admin/invitations/${id}`, { method: 'DELETE' }),
+
   // Users
   getUser: (id: string) =>
     fetchApi<AdminUserDetail>(`/admin/users/${id}`),

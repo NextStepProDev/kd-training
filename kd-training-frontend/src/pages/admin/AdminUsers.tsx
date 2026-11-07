@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../context/ToastContext'
 import { useAuth } from '../../context/AuthContext'
 import { AdminUserDetail } from './AdminUserDetail'
+import { AdminInvitations } from './AdminInvitations'
 import type { AdminUser } from '../../types'
 import { inputClassLg, textareaClassLg } from '../../utils/fieldClass'
 
@@ -173,6 +174,8 @@ export function AdminUsers() {
         <Users className="w-6 h-6 text-surface-400" />
         <h2 className="text-display text-3xl text-white">{t('users.title')}</h2>
       </div>
+
+      <AdminInvitations />
 
       <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4 sm:p-6 mb-6">
         <form onSubmit={handleSearch} className="flex gap-3">

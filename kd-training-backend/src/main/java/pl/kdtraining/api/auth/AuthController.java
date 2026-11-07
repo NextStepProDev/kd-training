@@ -18,8 +18,14 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @PostMapping("/invitation")
+    @Operation(summary = "Read an invitation", description = "Returns the address an invitation link was sent to")
+    public ResponseEntity<InvitationDetailsResponse> invitation(@Valid @RequestBody TokenRequest request) {
+        return ResponseEntity.ok(authService.invitationDetails(request.token()));
+    }
+
     @PostMapping("/register")
-    @Operation(summary = "Register a new user", description = "Creates a new account and sends verification email")
+    @Operation(summary = "Register by invitation", description = "Creates a verified account for the invited address")
     public ResponseEntity<MessageResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }

@@ -91,12 +91,7 @@ export function LoginPage() {
         <GoogleSignInButton />
 
         <div className="mt-6 space-y-2 text-center text-sm">
-          <p className="text-surface-400">
-            {t('login.noAccount')}{' '}
-            <Link to="/rejestracja" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-              {t('login.register')}
-            </Link>
-          </p>
+          <p className="text-surface-400">{t('login.noAccount')}</p>
           <p className="text-surface-400">
             <Link to="/forgot-password" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
               {t('login.forgotPassword')}

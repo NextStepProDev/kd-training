@@ -88,6 +88,14 @@ export function PrivacyPolicyPage() {
             Zbieramy wyłącznie dane niezbędne do założenia konta i świadczenia usług treningu personalnego. Nie zbieramy nic ponad to.
           </p>
 
+          <SubSection title="Zaproszenie">
+            <p className="text-surface-400 text-sm mb-2 leading-relaxed">
+              Konto zakłada się wyłącznie z zaproszenia od trenera. Do jego wysłania zapisujemy adres e-mail osoby
+              zaproszonej. Usuwamy go, gdy konto zostanie założone, a jeśli nikt nie skorzysta z zaproszenia —
+              najpóźniej dobę po upływie jego ważności (7 dni).
+            </p>
+          </SubSection>
+
           <SubSection title="Konto użytkownika (rejestracja)">
             <p className="text-surface-400 text-sm mb-2 leading-relaxed">
               Konto daje dostęp do Twojej strefy podopiecznego. Przy rejestracji zbieramy:
@@ -304,6 +312,11 @@ export function PrivacyPolicyPage() {
             <p>
               <span className="text-surface-200 font-medium">Dane konta</span> — przechowywane przez cały czas istnienia
               Twojego konta. Nie usuwamy ich po żadnym z góry ustalonym okresie — decydujesz o tym Ty, usuwając konto.
+            </p>
+            <p>
+              <span className="text-surface-200 font-medium">Zaproszenie</span> — adres e-mail zaproszonej osoby
+              usuwamy po założeniu konta, a niewykorzystane zaproszenie najpóźniej dobę po upływie jego ważności
+              (7 dni).
             </p>
             <p>
               <span className="text-surface-200 font-medium">Usunięcie konta</span> — konto możesz usunąć samodzielnie

@@ -6,8 +6,9 @@ import org.jspecify.annotations.Nullable;
 public final class AuthDtos {
     private AuthDtos() {}
 
+    // No e-mail field: the address is the one the invitation was sent to, so the request cannot pick it.
     public record RegisterRequest(
-        @NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email,
+        @NotBlank(message = "{validation.token.required}") String invitationToken,
         @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String password,
         @NotBlank(message = "{validation.firstname.required}") @Size(min = 3, max = 36, message = "{validation.firstname.size}") String firstName,
         @NotBlank(message = "{validation.lastname.required}") @Size(min = 3, max = 36, message = "{validation.lastname.size}") String lastName,
@@ -32,4 +33,5 @@ public final class AuthDtos {
     public record ResetPasswordRequest(@NotBlank(message = "{validation.token.required}") String token, @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String newPassword) {}
     public record ResendVerificationRequest(@NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email) {}
     public record MessageResponse(String message) {}
+    public record InvitationDetailsResponse(String email) {}
 }

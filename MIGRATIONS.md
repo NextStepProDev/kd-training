@@ -4,11 +4,12 @@
 
 ## Stan
 
-**Obecny stan: V1. Kolejna migracja: V2.**
+**Obecny stan: V2. Kolejna migracja: V3.**
 
 | Wersja | Co dodaje |
 |--------|-----------|
 | V1 | schemat startowy: `users`, `auth_tokens`, `personal_trainings`, `training_comments`, `training_calendar_reads`, `training_deletions`, `athlete_goals`, `exercise_videos`, `training_templates`, `training_attachments`, `admin_private_notes` |
+| V2 | `invitations`: rejestracja tylko z zaproszenia (adres, hash tokenu, ważność; jedno otwarte zaproszenie na adres; bez klucza do `users`) |
 
 ## Jak powstała V1 (26.10.2026)
 

@@ -10,11 +10,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import pl.kdtraining.api.admin.invitation.InvitationService;
+import pl.kdtraining.domain.invitation.Invitation;
 import pl.kdtraining.domain.user.User;
 import pl.kdtraining.domain.user.UserRepository;
 import pl.kdtraining.domain.user.UserRole;
 import pl.kdtraining.infrastructure.mail.AuthMailService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,8 +32,15 @@ class OAuth2UserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private AdminEmailConfig adminEmailConfig;
     @Mock private AuthMailService authMailService;
+    @Mock private InvitationService invitationService;
 
     @InjectMocks private OAuth2UserService service;
+
+    private Invitation givenInvitation(String email) {
+        Invitation invitation = new Invitation(email, "hash", Instant.now().plusSeconds(3600));
+        when(invitationService.findValidForEmail(email)).thenReturn(Optional.of(invitation));
+        return invitation;
+    }
 
     private OAuth2User googleUser(String email, String given, String family, String sub) {
         Map<String, Object> attrs = Map.of(
@@ -47,6 +57,7 @@ class OAuth2UserServiceTest {
         // GDPR: a Google account is created WITHOUT any consents — the policy/marketing is completed on the /uzupelnij-profil screen.
         when(userRepository.findByOauthProviderAndOauthId("google", "sub-1")).thenReturn(Optional.empty());
         when(userRepository.findByEmailIgnoreCase("anna@gmail.com")).thenReturn(Optional.empty());
+        Invitation invitation = givenInvitation("anna@gmail.com");
         when(adminEmailConfig.isAdminEmail("anna@gmail.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -62,12 +73,28 @@ class OAuth2UserServiceTest {
         assertFalse(created.hasMarketingConsent(), "Marketing nie może być ustawiany po cichu przy OAuth");
         verify(authMailService).sendWelcomeEmail(any(User.class));
         verify(authMailService).sendNewUserAdminNotification(any(User.class));
+        verify(invitationService).consume(invitation);
+    }
+
+    @Test
+    void shouldRefuseANewAccountWithoutAnInvitation() {
+        // Registration is by invitation only, and Google must not be the way around it.
+        when(userRepository.findByOauthProviderAndOauthId("google", "sub-9")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("stranger@gmail.com")).thenReturn(Optional.empty());
+        when(invitationService.findValidForEmail("stranger@gmail.com")).thenReturn(Optional.empty());
+
+        assertThrows(OAuth2AuthenticationException.class,
+            () -> service.processOAuth2User("google", googleUser("stranger@gmail.com", "Obcy", "Ktoś", "sub-9")));
+
+        verify(userRepository, never()).save(any());
+        verify(authMailService, never()).sendWelcomeEmail(any());
     }
 
     @Test
     void shouldAutoPromoteToAdminWhenEmailMatchesConfigOnRegistration() {
         when(userRepository.findByOauthProviderAndOauthId("google", "sub-2")).thenReturn(Optional.empty());
         when(userRepository.findByEmailIgnoreCase("boss@kdtraining.test")).thenReturn(Optional.empty());
+        givenInvitation("boss@kdtraining.test");
         when(adminEmailConfig.isAdminEmail("boss@kdtraining.test")).thenReturn(true);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -128,6 +155,7 @@ class OAuth2UserServiceTest {
             List.of(new SimpleGrantedAuthority("ROLE_USER")), attrs, "sub");
         when(userRepository.findByOauthProviderAndOauthId("google", "sub-4")).thenReturn(Optional.empty());
         when(userRepository.findByEmailIgnoreCase("noname@gmail.com")).thenReturn(Optional.empty());
+        givenInvitation("noname@gmail.com");
         when(adminEmailConfig.isAdminEmail("noname@gmail.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 

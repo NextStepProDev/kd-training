@@ -8,6 +8,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import pl.kdtraining.api.admin.invitation.InvitationService;
+import pl.kdtraining.domain.invitation.Invitation;
 import pl.kdtraining.domain.user.User;
 import pl.kdtraining.domain.user.UserRepository;
 import pl.kdtraining.domain.user.UserRole;
@@ -28,11 +30,14 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
     private final AdminEmailConfig adminEmailConfig;
     private final AuthMailService authMailService;
+    private final InvitationService invitationService;
 
-    public OAuth2UserService(UserRepository userRepository, AdminEmailConfig adminEmailConfig, AuthMailService authMailService) {
+    public OAuth2UserService(UserRepository userRepository, AdminEmailConfig adminEmailConfig,
+                             AuthMailService authMailService, InvitationService invitationService) {
         this.userRepository = userRepository;
         this.adminEmailConfig = adminEmailConfig;
         this.authMailService = authMailService;
+        this.invitationService = invitationService;
     }
 
     @Override
@@ -76,7 +81,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         return new CustomOAuth2User(oAuth2User, user);
     }
 
+    // Registration is by invitation only, and Google must not be the way around it: a new account
+    // needs an open invitation for the address Google vouches for. An existing account (the branches
+    // above) logs in without one.
     private User createNewUser(String provider, String oauthId, String email, String firstName, String lastName) {
+        Invitation invitation = invitationService.findValidForEmail(email)
+            .orElseThrow(() -> new OAuth2AuthenticationException("No invitation for this address"));
         User user = new User(email, firstName, lastName, "");
         user.setOauthProvider(provider);
         user.setOauthId(oauthId);
@@ -87,6 +97,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             log.info("AUTO-ADMIN-PROMOTION: {} promoted to ADMIN during OAuth2 registration", MailDispatcher.maskAddress(email));
         }
         User savedUser = userRepository.save(user);
+        invitationService.consume(invitation);
         authMailService.sendWelcomeEmail(savedUser);
         authMailService.sendNewUserAdminNotification(savedUser);
         return savedUser;

@@ -10,10 +10,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.kdtraining.api.auth.AuthDtos.*;
+import pl.kdtraining.api.admin.invitation.InvitationService;
 import pl.kdtraining.config.AdminEmailConfig;
 import pl.kdtraining.domain.auth.AuthToken;
 import pl.kdtraining.domain.auth.AuthTokenRepository;
 import pl.kdtraining.domain.auth.TokenType;
+import pl.kdtraining.domain.invitation.Invitation;
 import pl.kdtraining.domain.user.User;
 import pl.kdtraining.domain.user.UserRepository;
 import pl.kdtraining.domain.user.UserRole;
@@ -42,18 +44,21 @@ class AuthServiceTest {
     @Mock private AdminEmailConfig adminEmailConfig;
     @Mock private MessageService msg;
     @Mock private PasswordPolicyValidator passwordPolicy;
+    @Mock private InvitationService invitationService;
 
     @InjectMocks private AuthService authService;
 
     private RegisterRequest registerRequest;
+    private Invitation invitation;
     private LoginRequest loginRequest;
     private User existingUser;
 
     @BeforeEach
     void setUp() throws Exception {
         registerRequest = new RegisterRequest(
-            "new@example.com", "Password123", "Jan", "Kowalski", null, null, true, true, false
+            "invite-token", "Password123", "Jan", "Kowalski", null, null, true, true, false
         );
+        invitation = new Invitation("new@example.com", "invite-hash", Instant.now().plusSeconds(3600));
 
         loginRequest = new LoginRequest("test@example.com", "Password123");
 
@@ -65,59 +70,84 @@ class AuthServiceTest {
 
     // --- Register ---
 
+    private void givenInvitation() {
+        when(invitationService.findValid("invite-token")).thenReturn(Optional.of(invitation));
+    }
+
     @Test
-    void shouldRegisterNewUser() {
+    void shouldRegisterInvitedUserAsVerifiedAndUseTheInvitationUp() {
+        givenInvitation();
         when(userRepository.existsByEmailIgnoreCase("new@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password123")).thenReturn("encoded");
         when(adminEmailConfig.isAdminEmail("new@example.com")).thenReturn(false);
-        when(jwtService.generateSecureToken()).thenReturn("secure-token");
-        when(jwtService.hashToken("secure-token")).thenReturn("hashed-token");
         when(msg.get("auth.register.success")).thenReturn("Rejestracja zakończona");
 
         MessageResponse result = authService.register(registerRequest);
 
-        assertNotNull(result);
         assertEquals("Rejestracja zakończona", result.message());
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         User saved = userCaptor.getValue();
-        assertEquals("new@example.com", saved.getEmail());
+        assertEquals("new@example.com", saved.getEmail(), "the address comes from the invitation");
         assertEquals("Jan", saved.getFirstName());
         assertEquals(UserRole.USER, saved.getRole());
+        assertTrue(saved.isEmailVerified(), "the invitation link already proved the mailbox");
         assertTrue(saved.hasPrivacyAccepted());
         assertTrue(saved.hasTermsAccepted(), "the acceptance moment is the proof — it must be stored");
 
-        verify(authMailService).sendVerificationEmail(any(User.class), eq("secure-token"));
+        verify(invitationService).consume(invitation);
+        verify(authMailService).sendWelcomeEmail(saved);
+        verify(authMailService).sendNewUserAdminNotification(saved);
+        verify(authMailService, never()).sendVerificationEmail(any(User.class), anyString());
+    }
+
+    @Test
+    void shouldRefuseRegistrationWithoutAValidInvitation() {
+        // Given: the link is unknown, used or expired
+        when(invitationService.findValid("invite-token")).thenReturn(Optional.empty());
+        when(msg.get("auth.invitation.invalid")).thenReturn("Zaproszenie nieważne");
+
+        // When
+        var ex = assertThrows(IllegalArgumentException.class, () -> authService.register(registerRequest));
+
+        // Then: refused before the password policy's network call and before any account work
+        assertEquals("Zaproszenie nieważne", ex.getMessage());
+        verifyNoInteractions(passwordPolicy, userRepository);
     }
 
     @Test
     void shouldThrowWhenEmailAlreadyExists() {
+        givenInvitation();
         when(userRepository.existsByEmailIgnoreCase("new@example.com")).thenReturn(true);
         when(msg.get("auth.email.exists")).thenReturn("Email zajęty");
 
         var ex = assertThrows(IllegalArgumentException.class, () -> authService.register(registerRequest));
         assertEquals("Email zajęty", ex.getMessage());
         verify(userRepository, never()).save(any());
+        verify(invitationService, never()).consume(any());
     }
 
     @Test
-    void shouldValidatePasswordPolicyBeforeTouchingTheDatabase() {
+    void shouldValidatePasswordPolicyBeforeTouchingTheUsers() {
         // Given: the policy check (which calls Have I Been Pwned over the network) rejects the password
+        givenInvitation();
         doThrow(new IllegalArgumentException("Hasło z wycieku"))
             .when(passwordPolicy).validate("Password123", "new@example.com", "Jan", "Kowalski");
 
         // When
         var ex = assertThrows(IllegalArgumentException.class, () -> authService.register(registerRequest));
 
-        // Then: it ran before any repository call, so the slow network wait never holds a DB connection
+        // Then: only the invitation was read; the link keeps working for another try
         assertEquals("Hasło z wycieku", ex.getMessage());
         verifyNoInteractions(userRepository);
+        verify(invitationService, never()).consume(any());
     }
 
     @Test
     void shouldReportDuplicateEmailWhenTwoRegistrationsRace() {
-        // Given: another request saved the same address between the existence check and this save
+        // Given: another request from the same link saved the address between the check and this save
+        givenInvitation();
         when(userRepository.existsByEmailIgnoreCase("new@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password123")).thenReturn("encoded");
         when(adminEmailConfig.isAdminEmail("new@example.com")).thenReturn(false);
@@ -128,16 +158,15 @@ class AuthServiceTest {
         // When / Then: the UNIQUE violation surfaces as the ordinary 400, not a 500
         var ex = assertThrows(IllegalArgumentException.class, () -> authService.register(registerRequest));
         assertEquals("Email zajęty", ex.getMessage());
-        verify(authMailService, never()).sendVerificationEmail(any(User.class), anyString());
+        verify(authMailService, never()).sendWelcomeEmail(any(User.class));
     }
 
     @Test
     void shouldAutoPromoteAdminOnRegister() {
+        givenInvitation();
         when(userRepository.existsByEmailIgnoreCase("new@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password123")).thenReturn("encoded");
         when(adminEmailConfig.isAdminEmail("new@example.com")).thenReturn(true);
-        when(jwtService.generateSecureToken()).thenReturn("token");
-        when(jwtService.hashToken("token")).thenReturn("hash");
         when(msg.get("auth.register.success")).thenReturn("ok");
 
         authService.register(registerRequest);
@@ -149,12 +178,26 @@ class AuthServiceTest {
 
     @Test
     void shouldDefaultLanguageToPlWhenNull() {
-        var request = new RegisterRequest("new@example.com", "Password123", "Jan", "Kowalski", null, null, true, true, false);
+        givenInvitation();
         when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
         when(adminEmailConfig.isAdminEmail(anyString())).thenReturn(false);
-        when(jwtService.generateSecureToken()).thenReturn("t");
-        when(jwtService.hashToken("t")).thenReturn("h");
+        when(msg.get("auth.register.success")).thenReturn("ok");
+
+        authService.register(registerRequest);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("pl", captor.getValue().getPreferredLanguage());
+    }
+
+    @Test
+    void shouldDefaultLanguageToPlWhenUnsupported() {
+        var request = new RegisterRequest("invite-token", "Password123", "Jan", "Kowalski", null, "de", true, true, false);
+        givenInvitation();
+        when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
+        when(adminEmailConfig.isAdminEmail(anyString())).thenReturn(false);
         when(msg.get("auth.register.success")).thenReturn("ok");
 
         authService.register(request);
@@ -165,20 +208,19 @@ class AuthServiceTest {
     }
 
     @Test
-    void shouldDefaultLanguageToPlWhenUnsupported() {
-        var request = new RegisterRequest("new@example.com", "Password123", "Jan", "Kowalski", null, "de", true, true, false);
-        when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(adminEmailConfig.isAdminEmail(anyString())).thenReturn(false);
-        when(jwtService.generateSecureToken()).thenReturn("t");
-        when(jwtService.hashToken("t")).thenReturn("h");
-        when(msg.get("auth.register.success")).thenReturn("ok");
+    void shouldReturnTheInvitedAddress() {
+        givenInvitation();
 
-        authService.register(request);
+        assertEquals("new@example.com", authService.invitationDetails("invite-token").email());
+    }
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertEquals("pl", captor.getValue().getPreferredLanguage());
+    @Test
+    void shouldRefuseInvitationDetailsForADeadLink() {
+        when(invitationService.findValid("dead")).thenReturn(Optional.empty());
+        when(msg.get("auth.invitation.invalid")).thenReturn("Zaproszenie nieważne");
+
+        var ex = assertThrows(IllegalArgumentException.class, () -> authService.invitationDetails("dead"));
+        assertEquals("Zaproszenie nieważne", ex.getMessage());
     }
 
     // --- Login ---

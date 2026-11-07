@@ -39,11 +39,13 @@ public class AthleteMaterialService {
     private final TrainingAccessService access;
     private final TrainingUnreadService unread;
     private final MessageService msg;
+    private final CoachReplyNotifier replyNotifier;
 
     public AthleteMaterialService(AthleteMaterialRepository materials, MaterialQuestionRepository questions,
                                   ExerciseVideoRepository videos, UserRepository users,
                                   TrainingAccessService access, TrainingUnreadService unread,
-                                  MessageService msg) {
+                                  MessageService msg, CoachReplyNotifier replyNotifier) {
+        this.replyNotifier = replyNotifier;
         this.materials = materials;
         this.questions = questions;
         this.videos = videos;
@@ -111,6 +113,9 @@ public class AthleteMaterialService {
         User author = users.getReferenceById(authorId);
         MaterialQuestion question = questions.save(
                 new MaterialQuestion(material, author, viewerIsAdmin, request.body().trim()));
+        if (viewerIsAdmin) {
+            replyNotifier.coachWroteTo(material.getAthlete());
+        }
         return toResponse(question);
     }
 

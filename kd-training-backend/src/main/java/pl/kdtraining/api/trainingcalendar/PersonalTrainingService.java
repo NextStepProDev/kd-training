@@ -57,6 +57,7 @@ public class PersonalTrainingService {
     private final TrainingPhotoService photos;
     private final UserRepository userRepository;
     private final MessageService msg;
+    private final CoachReplyNotifier replyNotifier;
 
     public PersonalTrainingService(PersonalTrainingRepository repository,
                                    TrainingCommentRepository commentRepository,
@@ -66,7 +67,8 @@ public class PersonalTrainingService {
                                    AttachmentService attachments,
                                    TrainingPhotoService photos,
                                    UserRepository userRepository,
-                                   MessageService msg) {
+                                   MessageService msg,
+                                   CoachReplyNotifier replyNotifier) {
         this.repository = repository;
         this.commentRepository = commentRepository;
         this.deletionRepository = deletionRepository;
@@ -76,6 +78,7 @@ public class PersonalTrainingService {
         this.photos = photos;
         this.userRepository = userRepository;
         this.msg = msg;
+        this.replyNotifier = replyNotifier;
     }
 
     @Transactional(readOnly = true)
@@ -348,7 +351,12 @@ public class PersonalTrainingService {
         User author = userRepository.findById(viewerId)
                 .orElseThrow(() -> new IllegalStateException(msg.get("error.user.not.found")));
         TrainingComment comment = new TrainingComment(training, author, viewerIsAdmin, request.body().trim());
-        return TrainingCommentMapper.toResponse(commentRepository.save(comment), viewerId, viewerIsAdmin);
+        TrainingCommentResponse response =
+                TrainingCommentMapper.toResponse(commentRepository.save(comment), viewerId, viewerIsAdmin);
+        if (viewerIsAdmin) {
+            replyNotifier.coachWroteTo(training.getAthlete());
+        }
+        return response;
     }
 
     @Transactional

@@ -130,7 +130,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V3 (V1 schemat startowy, V2 zaproszenia, V3 materiały; jeszcze nigdzie niewdrożone). Kolejna migracja: V4.**
+**Obecny stan: V4 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów; jeszcze nigdzie niewdrożone). Kolejna migracja: V5.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).

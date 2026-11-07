@@ -111,6 +111,8 @@ export interface PersonalTraining {
   version: number
   createdAt: string
   updatedAt: string
+  /** Set on the occurrences of a weekly series. */
+  seriesId?: string | null
 }
 
 export interface DeletedTrainingNotice {
@@ -166,6 +168,8 @@ export interface CreateTrainingBody {
   targetCalories?: number | null
   /** undefined = leave materials alone · [] = clear · list = replace. */
   attachments?: AttachmentInput[] | null
+  /** Coach only, creating only: repeat weekly on the same weekday up to and including this date. */
+  repeatWeeklyUntil?: string | null
 }
 
 /** No kind: an entry is a training or a task from birth, and the server will not change it. */

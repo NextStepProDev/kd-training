@@ -56,8 +56,9 @@ public class AdminPersonalTrainingController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@CurrentUserId UUID adminId, @PathVariable UUID id) {
-        service.delete(id, adminId, true);
+    public ResponseEntity<Void> delete(@CurrentUserId UUID adminId, @PathVariable UUID id,
+                                       @RequestParam(defaultValue = "false") boolean following) {
+        service.delete(id, following, adminId, true);
         return ResponseEntity.noContent().build();
     }
 

@@ -362,6 +362,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
           onSubmit={submitForm}
           onConflictRefresh={() => { refresh(); setFormDate(null); setEditing(null) }}
           canAttach={adapter.role === 'coach'}
+          canRepeat={adapter.role === 'coach'}
         />
       )}
 
@@ -372,7 +373,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
           onClose={() => setSelected(null)}
           adapter={adapter}
           onEdit={tr => { setSelected(null); setEditing(tr); setFormDate(tr.date) }}
-          onDelete={async tr => { await adapter.deleteTraining(tr.id); refresh() }}
+          onDelete={async (tr, following) => { await adapter.deleteTraining(tr.id, following); refresh() }}
           onDuplicate={async tr => { await adapter.duplicateTraining(tr.id); refresh() }}
           onComplete={adapter.completeTraining
             ? async (tr, rpe, feedback) => {

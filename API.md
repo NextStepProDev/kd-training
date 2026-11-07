@@ -78,7 +78,7 @@ Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, ter
 
 **Trener** `/api/admin` (ROLE_ADMIN):
 `GET /athletes` (roster; nieprzeczytane najpierw) · `POST|DELETE /users/{id}/athlete` (flaga)
-`GET|POST /personal-trainings` (`?athleteId=&from=&to=`) · `PUT|DELETE /personal-trainings/{id}` · `POST /{id}/duplicate` · `POST /paste` (`{sourceId, targetDate, mode: COPY|MOVE, targetAthleteId}` — **`targetAthleteId` = kalendarz otwarty na ekranie, nie właściciel źródła**; brak pola = ten sam podopieczny co źródło. Kopiowanie między podopiecznymi robi się właśnie tym polem)
+`GET|POST /personal-trainings` (`?athleteId=&from=&to=`; POST z opcjonalnym `repeatWeeklyUntil` = seria co tydzień do tej daty włącznie, najdłużej pół roku, tylko trener) · `PUT|DELETE /personal-trainings/{id}` (DELETE `?following=true` = ten termin i kolejne z jego serii; wcześniejsze zostają) · `POST /{id}/duplicate` · `POST /paste` (`{sourceId, targetDate, mode: COPY|MOVE, targetAthleteId}` — **`targetAthleteId` = kalendarz otwarty na ekranie, nie właściciel źródła**; brak pola = ten sam podopieczny co źródło. Kopiowanie między podopiecznymi robi się właśnie tym polem)
 `GET|POST /personal-trainings/{id}/comments` · `POST /personal-trainings/mark-seen?athleteId=&to=` (**`to` wymagane** — ostatni dzień oglądanego okna; kolumna `seen_through`) · `POST /personal-trainings/deletions/dismiss?athleteId=`
 `POST /training-photos` (multipart `trainingId`,`file`,opc. `body` — **osobny prefiks pod kubełek rate-limitu**) · `GET|DELETE /personal-trainings/comments/{commentId}/photo`
 `GET /personal-trainings/stats?athleteId=` (**z sygnałem przetrenowania**)

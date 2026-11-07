@@ -82,17 +82,20 @@ public class TrainingPhotoService {
     private final UserRepository userRepository;
     private final FileStorageService storage;
     private final MessageService msg;
+    private final CoachReplyNotifier replyNotifier;
 
     public TrainingPhotoService(TrainingCommentRepository commentRepository,
                                 TrainingAccessService access,
                                 UserRepository userRepository,
                                 FileStorageService storage,
-                                MessageService msg) {
+                                MessageService msg,
+                                CoachReplyNotifier replyNotifier) {
         this.commentRepository = commentRepository;
         this.access = access;
         this.userRepository = userRepository;
         this.storage = storage;
         this.msg = msg;
+        this.replyNotifier = replyNotifier;
     }
 
     /**
@@ -126,7 +129,12 @@ public class TrainingPhotoService {
 
         TrainingComment comment = new TrainingComment(training, author, viewerIsAdmin, Strings.trimToNull(body));
         comment.attachPhoto(stored.filename(), stored.width(), stored.height(), Instant.now().plus(RETENTION));
-        return TrainingCommentMapper.toResponse(commentRepository.save(comment), viewerId, viewerIsAdmin);
+        TrainingCommentResponse response =
+                TrainingCommentMapper.toResponse(commentRepository.save(comment), viewerId, viewerIsAdmin);
+        if (viewerIsAdmin) {
+            replyNotifier.coachWroteTo(training.getAthlete());
+        }
+        return response;
     }
 
     /**

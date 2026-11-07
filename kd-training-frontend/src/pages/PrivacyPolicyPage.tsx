@@ -195,6 +195,10 @@ export function PrivacyPolicyPage() {
               basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy"
             />
             <LegalBasis
+              purpose="Powiadomienie e-mailem o nowej wiadomości od trenera w planie treningowym (bez treści wiadomości, najwyżej jedno na kwadrans)"
+              basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy (prowadzenie planu treningowego)"
+            />
+            <LegalBasis
               purpose="Wysyłka wiadomości marketingowych (newsletter)"
               basis="Art. 6 ust. 1 lit. a RODO — Twoja dobrowolna i odrębna zgoda; dodatkowo art. 10 ustawy o świadczeniu usług drogą elektroniczną oraz art. 172 Prawa telekomunikacyjnego. Szczegóły w punkcie 4 poniżej."
             />
@@ -375,7 +379,7 @@ export function PrivacyPolicyPage() {
             />
             <InfoItem
               title="Zewnętrzny serwer poczty e-mail (SMTP)"
-              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (weryfikacja konta, reset hasła, powiadomienia o koncie), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
+              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (weryfikacja konta, reset hasła, powiadomienia o koncie i o wiadomościach od trenera), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
             />
             <InfoItem
               title={notYet('Google LLC (logowanie przez konto Google)')}

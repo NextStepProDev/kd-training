@@ -6,7 +6,9 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { ApiError } from '../../utils/errors'
 import { VideoPickerModal } from '../exercise-videos/VideoPickerModal'
-import { formatLongDate } from '../../utils/calendarRange'
+import { addMonths, format, parseISO } from 'date-fns'
+import { addDaysIso, formatLongDate } from '../../utils/calendarRange'
+import { DateInput } from '../ui/DateInput'
 import type { AttachmentKind, CreateTrainingBody, PersonalTraining, TrainingKind } from '../../types'
 import { inputClass, textareaClass } from '../../utils/fieldClass'
 
@@ -28,6 +30,8 @@ interface TrainingFormModalProps {
   onConflictRefresh: () => void
   /** The library lives in the admin panel, so only the coach can attach from it. */
   canAttach: boolean
+  /** Weekly series are the coach's planning tool; offered only when creating. */
+  canRepeat?: boolean
 }
 
 /**
@@ -36,7 +40,7 @@ interface TrainingFormModalProps {
  * of the cascading render an effect would cause.
  */
 export function TrainingFormModal({
-  training, date, onClose, onSubmit, onConflictRefresh, canAttach,
+  training, date, onClose, onSubmit, onConflictRefresh, canAttach, canRepeat = false,
 }: TrainingFormModalProps) {
   const { t } = useTranslation('calendar')
 
@@ -53,6 +57,10 @@ export function TrainingFormModal({
   // A new training defaults to no hour: that is the normal case, and forcing a time on every entry
   // would make the coach invent one.
   const [timed, setTimed] = useState(training?.startTime != null)
+  // Four occurrences by default: a month is the usual first block, and it is easy to see on screen.
+  const [repeat, setRepeat] = useState(false)
+  const [repeatUntil, setRepeatUntil] = useState(() => addDaysIso(date, 21))
+  const offerRepeat = canRepeat && !training
   const [startTime, setStartTime] = useState(training?.startTime?.slice(0, 5) ?? '17:00')
   const [endTime, setEndTime] = useState(training?.endTime?.slice(0, 5) ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -84,6 +92,12 @@ export function TrainingFormModal({
       return
     }
 
+    // A cleared date field would reach the server as an empty string and come back as a generic 400.
+    if (offerRepeat && repeat && !repeatUntil) {
+      setError(t('form.repeatUntilRequired'))
+      return
+    }
+
     setError(null)
     setConflict(false)
     setSaving(true)
@@ -94,6 +108,7 @@ export function TrainingFormModal({
         // Only when creating: the server has no field for it on an update, and sending one would
         // suggest it could be changed.
         ...(training ? {} : { kind }),
+        ...(offerRepeat && repeat ? { repeatWeeklyUntil: repeatUntil } : {}),
         date,
         title: title.trim(),
         description: description.trim() || null,
@@ -236,6 +251,28 @@ export function TrainingFormModal({
             </div>
           )}
         </div>
+
+        {offerRepeat && (
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm text-surface-300">
+              <input type="checkbox" checked={repeat} onChange={e => setRepeat(e.target.checked)}
+                className="h-4 w-4 accent-primary-500" />
+              {t('form.repeatWeekly')}
+            </label>
+            {repeat && (
+              <div>
+                <label htmlFor="training-repeat-until" className="block text-xs text-surface-400 mb-1">
+                  {t('form.repeatUntil')}
+                </label>
+                {/* The server caps a series at half a year; the picker says so before it has to. */}
+                <DateInput id="training-repeat-until" className={inputClass} value={repeatUntil}
+                  min={addDaysIso(date, 7)} max={format(addMonths(parseISO(date), 6), 'yyyy-MM-dd')}
+                  onChange={setRepeatUntil} />
+                <p className="mt-1 text-xs text-surface-500">{t('form.repeatHint')}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Materials. Videos come from the shared library so a correction there fixes every
             training at once; a plain link covers the one-off case. */}

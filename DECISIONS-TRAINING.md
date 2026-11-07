@@ -82,6 +82,26 @@ retencja). Zasięg jak przy celach: zdjęta flaga `is_athlete` = materiał poza 
   tekstem i zerowanie `training_consent_at` nie było potrzebne (patrz „Zgoda: poszerzenie zakresu”).
 - Kasowanie planu (`AdminTrainingPlanErasureService`) i eksport RODO zabierają materiały z pytaniami.
 
+### V4 (tutaj) — treningi powtarzalne
+
+Odpowiedź klienta (07.11.2026): „powtarzalność jest mile widziana”; decyzje Mateusza (08.11.2026):
+seria **do wybranej daty** (nie „do odwołania”) i **usuwanie „ten i następne”** (bez edycji całej serii).
+- Trener ustawia przy tworzeniu „powtarzaj co tydzień do dnia” → serwer od razu zapisuje każdy termin
+  jako **zwykły wiersz** ze wspólnym `series_id`. Każdy edytuje się osobno, jak dotąd; nie ma tabeli
+  serii, bo seria nie ma nic do zapamiętania poza tym, które wiersze do niej należą.
+- **Najdłużej pół roku** (`MAX_SERIES_SPAN`): wszystkie terminy powstają naraz, a literówka w roku nie
+  może zasypać kalendarza setkami wpisów. Dłuższy okres to druga seria. Serię zakłada tylko trener.
+- **Kopia (duplikat, wklejenie COPY) nie dostaje `series_id`**, więc „usuń ten i następne” jej nie
+  zabierze. MOVE przenosi oryginalny wiersz, więc zostaje w serii.
+- „Ten i następne” bierze terminy od daty usuwanego w górę; wcześniejsze to historia i zostają.
+  **Późniejszych terminów już odhaczonych przez podopiecznego też nie rusza** (ocena wysiłku
+  i komentarze to jego zapis) — usuwa się tylko kliknięty termin i nieodhaczone po nim.
+  Każde usunięcie przyszłego terminu idzie przez zwykłą ścieżkę (`deleteAndAnnounce`), więc
+  podopieczny widzi je w banerze usuniętych — po jednym wpisie na termin.
+- **Licznik nowości liczy każdy termin osobno** (seria czterech tygodni = 4), bo każdy to osobny
+  trening w kalendarzu. Świadomie bez wyjątku dla serii: predykat licznika żyje w kilku miejscach
+  i wyjątek musiałby trafić do wszystkich naraz.
+
 ### V37 — zadanie jako osobny wiersz
 
 `personal_trainings` + `kind` TRAINING/TASK, `target_calories`.

@@ -25,7 +25,8 @@ interface TrainingDetailModalProps {
   adapter: TrainingCalendarAdapter
   onClose: () => void
   onEdit: (training: PersonalTraining) => void
-  onDelete: (training: PersonalTraining) => Promise<unknown>
+  /** `following`: also the later occurrences of the entry's weekly series. */
+  onDelete: (training: PersonalTraining, following: boolean) => Promise<unknown>
   onDuplicate: (training: PersonalTraining) => Promise<unknown>
   /**
    * Absent for the coach — ticking off is the client's act alone, so no form renders. `rpe` is null
@@ -48,6 +49,7 @@ export function TrainingDetailModal({
   const [footerError, setFooterError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteFollowing, setDeleteFollowing] = useState(false)
 
   const isTask = training.kind === 'TASK'
   // What the coach assigned is the client's to do and comment on, not to rewrite, repeat elsewhere
@@ -209,13 +211,22 @@ export function TrainingDetailModal({
       <ConfirmDialog
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        onConfirm={() => run(() => onDelete(training), 'footer', true)}
+        onConfirm={() => run(() => onDelete(training, deleteFollowing), 'footer', true)}
         title={t(isTask ? 'detail.deleteTaskTitle' : 'detail.deleteTitle')}
         message={t('detail.deleteMessage', { title: training.title })}
         confirmLabel={t('detail.delete')}
         danger
         loading={busy}
-      />
+      >
+        {/* Earlier occurrences are history and never offered: only this one and the ones after it. */}
+        {training.seriesId && (
+          <label className="flex items-center gap-2 text-sm text-surface-300">
+            <input type="checkbox" checked={deleteFollowing}
+              onChange={e => setDeleteFollowing(e.target.checked)} className="h-4 w-4 accent-primary-500" />
+            {t('detail.deleteFollowing')}
+          </label>
+        )}
+      </ConfirmDialog>
     </>
   )
 }

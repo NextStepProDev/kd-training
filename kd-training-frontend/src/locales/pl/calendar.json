@@ -50,6 +50,10 @@
     "setTime": "Ustaw godzinę",
     "startTime": "Od",
     "endTime": "Do",
+    "repeatWeekly": "Powtarzaj co tydzień",
+    "repeatUntil": "Do dnia (włącznie)",
+    "repeatUntilRequired": "Wybierz, do którego dnia powtarzać.",
+    "repeatHint": "Każdy termin to osobny wpis: możesz go potem zmienić albo usunąć. Najdłużej pół roku.",
     "save": "Zapisz",
     "cancel": "Anuluj",
     "refresh": "Odśwież i spróbuj ponownie"
@@ -70,7 +74,8 @@
     "coachOnlyHint": "Wpis od trenera — zmienić, powtórzyć lub usunąć może go tylko trener.",
     "deleteTitle": "Usunąć trening?",
     "deleteTaskTitle": "Usunąć zadanie?",
-    "deleteMessage": "Czy na pewno usunąć „{{title}}\"?"
+    "deleteMessage": "Czy na pewno usunąć „{{title}}\"?",
+    "deleteFollowing": "Usuń też kolejne terminy z tej serii"
   },
   "athletes": {
     "title": "Podopieczni",

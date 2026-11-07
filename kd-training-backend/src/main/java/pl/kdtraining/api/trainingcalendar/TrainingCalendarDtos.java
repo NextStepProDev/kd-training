@@ -70,6 +70,8 @@ public final class TrainingCalendarDtos {
             boolean unread,
             int commentCount,
             List<AttachmentResponse> attachments,
+            /** Set on the occurrences of a weekly series, so the client can offer "delete the following ones too". */
+            @Nullable UUID seriesId,
             long version,
             Instant createdAt,
             Instant updatedAt
@@ -151,7 +153,9 @@ public final class TrainingCalendarDtos {
             @Nullable @Size(max = 2000) String description,
             /** Ignored on a training: only a task has a calorie ceiling. */
             @Nullable @Min(500) @Max(10000) Integer targetCalories,
-            @Nullable @Size(max = 3) List<@Valid AttachmentRequest> attachments
+            @Nullable @Size(max = 3) List<@Valid AttachmentRequest> attachments,
+            /** Coach only: repeat on the same weekday up to and including this date (at most half a year). */
+            @Nullable LocalDate repeatWeeklyUntil
     ) {}
 
     /** No {@code kind}: an entry is a training or a task from birth, and stays what it was. */

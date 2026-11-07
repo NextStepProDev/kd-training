@@ -93,4 +93,12 @@ public interface PersonalTrainingRepository extends JpaRepository<PersonalTraini
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PersonalTraining t WHERE t.athlete.id = :athleteId")
     int deleteAllForAthlete(@Param("athleteId") UUID athleteId);
+
+    /** "This and the following ones": the occurrences of a series from a given day on, oldest first. */
+    @Query("""
+        SELECT t FROM PersonalTraining t
+        WHERE t.seriesId = :seriesId AND t.date >= :from
+        ORDER BY t.date
+        """)
+    List<PersonalTraining> findSeriesFrom(@Param("seriesId") UUID seriesId, @Param("from") LocalDate from);
 }

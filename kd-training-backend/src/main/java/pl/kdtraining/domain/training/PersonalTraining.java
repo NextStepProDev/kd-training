@@ -83,6 +83,11 @@ public class PersonalTraining {
     @Nullable
     private Integer rpe;
 
+    /** Shared by the occurrences of one weekly series; null for a one-off. Never copied. */
+    @Column(name = "series_id")
+    @Nullable
+    private UUID seriesId;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -273,5 +278,13 @@ public class PersonalTraining {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public @Nullable UUID getSeriesId() {
+        return seriesId;
+    }
+
+    public void joinSeries(UUID seriesId) {
+        this.seriesId = seriesId;
     }
 }

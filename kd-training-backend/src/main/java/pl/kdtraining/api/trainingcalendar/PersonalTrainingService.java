@@ -42,6 +42,8 @@ public class PersonalTrainingService {
     static final int MAX_RANGE_DAYS = 62;
 
     private static final int DEFAULT_DUPLICATE_OFFSET_DAYS = 7;
+    /** The furthest a weekly series may run from its first date — see {@link #occurrences}. */
+    private static final java.time.Period MAX_SERIES_SPAN = java.time.Period.ofMonths(6);
 
     /** The banner is an alert feed, not an archive — showing every deletion ever would bury the news. */
     private static final int MAX_DELETION_NOTICES = 10;
@@ -113,15 +115,60 @@ public class PersonalTrainingService {
         User athlete = access.requireAthlete(athleteId);
         validateTimes(request.startTime(), request.endTime());
 
+        List<LocalDate> dates = occurrences(request, byAdmin);
+        // One id for the whole series; a one-off (a single date) gets none.
+        UUID seriesId = dates.size() > 1 ? UUID.randomUUID() : null;
+
+        PersonalTraining first = createOne(athlete, request, dates.getFirst(), byAdmin, seriesId);
+        for (LocalDate date : dates.subList(1, dates.size())) {
+            createOne(athlete, request, date, byAdmin, seriesId);
+        }
+        return single(first);
+    }
+
+    private PersonalTraining createOne(User athlete, CreateTrainingRequest request, LocalDate date,
+                                       boolean byAdmin, @Nullable UUID seriesId) {
         // Absent kind means TRAINING: it is what almost every entry is, and what older clients send.
         TrainingKind kind = request.kind() == null ? TrainingKind.TRAINING : request.kind();
         PersonalTraining training =
-                new PersonalTraining(athlete, kind, request.date(), request.title().trim(), byAdmin);
-        training.edit(request.date(), request.startTime(), request.endTime(),
+                new PersonalTraining(athlete, kind, date, request.title().trim(), byAdmin);
+        training.edit(date, request.startTime(), request.endTime(),
                 request.title().trim(), Strings.trimToNull(request.description()), request.targetCalories(), byAdmin);
+        if (seriesId != null) {
+            training.joinSeries(seriesId);
+        }
         PersonalTraining saved = repository.saveAndFlush(training);
         attachments.applyToTraining(saved, materialsFrom(request.attachments(), byAdmin));
-        return single(saved);
+        return saved;
+    }
+
+    /**
+     * The dates a create request lands on: the one day, or every week on that weekday up to and
+     * including {@code repeatWeeklyUntil}. Each occurrence becomes an ordinary, separately editable row.
+     * <p>
+     * Coach only — the client's own entries are notes to self, and a series is planning. Capped at half
+     * a year: every occurrence is a real row written at once, and a mistyped year must not fill the
+     * calendar with hundreds of them. A longer run is a second series.
+     */
+    private List<LocalDate> occurrences(CreateTrainingRequest request, boolean byAdmin) {
+        LocalDate until = request.repeatWeeklyUntil();
+        if (until == null) {
+            return List.of(request.date());
+        }
+        if (!byAdmin) {
+            throw new IllegalArgumentException(msg.get("personaltraining.series.coach.only"));
+        }
+        if (!until.isAfter(request.date())) {
+            throw new IllegalArgumentException(msg.get("personaltraining.series.until.before.start"));
+        }
+        if (until.isAfter(request.date().plus(MAX_SERIES_SPAN))) {
+            throw new IllegalArgumentException(msg.get("personaltraining.series.too.long"));
+        }
+        List<LocalDate> dates = new java.util.ArrayList<>();
+        for (LocalDate d = request.date(); !d.isAfter(until); d = d.plusWeeks(1)) {
+            dates.add(d);
+        }
+        return dates;
     }
 
     @Transactional
@@ -142,11 +189,35 @@ public class PersonalTrainingService {
         return single(saved);
     }
 
+    /**
+     * @param following also delete the later occurrences of this entry's weekly series ("this and the
+     *                  following ones" — the end of a cooperation, or a new hour as a new series). On a
+     *                  one-off it changes nothing. Earlier occurrences are never touched: they are history.
+     *                  Nor is a later one the client already ticked off: its effort rating and comments
+     *                  are their record, and "the following ones" means the plan ahead, not that record.
+     *                  Only the entry actually clicked goes regardless — that one was chosen.
+     */
     @Transactional
-    public void delete(UUID trainingId, UUID viewerId, boolean viewerIsAdmin) {
+    public void delete(UUID trainingId, boolean following, UUID viewerId, boolean viewerIsAdmin) {
         PersonalTraining training = access.requireTraining(trainingId, viewerId, viewerIsAdmin);
         requireOwnEntry(training, viewerIsAdmin);
-        deleteAndAnnounce(training, viewerIsAdmin);
+        UUID seriesId = training.getSeriesId();
+        if (!following || seriesId == null) {
+            deleteAndAnnounce(training, viewerIsAdmin);
+            return;
+        }
+        for (PersonalTraining occurrence : repository.findSeriesFrom(seriesId, training.getDate())) {
+            boolean chosen = occurrence.getId().equals(training.getId());
+            if (!chosen && occurrence.getCompletedAt() != null) {
+                continue;
+            }
+            // The series id cannot cross to another client (copies never carry it), but the guard is
+            // cheap and keeps "one person's plan" true by construction rather than by that argument.
+            if (occurrence.getAthlete().getId().equals(training.getAthlete().getId())) {
+                requireOwnEntry(occurrence, viewerIsAdmin);
+                deleteAndAnnounce(occurrence, viewerIsAdmin);
+            }
+        }
     }
 
     private void deleteAndAnnounce(PersonalTraining training, boolean viewerIsAdmin) {
@@ -458,7 +529,7 @@ public class PersonalTrainingService {
                 t.getTitle(), t.getDescription(), t.getTargetCalories(), t.status(now),
                 t.getCompletedAt(), t.getFeedback(), t.getRpe(),
                 t.isCreatedByAdmin(), t.isLastModifiedByAdmin(),
-                unread, commentCount, materials,
+                unread, commentCount, materials, t.getSeriesId(),
                 t.getVersion(), t.getCreatedAt(), t.getUpdatedAt());
     }
 }

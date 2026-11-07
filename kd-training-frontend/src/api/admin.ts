@@ -73,8 +73,9 @@ export const adminApi = {
     fetchApi<PersonalTraining>(`/admin/personal-trainings/${id}`, {
       method: 'PUT', body: JSON.stringify(body),
     }),
-  deletePersonalTraining: (id: string) =>
-    fetchApi<void>(`/admin/personal-trainings/${id}`, { method: 'DELETE' }),
+  /** `following` also deletes the later occurrences of the entry's weekly series. */
+  deletePersonalTraining: (id: string, following = false) =>
+    fetchApi<void>(`/admin/personal-trainings/${id}${following ? '?following=true' : ''}`, { method: 'DELETE' }),
   duplicatePersonalTraining: (id: string, offsetDays?: number) =>
     fetchApi<PersonalTraining>(`/admin/personal-trainings/${id}/duplicate`, {
       method: 'POST', body: JSON.stringify({ offsetDays }),

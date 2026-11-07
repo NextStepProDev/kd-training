@@ -23,7 +23,8 @@ export interface TrainingCalendarAdapter {
   fetchRange: (from: string, to: string) => Promise<CalendarRange>
   createTraining: (body: CreateTrainingBody) => Promise<PersonalTraining>
   updateTraining: (id: string, body: UpdateTrainingBody) => Promise<PersonalTraining>
-  deleteTraining: (id: string) => Promise<void>
+  /** `following`: the later occurrences of a weekly series go too. Only the coach has series. */
+  deleteTraining: (id: string, following?: boolean) => Promise<void>
   duplicateTraining: (id: string, offsetDays?: number) => Promise<PersonalTraining>
   pasteTraining: (sourceId: string, targetDate: string, mode: PasteMode) => Promise<PersonalTraining>
   /**
@@ -78,7 +79,7 @@ export function coachAdapter(athleteId: string): TrainingCalendarAdapter {
     fetchRange: (from, to) => adminApi.getTrainingCalendar(athleteId, from, to),
     createTraining: (body) => adminApi.createPersonalTraining(athleteId, body),
     updateTraining: (id, body) => adminApi.updatePersonalTraining(id, body),
-    deleteTraining: (id) => adminApi.deletePersonalTraining(id),
+    deleteTraining: (id, following) => adminApi.deletePersonalTraining(id, following),
     duplicateTraining: (id, offsetDays) => adminApi.duplicatePersonalTraining(id, offsetDays),
     // The paste lands in the calendar being viewed, which is not necessarily the one the entry was
     // copied from: the clipboard survives a switch of client on purpose.

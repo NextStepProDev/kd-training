@@ -55,11 +55,12 @@ export function MaterialsBoard({ athleteId }: { athleteId: string | null }) {
   if (!isCoach && materials.length === 0) return null
 
   return (
-    <section aria-labelledby="materials-title" className="rounded-2xl border border-white/[0.07] bg-surface-900 p-4 sm:p-6">
+    // Same head as the goals board right above it: one page, one way of titling a section.
+    <section aria-labelledby="materials-title" className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="materials-title" className="flex items-center gap-2 text-lg font-semibold text-white">
-            <BookOpen className="h-5 w-5 text-surface-400" aria-hidden="true" />
+          <h2 id="materials-title" className="flex items-center gap-3 text-display text-3xl text-white">
+            <BookOpen className="h-6 w-6 text-surface-400" aria-hidden="true" />
             {t('library.title')}
           </h2>
           <p className="mt-1 text-sm text-surface-400">{t(isCoach ? 'library.coachSubtitle' : 'library.subtitle')}</p>
@@ -72,14 +73,16 @@ export function MaterialsBoard({ athleteId }: { athleteId: string | null }) {
         )}
       </div>
 
-      {actionError && <p role="alert" className="mt-3 text-sm text-rose-400">{actionError}</p>}
+      {actionError && (
+        <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{actionError}</p>
+      )}
 
       {isCoach && materials.length === 0 && !materialsQuery.isLoading && (
-        <p className="mt-4 text-sm text-surface-500">{t('library.empty')}</p>
+        <p className="rounded-xl border border-dashed border-white/[0.1] p-4 text-sm text-surface-500">{t('library.empty')}</p>
       )}
 
       {materials.length > 0 && (
-        <ul className="mt-4 space-y-4">
+        <ul className="space-y-3">
           {materials.map(material => (
             <li key={material.id}>
               <MaterialCard
@@ -127,7 +130,7 @@ function MaterialCard({ material, isCoach, onEdit, onDelete, onAsked }: {
   const { t } = useTranslation('calendar')
 
   return (
-    <article className="rounded-xl border border-white/[0.07] bg-surface-850 p-4">
+    <article className="rounded-xl border border-white/[0.07] bg-surface-900 p-4">
       <div className="flex items-start justify-between gap-3">
         <h3 className="min-w-0 font-semibold text-white">
           {material.title}

@@ -130,7 +130,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V2 (V1 schemat startowy, V2 zaproszenia; jeszcze nigdzie niewdrożone). Kolejna migracja: V3.**
+**Obecny stan: V3 (V1 schemat startowy, V2 zaproszenia, V3 materiały; jeszcze nigdzie niewdrożone). Kolejna migracja: V4.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).
@@ -145,8 +145,8 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 |---------|--------|-------------|
 | `/api/auth` | brak | rejestracja (tylko z zaproszenia), odczyt zaproszenia, logowanie, weryfikacja maila, reset hasła, refresh |
 | `/api/user` | zalogowany | profil, zgody (w tym art. 9), avatar, wylogowanie wszędzie, usunięcie konta |
-| `/api/user/my-training` | podopieczny (`is_athlete` + zgoda art. 9) | kalendarz 1:1, cele, statystyki, komentarze, zdjęcia |
-| `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, biblioteka filmów, szablony, notatki |
+| `/api/user/my-training` | podopieczny (`is_athlete` + zgoda art. 9) | kalendarz 1:1, cele, materiały z pytaniami, statystyki, komentarze, zdjęcia |
+| `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, materiały, biblioteka filmów, szablony, notatki |
 | `/api/public` | brak | wypis z marketingu |
 | `/api/files` | brak | streaming plików z białej listy folderów (dziś tylko `avatars`) |
 | `/og/` · `/sitemap.xml` | brak | Open Graph strony głównej, mapa strony (`/`, `/polityka-prywatnosci`, `/regulamin`) |

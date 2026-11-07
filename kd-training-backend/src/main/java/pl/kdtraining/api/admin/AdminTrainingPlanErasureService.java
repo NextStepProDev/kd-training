@@ -8,6 +8,7 @@ import pl.kdtraining.api.NotFoundException;
 import pl.kdtraining.api.admin.note.AdminPrivateNoteService;
 import pl.kdtraining.api.trainingcalendar.TrainingPhotoService;
 import pl.kdtraining.domain.training.AthleteGoalRepository;
+import pl.kdtraining.domain.training.AthleteMaterialRepository;
 import pl.kdtraining.domain.training.PersonalTrainingRepository;
 import pl.kdtraining.domain.training.TrainingCalendarReadRepository;
 import pl.kdtraining.domain.training.TrainingDeletionRepository;
@@ -39,6 +40,7 @@ public class AdminTrainingPlanErasureService {
     private final UserRepository userRepository;
     private final PersonalTrainingRepository trainings;
     private final AthleteGoalRepository goals;
+    private final AthleteMaterialRepository materials;
     private final TrainingCalendarReadRepository reads;
     private final TrainingDeletionRepository deletions;
     private final TrainingPhotoService photos;
@@ -48,6 +50,7 @@ public class AdminTrainingPlanErasureService {
     public AdminTrainingPlanErasureService(UserRepository userRepository,
                                            PersonalTrainingRepository trainings,
                                            AthleteGoalRepository goals,
+                                           AthleteMaterialRepository materials,
                                            TrainingCalendarReadRepository reads,
                                            TrainingDeletionRepository deletions,
                                            TrainingPhotoService photos,
@@ -56,6 +59,7 @@ public class AdminTrainingPlanErasureService {
         this.userRepository = userRepository;
         this.trainings = trainings;
         this.goals = goals;
+        this.materials = materials;
         this.reads = reads;
         this.deletions = deletions;
         this.photos = photos;
@@ -82,6 +86,8 @@ public class AdminTrainingPlanErasureService {
         int erasedNotes = notes.countOwnNotesBeforeErasure(userId, actingAdminId);
         int erasedTrainings = trainings.deleteAllForAthlete(userId);
         int erasedGoals = goals.deleteAllForAthlete(userId);
+        // The questions under them leave through the cascade.
+        int erasedMaterials = materials.deleteAllForAthlete(userId);
         deletions.deleteAllForAthlete(userId);
         reads.deleteAllForAthlete(userId);
 
@@ -90,8 +96,8 @@ public class AdminTrainingPlanErasureService {
         user.setAthlete(false);
         userRepository.save(user);
 
-        log.info("Erased the 1-on-1 plan for user {}: {} trainings, {} goals, {} notes",
-            userId, erasedTrainings, erasedGoals, erasedNotes);
+        log.info("Erased the 1-on-1 plan for user {}: {} trainings, {} goals, {} materials, {} notes",
+            userId, erasedTrainings, erasedGoals, erasedMaterials, erasedNotes);
 
         return new ErasedPlan(erasedTrainings, erasedGoals, erasedNotes);
     }

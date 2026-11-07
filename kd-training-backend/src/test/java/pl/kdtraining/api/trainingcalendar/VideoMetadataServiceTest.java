@@ -3,6 +3,7 @@ package pl.kdtraining.api.trainingcalendar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pl.kdtraining.api.trainingcalendar.TrainingCalendarDtos.VideoMetadataResponse;
+import pl.kdtraining.domain.training.AthleteMaterialRepository;
 import pl.kdtraining.domain.training.ExerciseVideo;
 import pl.kdtraining.domain.training.ExerciseVideoRepository;
 import pl.kdtraining.domain.training.TrainingAttachmentRepository;
@@ -35,7 +36,7 @@ class VideoMetadataServiceTest {
         when(msg.get(anyString())).thenReturn("message");
         when(msg.get(anyString(), any())).thenReturn("message");
         when(repository.findByVideoKey(anyString())).thenReturn(Optional.empty());
-        service = new ExerciseVideoService(repository, mock(TrainingAttachmentRepository.class), oEmbed, msg);
+        service = new ExerciseVideoService(repository, mock(TrainingAttachmentRepository.class), mock(AthleteMaterialRepository.class), oEmbed, msg);
     }
 
     @Test

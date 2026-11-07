@@ -28,13 +28,16 @@ public class MyTrainingController {
     private final PersonalTrainingService service;
     private final AthleteGoalService goalService;
     private final TrainingStatsService statsService;
+    private final AthleteMaterialService materialService;
 
     public MyTrainingController(PersonalTrainingService service,
                                 AthleteGoalService goalService,
-                                TrainingStatsService statsService) {
+                                TrainingStatsService statsService,
+                                AthleteMaterialService materialService) {
         this.service = service;
         this.goalService = goalService;
         this.statsService = statsService;
+        this.materialService = materialService;
     }
 
     @GetMapping("/calendar")
@@ -140,5 +143,18 @@ public class MyTrainingController {
     @GetMapping("/goals")
     public GoalsResponse goals(@CurrentUserId UUID userId) {
         return goalService.getGoals(userId, userId, false);
+    }
+
+    /** The coach's materials for this client; read-only apart from the questions under them. */
+    @GetMapping("/materials")
+    public List<MaterialResponse> materials(@CurrentUserId UUID userId) {
+        return materialService.list(userId, userId, false);
+    }
+
+    @PostMapping("/materials/{materialId}/questions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MaterialQuestionResponse askAboutMaterial(@CurrentUserId UUID userId, @PathVariable UUID materialId,
+                                                     @Valid @RequestBody MaterialQuestionRequest request) {
+        return materialService.ask(materialId, userId, false, request);
     }
 }

@@ -64,6 +64,24 @@ tylko AKTYWNE cele; zwykły unikat ograniczyłby podopiecznego do trzech celów 
 Osiągnięty cel jest **niezmienny** (brak edycji, usunięcia i ponownego osiągnięcia → 409) i trafia
 do skrzyni trofeów; `achieved_at` to DATE, bo datowanie jest wsteczne.
 
+### V3 (tutaj) — materiały na stałe i pytania pod nimi
+
+Odpowiedzi klienta (07.11.2026): materiały mają być „na stałe” (nie przy dacie), osobno dla każdej
+osoby, a pytania „przy materiale”. `athlete_materials` — tytuł + film z biblioteki i/lub opis
+(`CHECK`: sam tytuł nie przejdzie), trener pisze, podopieczny czyta. `material_questions` — wątek
+pod materiałem, sam tekst (zdjęcia zostają przy komentarzach treningów, tam mieszka ich 30-dniowa
+retencja). Zasięg jak przy celach: zdjęta flaga `is_athlete` = materiał poza zasięgiem, cudzy = 404.
+- **Film w użyciu przez materiał też blokuje usunięcie z biblioteki** — oba klucze na `exercise_videos`
+  są RESTRICT, a `ExerciseVideoService.delete` sprawdza oba (bez tego 500).
+- **Liczniki nieprzeczytanych:** nowy materiał (tylko dla podopiecznego, jak cel) i wiadomości
+  w wątkach (obie strony) wchodzą do `TrainingUnreadService` — `countUnread` i zbiorczo dla listy
+  podopiecznych. Liczone samym czasem (`seen_at`), bo materiał nie ma daty; ten sam znacznik co
+  kalendarz, bo leżą na jednej stronie.
+- **Zgoda art. 9:** pozycja „wiadomości z trenerem” w `consent.items` obejmuje teraz też pytania pod
+  materiałami. Zmienione **przed** pierwszym wdrożeniem, więc nikt nie udzielił zgody pod starym
+  tekstem i zerowanie `training_consent_at` nie było potrzebne (patrz „Zgoda: poszerzenie zakresu”).
+- Kasowanie planu (`AdminTrainingPlanErasureService`) i eksport RODO zabierają materiały z pytaniami.
+
 ### V37 — zadanie jako osobny wiersz
 
 `personal_trainings` + `kind` TRAINING/TASK, `target_calories`.

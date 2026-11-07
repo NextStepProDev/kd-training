@@ -1,4 +1,6 @@
 DELETE FROM admin_private_notes;
+DELETE FROM material_questions;
+DELETE FROM athlete_materials;
 DELETE FROM athlete_goals;
 DELETE FROM training_attachments;
 DELETE FROM training_templates;

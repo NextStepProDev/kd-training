@@ -19,7 +19,7 @@ import { test as setup, expect } from '@playwright/test'
  * Not solved by switching reuse off, which would break the ordinary case where the dev server that
  * is already up is the right one.
  */
-setup('the server under test is KD Training, not another project on the same port', async ({ request, baseURL }) => {
+setup('the server under test is Mocny Grzbiet, not another project on the same port', async ({ request, baseURL }) => {
   const response = await request.get('/')
   const html = await response.text()
   const title = html.match(/<title>(.*?)<\/title>/s)?.[1]?.trim() ?? '(no <title>)'
@@ -28,9 +28,9 @@ setup('the server under test is KD Training, not another project on the same por
   // value, and printing an entire HTML page buries the explanation under it.
   expect(
     title,
-    `${baseURL} is serving "${title}", which is not KD Training.\n\n`
+    `${baseURL} is serving "${title}", which is not Mocny Grzbiet.\n\n`
       + 'Something else already holds that port and Playwright reused it. Stop that dev server (or '
       + 'start this one on a free port) and run again. Every test below would otherwise be describing '
       + 'the wrong application.',
-  ).toContain('KD Training')
+  ).toContain('Mocny Grzbiet')
 })

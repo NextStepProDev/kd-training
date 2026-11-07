@@ -1,4 +1,4 @@
-# KD Training — bezpieczeństwo i sesje
+# Mocny Grzbiet — bezpieczeństwo i sesje
 
 > Wydzielone z `CLAUDE.md`. Logowanie, JWT, OAuth, rate limiting, blokada konta, reguła „co kończy sesję".
 

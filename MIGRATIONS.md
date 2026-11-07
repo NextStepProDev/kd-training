@@ -1,4 +1,4 @@
-# KD Training — migracje bazy (Flyway)
+# Mocny Grzbiet — migracje bazy (Flyway)
 
 > Wydzielone z `CLAUDE.md`. Uzasadnienia decyzji treningowych → [`DECISIONS-TRAINING.md`](DECISIONS-TRAINING.md).
 

@@ -36,7 +36,7 @@
     "audienceSelectedHint": "Tylko ręcznie zaznaczeni użytkownicy z listy.",
     "emailSubject": "Tytuł",
     "emailMessage": "Treść",
-    "emailSignatureHint": "Logo KD Training oraz podpis „Pozdrawiam, KD Training\" zostaną dodane automatycznie.",
+    "emailSignatureHint": "Nagłówek „Mocny Grzbiet” oraz podpis „Pozdrawiam, Mocny Grzbiet” zostaną dodane automatycznie.",
     "emailUnsubscribeHint": "Na dole wiadomości dodamy link umożliwiający rezygnację z marketingu.",
     "emailSend": "Wyślij",
     "emailSuccess_one": "Wysłano wiadomość do {{count}} użytkownika.",

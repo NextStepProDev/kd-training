@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => { await stubApi(page) })
 test.describe('Golden Path — gość', () => {
   test('strona główna mówi, czyja to strona, i prowadzi do logowania', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle(/KD Training/)
+    await expect(page).toHaveTitle(/Mocny Grzbiet/)
     await expect(page.getByRole('heading', { level: 1, name: 'Kacper Dąbrowski' })).toBeVisible()
 
     await page.getByRole('main').getByRole('link', { name: 'Zaloguj się' }).click()

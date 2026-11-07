@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 
-const SITE_NAME = 'KD Training'
+const SITE_NAME = 'Mocny Grzbiet'
 const DEFAULT_DESCRIPTION = 'Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.'
 const DEFAULT_IMAGE = '/og-default.png'
 

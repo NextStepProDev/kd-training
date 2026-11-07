@@ -1,4 +1,4 @@
-# KD Training — infrastruktura
+# Mocny Grzbiet — infrastruktura
 
 > Wydzielone z `CLAUDE.md`. Serwer produkcyjny, JVM, kopie zapasowe, CI/CD, zmienne środowiskowe.
 > Porty dev zostały w `CLAUDE.md` (sekcja „Local Dev Workflow").
@@ -7,7 +7,7 @@
 
 ### Serwer produkcyjny
 > Liczby i pomiary w tej sekcji (limity pamięci, soak, czasy startu) pochodzą z produkcji **Fire
-> Academy** — małej maszyny, na której ten kod dotąd działał. Serwer KD Training nie jest jeszcze
+> Academy** — małej maszyny, na której ten kod dotąd działał. Serwer Mocnego Grzbietu nie jest jeszcze
 > wybrany; po wyborze przeliczyć `mem_limit` i heap.
 
 - **Swap 2 GB — krytyczny przy ograniczonej pamięci (bez tego OOM).** Przy pierwszym deploy uruchomić raz: `sudo bash setup-swap.sh` (skrypt w `kd-training-hub/`, idempotentny: 2 GB `/swapfile`, swappiness 10, utrwalone w fstab + sysctl)

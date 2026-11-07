@@ -1,6 +1,8 @@
-# KD Training
+# Mocny Grzbiet (kd-training)
 
-Strona i aplikacja trenera personalnego **Kacpra Dąbrowskiego**: wizytówka + strefa podopiecznego
+Strona i aplikacja trenera personalnego **Kacpra Dąbrowskiego**, marka **„Mocny Grzbiet”** (od 07.11.2026,
+odpowiedzi klienta; wcześniej robocze „KD Training”). Nazwy techniczne zostają: repo, pakiet `pl.kdtraining`,
+katalogi `kd-training-*`, kontenery i wolumeny. Produkt: wizytówka + strefa podopiecznego
 (plan 1:1, wiadomości, zdjęcia, filmy, cele) + panel trenera. Java/Spring Boot backend + React
 frontend, Tailwind 4, czerń i biel. Wyłącznie język polski. Najpierw telefon (brief klienta).
 
@@ -155,7 +157,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Ścieżka | Komponent | Opis |
 |---------|-----------|------|
-| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Treningi i opieka, Z pracy, Umów trening. Teksty z briefu; prezentacja Kacpra i zdjęcia to **zaślepki** |
+| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening. „O mnie” to tekst Kacpra dosłownie, usługi zbudowane z niego; zdjęcia klienta w `public/images/`. Adres, telefon i prawdziwy mail jeszcze nie |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
@@ -168,11 +170,13 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/verify-email` · `/reset-password` · `/forgot-password` · `/resend-verification` · `/oauth-callback` | — | przepływy konta |
 
 Nawigacja: Strona główna · (Moje konto — zalogowany) · (Panel admina — admin) · (Zaloguj się — gość).
-Marka w nawigacji, stopce i mailach jest **tekstem** („KD Training”) — logo jeszcze nie ma.
-Ikony i obrazek OG (`public/icons`, `favicon.*`, `og-default.png`) to znak „KD” w Antonie na grafitowym tle,
-w stylu strony (01.11.2026) — do podmiany, gdy klient da logo. `favicon.svg` ma litery jako krzywe (przeglądarka nie
-ładuje czcionek do favicony). Maile: nagłówek „KD Training” prosi o Antona, a programy pocztowe bez czcionek
-webowych dostają Impact albo Arial Black.
+Marka (`Brand.tsx`): okrągłe logo klienta (`public/logo.svg`) + napis „Mocny Grzbiet” — napis w logo jest
+nieczytelny w rozmiarze nawigacji. `logo.svg` to obrys (`potrace`) wyrenderowanego PDF-u klienta, biały, bo strona jest
+zawsze ciemna; konwersja `pdftocairo -svg` dawała 300 KB ścieżek i 70 masek. Ikony aplikacji i `og-default.png` mają
+pełne logo na grafitowym tle, a favicona monogram „MG” w Antonie jako krzywe: logo w 32 px zlewa się w plamę,
+a przeglądarka nie ładuje czcionek do favicony. Maile: nagłówek „Mocny Grzbiet” prosi o Antona, a programy pocztowe
+bez czcionek webowych dostają Impact albo Arial Black. Zdjęcia do repo (publiczne) idą przeskalowane i **bez
+metadanych EXIF/GPS**; `src/config/site.test.ts` pilnuje, że pliki z `HOME_PHOTOS` istnieją i mają opisy.
 
 ---
 
@@ -314,9 +318,9 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 2. Dane administratora → polityka prywatności (sekcja 1), `AdminUserDataExportService.readme()`,
    zgody marketingowe (`auth.json`, `settings.json`); adres kontaktowy → `config/site.ts`,
    `calendar.json` (`withdrawNote`).
-3. Treść wizytówki: prezentacja Kacpra (`home.about.body` w `locales/pl/common.json`, dziś oznaczona
-   zaślepka), zdjęcia do `public/images/` + nazwy w `HOME_PHOTOS` (`config/site.ts`; puste = zaślepka
-   bez żadnego zapytania). Do tego logo, ikony, `og-default.png` (dziś zaślepki).
+3. Treść wizytówki: tekst, zdjęcia, logo i ikony są (07.11.2026). Brakuje: miasta do adresu (Matejki 15),
+   telefonu, maila kontaktowego, certyfikatu. Słowo „pacjent” w tekście Kacpra zostaje, dopóki nie potwierdzi
+   uprawnień (pytanie w mailu z 07.11.2026).
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
    `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
    `TermsPage.tsx` to szkic do podmiany po danych usługodawcy i weryfikacji prawnej.

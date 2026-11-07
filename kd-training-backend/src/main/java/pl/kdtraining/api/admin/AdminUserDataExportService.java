@@ -241,7 +241,7 @@ public class AdminUserDataExportService {
 
     private static String readme() {
         return """
-            Kopia danych osobowych — KD Training (kdtraining.example)
+            Kopia danych osobowych — Mocny Grzbiet (kdtraining.example)
 
             Ta paczka zawiera wszystkie dane osobowe, które przechowujemy o Tobie w serwisie,
             przygotowane na Twoje żądanie (art. 15 i 20 RODO).

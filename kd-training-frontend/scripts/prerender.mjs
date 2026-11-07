@@ -20,12 +20,12 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const SITE_NAME = 'KD Training'
+const SITE_NAME = 'Mocny Grzbiet'
 const BASE_URL = 'https://kdtraining.example'
 // Mirrors HomePage's <Seo> (brand suffix appended below).
 const HOME_TITLE = 'Kacper Dąbrowski — trener personalny'
 const DEFAULT_DESCRIPTION =
-  'Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.'
+  'Kacper Dąbrowski, trener personalny. Bóle kręgosłupa, drętwienie kończyn, stawy i ich mobilność, powrót po urazie, oddech i postawa.'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
@@ -50,13 +50,13 @@ try {
   // and HomePage's <Seo> — keep in sync.
   const routes = [
     { path: '/', title: HOME_TITLE, description: DEFAULT_DESCRIPTION },
-    { path: '/polityka-prywatnosci', title: 'Polityka prywatności', description: 'Polityka prywatności KD Training — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują.' },
-    { path: '/regulamin', title: 'Regulamin', description: 'Regulamin serwisu KD Training — zasady korzystania z konta i strefy podopiecznego.' },
+    { path: '/polityka-prywatnosci', title: 'Polityka prywatności', description: 'Polityka prywatności serwisu Mocny Grzbiet — jakie dane zbieramy, w jakim celu, jak długo je przechowujemy i jakie prawa Ci przysługują.' },
+    { path: '/regulamin', title: 'Regulamin', description: 'Regulamin serwisu Mocny Grzbiet — zasady korzystania z konta i strefy podopiecznego.' },
   ]
 
   let written = 0
   for (const route of routes) {
-    // Matches Seo.tsx: SITE_NAME stays as-is, otherwise "Title | KD Training".
+    // Matches Seo.tsx: SITE_NAME stays as-is, otherwise "Title | Mocny Grzbiet".
     const fullTitle = route.title === SITE_NAME ? SITE_NAME : `${route.title} | ${SITE_NAME}`
     const url = `${BASE_URL}${route.path}`
     const desc = route.description

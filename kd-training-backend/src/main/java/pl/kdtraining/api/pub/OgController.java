@@ -23,13 +23,14 @@ public class OgController {
     public ResponseEntity<String> homeOg() {
         String siteUrl = appConfig.getSiteUrl();
         String jsonLd = """
-                [{"@context":"https://schema.org","@type":"Person","name":"Kacper Dąbrowski","jobTitle":"Trener personalny","url":"%s"},{"@context":"https://schema.org","@type":"WebSite","name":"KD Training","url":"%s","inLanguage":"pl-PL"}]"""
+                [{"@context":"https://schema.org","@type":"Person","name":"Kacper Dąbrowski","jobTitle":"Trener personalny","url":"%s"},{"@context":"https://schema.org","@type":"WebSite","name":"Mocny Grzbiet","url":"%s","inLanguage":"pl-PL"}]"""
                 .formatted(siteUrl, siteUrl);
-        // Placeholder copy until the client sends the real description (city, services, phone) — the
-        // same sentence lives in index.html and has to change together with this one.
+        // The services come from the client's own description; the city and phone are still to come.
+        // The same sentence lives in index.html, prerender.mjs and common.json (home.seoDescription)
+        // and has to change together with this one.
         return ogResponse(
                 "Kacper Dąbrowski — trener personalny",
-                "Trening personalny z Kacprem Dąbrowskim — indywidualny plan, materiały i kontakt z trenerem w jednym miejscu.",
+                "Kacper Dąbrowski, trener personalny. Bóle kręgosłupa, drętwienie kończyn, stawy i ich mobilność, powrót po urazie, oddech i postawa.",
                 siteUrl + "/og-default.png",
                 siteUrl,
                 jsonLd
@@ -38,7 +39,7 @@ public class OgController {
 
     private ResponseEntity<String> ogResponse(String title, String description, String imageUrl, String pageUrl, String jsonLd) {
         String safeTitle = escapeHtml(title);
-        String safeDesc = escapeHtml(description != null ? description : "KD Training");
+        String safeDesc = escapeHtml(description != null ? description : "Mocny Grzbiet");
         String jsonLdTag = jsonLd != null
                 ? "<script type=\"application/ld+json\">" + jsonLd + "</script>\n"
                 : "";
@@ -55,12 +56,12 @@ public class OgController {
                 <meta property="og:image" content="%s"/>
                 <meta property="og:url" content="%s"/>
                 <meta property="og:type" content="website"/>
-                <meta property="og:site_name" content="KD Training"/>
+                <meta property="og:site_name" content="Mocny Grzbiet"/>
                 <meta property="og:locale" content="pl_PL"/>
                 %s<meta http-equiv="refresh" content="0;url=%s"/>
-                <title>%s | KD Training</title>
+                <title>%s | Mocny Grzbiet</title>
                 </head>
-                <body><p>Przekierowanie do <a href="%s">KD Training</a>...</p></body>
+                <body><p>Przekierowanie do serwisu <a href="%s">Mocny Grzbiet</a>...</p></body>
                 </html>
                 """.formatted(safeDesc, pageUrl, safeTitle, safeDesc, imageUrl, pageUrl, jsonLdTag, pageUrl, safeTitle, pageUrl);
 

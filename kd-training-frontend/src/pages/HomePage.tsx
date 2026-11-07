@@ -17,8 +17,8 @@ interface OfferItem {
  * The business card (brief, point 2): who Kacper is, what he does, the services, photos from work and
  * a way to get in touch. Dark and photographic, one typeface for headlines, white as the only accent.
  *
- * The copy is built from the brief and the photos are placeholders until the client sends his own
- * (HOME_PHOTOS in config/site.ts); the "about" text is marked as a placeholder in common.json.
+ * The "about" text is the client's own, verbatim; the services are built from it. Photos come from
+ * HOME_PHOTOS in config/site.ts.
  */
 export function HomePage() {
   const { t } = useTranslation('common')
@@ -27,6 +27,8 @@ export function HomePage() {
   const [firstName, ...rest] = t('home.title').split(' ')
   const surname = rest.join(' ')
   const workSlots = Array.from({ length: HOME_WORK_SLOTS }, (_, i) => HOME_PHOTOS.work[i])
+  // One alt per photo, same index as HOME_PHOTOS.work; src/config/site.test.ts keeps the two in step.
+  const workAlts = t('home.work.photos', { returnObjects: true }) as string[]
 
   return (
     <>
@@ -46,7 +48,7 @@ export function HomePage() {
           {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            name: 'KD Training',
+            name: 'Mocny Grzbiet',
             url: window.location.origin,
             publisher: { '@id': `${window.location.origin}/#person` },
             inLanguage: 'pl-PL',
@@ -57,6 +59,10 @@ export function HomePage() {
       {/* Hero — full screen, the photo carries the page; the navbar floats over it. */}
       <section className="relative flex min-h-[100svh] items-end overflow-hidden">
         <PhotoSlot src={HOME_PHOTOS.hero} alt={t('home.heroPhotoAlt')} loading="eager" shade monogram={false} className="!absolute inset-0" />
+        {/* The studio photos are bright (white walls), and the shade only darkens the bottom. Without
+            this, the floating navbar and the kicker sat light-on-light: "Grzbiet" all but vanished. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-surface-950/35" />
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-surface-950/85 to-transparent" />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-14 pt-32 sm:px-6 sm:pb-20 lg:px-8">
           <p className="kicker animate-rise">{t('home.kicker')}</p>
           {/* Solid first name, the surname as a contour. The space between the two spans keeps the
@@ -131,7 +137,7 @@ export function HomePage() {
               <PhotoSlot
                 key={i}
                 src={src}
-                alt={t('home.work.photoAlt', { n: i + 1 })}
+                alt={workAlts[i] ?? ''}
                 className={`aspect-[3/4] w-[72vw] shrink-0 snap-start rounded-2xl sm:w-[45vw] md:w-auto ${i % 2 === 1 ? 'md:translate-y-10' : ''}`}
               />
             ))}

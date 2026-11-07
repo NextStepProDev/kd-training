@@ -57,7 +57,7 @@ class AuthMailServiceTest {
     void shouldSendWelcomeEmail() {
         when(msg.getForLang(eq("email.welcome.subject"), eq("pl"))).thenReturn("Witamy!");
         when(msg.getForLang(eq("email.welcome.greeting"), eq("pl"), eq("Jan"))).thenReturn("Cześć Jan!");
-        when(msg.getForLang(eq("email.welcome.body"), eq("pl"))).thenReturn("Witamy w KD Training");
+        when(msg.getForLang(eq("email.welcome.body"), eq("pl"))).thenReturn("Witamy w Mocnym Grzbiecie");
         when(msg.getForLang(eq("email.welcome.see.you"), eq("pl"))).thenReturn("Do zobaczenia!");
 
         service.sendWelcomeEmail(user);
@@ -97,7 +97,7 @@ class AuthMailServiceTest {
         when(adminEmailConfig.getAdminEmails())
             .thenReturn(Set.of("admin1@kdtraining.example", "admin2@kdtraining.example"));
         when(msg.get(eq("email.admin.new.user.subject"), eq("Jan Kowalski"))).thenReturn("Nowy użytkownik: Jan Kowalski");
-        when(msg.get("email.admin.new.user.heading")).thenReturn("Nowy użytkownik dołączył do KD Training");
+        when(msg.get("email.admin.new.user.heading")).thenReturn("Nowy użytkownik dołączył do Mocnego Grzbietu");
         when(msg.get("email.admin.new.user.intro")).thenReturn("Konto zostało właśnie aktywowane. Szczegóły:");
         when(msg.get(eq("email.admin.new.user.name"), anyString())).thenReturn("Imię i nazwisko: Jan Kowalski");
         when(msg.get(eq("email.admin.new.user.email"), anyString())).thenReturn("Email: jan@test.com");
@@ -108,7 +108,7 @@ class AuthMailServiceTest {
         when(msg.get(eq("email.admin.new.user.marketing"), anyString())).thenReturn("Zgoda marketingowa: Nie");
         when(msg.get("email.admin.new.user.button")).thenReturn("Zobacz w panelu");
         when(msg.get("email.footer.visit")).thenReturn("Odwiedź naszą stronę");
-        when(msg.get("email.footer")).thenReturn("KD Training");
+        when(msg.get("email.footer")).thenReturn("Mocny Grzbiet");
         when(msg.get("email.regards")).thenReturn("Pozdrawiam,");
 
         service.sendNewUserAdminNotification(user);

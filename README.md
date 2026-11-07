@@ -1,6 +1,6 @@
 <div align="center">
 
-# KD Training
+# Mocny Grzbiet
 
 **A personal trainer's website and client space — a business card for visitors, a private training plan and a direct line to the coach for every client.**
 
@@ -58,6 +58,6 @@ CI builds and tests both parts, scans the images, and publishes them to GHCR; de
 
 <div align="center">
 
-**KD Training** · [latest release](../../releases)
+**Mocny Grzbiet** · [latest release](../../releases)
 
 </div>

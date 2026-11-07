@@ -48,7 +48,7 @@ export function Footer() {
             <span aria-hidden="true" className="w-px h-4 bg-white/10" />
             <div className="flex items-center gap-2">
               <span className="text-xs text-surface-500">{t('footer.shareLabel')}</span>
-              <ShareButton url="/" title="KD Training" />
+              <ShareButton url="/" title="Mocny Grzbiet" />
             </div>
           </div>
         </div>

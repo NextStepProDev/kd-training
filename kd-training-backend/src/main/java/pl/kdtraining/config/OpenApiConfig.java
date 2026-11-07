@@ -27,9 +27,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
             .info(new Info()
-                .title("KD Training API")
+                .title("Mocny Grzbiet API")
                 .version(appVersion)
-                .description("KD Training REST API"))
+                .description("Mocny Grzbiet REST API"))
             .servers(List.of(
                 new Server().url(baseUrl).description("Current Server"),
                 new Server().url("http://localhost:8083").description("Local Development")))

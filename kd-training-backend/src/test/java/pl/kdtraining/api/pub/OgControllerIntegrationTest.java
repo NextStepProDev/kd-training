@@ -14,13 +14,13 @@ class OgControllerIntegrationTest extends BaseIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith("text/html"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("og:title")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("KD Training")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Mocny Grzbiet")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("og:image")));
     }
 
     /**
-     * ogResponse appends " | KD Training" to every title it renders, so a page title that already
-     * carries the brand would print it twice. "KD Training" legitimately appears several times
+     * ogResponse appends " | Mocny Grzbiet" to every title it renders, so a page title that already
+     * carries the brand would print it twice. "Mocny Grzbiet" legitimately appears several times
      * elsewhere (og:site_name, the body link).
      */
     @Test
@@ -28,7 +28,7 @@ class OgControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(get("/og/"))
             .andExpect(status().isOk())
             .andExpect(content().string(org.hamcrest.Matchers.not(
-                org.hamcrest.Matchers.containsString("KD Training | KD Training"))));
+                org.hamcrest.Matchers.containsString("Mocny Grzbiet | Mocny Grzbiet"))));
     }
 
     /**

@@ -9,6 +9,8 @@ import pl.kdtraining.BaseIntegrationTest;
 import pl.kdtraining.domain.auth.AuthToken;
 import pl.kdtraining.domain.auth.AuthTokenRepository;
 import pl.kdtraining.domain.auth.TokenType;
+import pl.kdtraining.domain.invitation.Invitation;
+import pl.kdtraining.domain.invitation.InvitationRepository;
 import pl.kdtraining.domain.user.User;
 
 import java.time.Instant;
@@ -25,33 +27,84 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private InvitationRepository invitationRepository;
+
+    /** An open invitation for the address, as the coach's panel would create it; returns the link's token. */
+    private String invite(String email) {
+        String token = "invite-" + email;
+        invitationRepository.save(new Invitation(email, jwtService.hashToken(token), Instant.now().plusSeconds(3600)));
+        return token;
+    }
+
+    private ResultActions register(String token, String firstName) throws Exception {
+        return mockMvc.perform(post("/api/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"invitationToken":"%s","password":"StrongPass123","firstName":"%s","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":true}
+                """.formatted(token, firstName)));
+    }
+
     @Test
-    void shouldRegisterNewUser() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {
-                        "email": "newuser-register@test.com",
-                        "password": "StrongPass123",
-                        "firstName": "Jan",
-                        "lastName": "Kowalski",
-                        "acceptedPrivacy": true,
-                        "acceptedTerms": true
-                    }
-                    """))
+    void shouldRegisterAnInvitedUserReadyToLogIn() throws Exception {
+        String token = invite("newuser-register@test.com");
+
+        register(token, "Jan")
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").exists());
 
-        assertTrue(userRepository.existsByEmail("newuser-register@test.com"));
+        User user = userRepository.findByEmail("newuser-register@test.com").orElseThrow();
+        assertTrue(user.isEmailVerified(), "the invitation link proved the mailbox");
+        assertEquals(0, invitationRepository.count(), "the invitation is used up");
+
+        // No verification step: the password works straight away.
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"email":"newuser-register@test.com","password":"StrongPass123"}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").exists());
+    }
+
+    @Test
+    void shouldRefuseRegistrationWithoutAnInvitation() throws Exception {
+        register("made-up-token", "Jan")
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+
+        assertEquals(0, userRepository.count());
+    }
+
+    @Test
+    void shouldRefuseAnExpiredInvitation() throws Exception {
+        invitationRepository.save(new Invitation("late@test.com", jwtService.hashToken("late"), Instant.now().minusSeconds(1)));
+
+        register("late", "Jan").andExpect(status().isBadRequest());
+
+        assertFalse(userRepository.existsByEmail("late@test.com"));
+    }
+
+    @Test
+    void shouldNotLetOneInvitationCreateTwoAccounts() throws Exception {
+        String token = invite("dup@test.com");
+        register(token, "Jan").andExpect(status().isOk());
+
+        register(token, "Anna")
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+
+        assertEquals("Jan", userRepository.findByEmail("dup@test.com").orElseThrow().getFirstName());
     }
 
     @Test
     void shouldRejectRegistrationWhenTermsNotAccepted() throws Exception {
+        String token = invite("no-terms@test.com");
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"email":"no-terms@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":false}
-                    """))
+                    {"invitationToken":"%s","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":false}
+                    """.formatted(token)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
@@ -59,32 +112,37 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldRejectDuplicateEmail() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                {"email":"dup@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","acceptedPrivacy":true,"acceptedTerms":true}
-                """))
-            .andExpect(status().isOk());
-
-        mockMvc.perform(post("/api/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                {"email":"dup@test.com","password":"StrongPass123","firstName":"Anna","lastName":"Nowak","acceptedPrivacy":true,"acceptedTerms":true}
-                """))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
-    }
-
-    @Test
     void shouldRejectInvalidRegistration() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"email":"invalid","password":"short","firstName":"","lastName":"","acceptedPrivacy":true,"acceptedTerms":true}
+                    {"invitationToken":"","password":"short","firstName":"","lastName":"","acceptedPrivacy":true,"acceptedTerms":true}
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void shouldShowTheAddressBehindAnInvitationLink() throws Exception {
+        String token = invite("shown@test.com");
+
+        mockMvc.perform(post("/api/auth/invitation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"token":"%s"}
+                    """.formatted(token)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.email").value("shown@test.com"));
+    }
+
+    @Test
+    void shouldRefuseToReadADeadInvitationLink() throws Exception {
+        mockMvc.perform(post("/api/auth/invitation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"token":"nothing-here"}
+                    """))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -351,19 +409,9 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldAutoPromoteAdminEmailOnRegister() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {
-                        "email": "admin@kdtraining.test",
-                        "password": "StrongPass123",
-                        "firstName": "Admin",
-                        "lastName": "Fire",
-                        "acceptedPrivacy": true,
-                        "acceptedTerms": true
-                    }
-                    """))
-            .andExpect(status().isOk());
+        String token = invite("admin@kdtraining.test");
+
+        register(token, "Admin").andExpect(status().isOk());
 
         User admin = userRepository.findByEmail("admin@kdtraining.test").orElseThrow();
         assertEquals(pl.kdtraining.domain.user.UserRole.ADMIN, admin.getRole());

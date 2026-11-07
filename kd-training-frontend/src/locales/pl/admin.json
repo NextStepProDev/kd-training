@@ -1,4 +1,17 @@
 {
+  "invitations": {
+    "title": "Zaproszenia",
+    "hint": "Konto można założyć tylko z linku w zaproszeniu. Link jest ważny 7 dni.",
+    "email": "Adres e-mail osoby",
+    "send": "Zaproś",
+    "sent": "Zaproszenie wysłane na {{email}}.",
+    "validUntil": "Ważne do {{date}}",
+    "resend": "Wyślij ponownie",
+    "resendFor": "Wyślij ponownie: {{email}}",
+    "cancelFor": "Anuluj zaproszenie: {{email}}",
+    "cancelled": "Zaproszenie anulowane.",
+    "loadError": "Nie udało się załadować zaproszeń."
+  },
   "users": {
     "title": "Użytkownicy",
     "searchPlaceholder": "Szukaj po imieniu, nazwisku lub e-mailu...",

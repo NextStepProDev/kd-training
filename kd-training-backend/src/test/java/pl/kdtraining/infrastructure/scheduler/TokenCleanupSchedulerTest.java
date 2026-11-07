@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.kdtraining.domain.auth.AuthTokenRepository;
+import pl.kdtraining.domain.invitation.InvitationRepository;
 
 import java.time.Instant;
 
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.*;
 class TokenCleanupSchedulerTest {
 
     @Mock private AuthTokenRepository authTokenRepository;
+    @Mock private InvitationRepository invitationRepository;
 
     @InjectMocks private TokenCleanupScheduler scheduler;
 
@@ -35,5 +37,12 @@ class TokenCleanupSchedulerTest {
         scheduler.cleanupExpiredTokens();
 
         verify(authTokenRepository).deleteExpiredTokens(any(Instant.class));
+    }
+
+    @Test
+    void shouldDeleteExpiredInvitations() {
+        scheduler.cleanupExpiredTokens();
+
+        verify(invitationRepository).deleteExpired(any(Instant.class));
     }
 }

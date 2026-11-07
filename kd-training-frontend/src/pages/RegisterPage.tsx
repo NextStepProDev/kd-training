@@ -1,25 +1,92 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { inputClassInvalid, inputClassMuted } from '../utils/fieldClass'
-import { registerUser } from '../api/auth'
-import { validatePassword, validatePhone, validateName, validateEmail } from '../utils/validation'
+import { getInvitation, registerUser } from '../api/auth'
+import { validatePassword, validatePhone, validateName } from '../utils/validation'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { Button } from '../components/ui/Button'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
 import { Brand } from '../components/layout/Brand'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
-type FieldKey = 'firstName' | 'lastName' | 'email' | 'phone' | 'password' | 'confirmPassword'
+type FieldKey = 'firstName' | 'lastName' | 'phone' | 'password' | 'confirmPassword'
 
+const linkClass = 'text-white underline decoration-white/30 underline-offset-4 hover:decoration-white'
 
+/** A card with the brand, a heading and a message: no link, a dead link, or registration done. */
+function Notice({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className={authStageClass}>
+      <div className={`${authCardClass} text-center`}>
+        <Brand size="lg" />
+        <h1 className="mt-6 text-xl font-bold text-surface-100">{title}</h1>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Registration is by invitation only: the coach's mail links here with ?token=, and the account gets
+ * the address the invitation went to. Without a working link there is no form, only a notice.
+ */
 export function RegisterPage() {
+  const { t } = useTranslation('auth')
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token')
+
+  const invitation = useQuery({
+    queryKey: ['invitation', token],
+    queryFn: () => getInvitation(token!),
+    enabled: !!token,
+    // A dead link stays dead; asking again only delays the notice. And once the account is created
+    // the invitation is gone, so a refetch must not swap the success screen for "invalid link".
+    retry: false,
+    staleTime: Infinity,
+  })
+
+  const loginLink = (
+    <p className="mt-6 text-sm text-surface-400">
+      {t('register.hasAccount')}{' '}
+      <Link to="/logowanie" className={linkClass}>{t('register.login')}</Link>
+    </p>
+  )
+
+  if (!token) {
+    return (
+      <Notice title={t('register.inviteOnlyTitle')}>
+        <p className="mt-3 text-surface-300">{t('register.inviteOnlyMessage')}</p>
+        {loginLink}
+      </Notice>
+    )
+  }
+  if (invitation.isPending) {
+    return (
+      <div className={authStageClass}>
+        <LoadingSpinner />
+      </div>
+    )
+  }
+  if (invitation.isError) {
+    return (
+      <Notice title={t('register.invalidInvitationTitle')}>
+        <p className="mt-3 text-surface-300">{getErrorMessage(invitation.error)}</p>
+        {loginLink}
+      </Notice>
+    )
+  }
+  return <RegisterForm token={token} email={invitation.data.email} />
+}
+
+function RegisterForm({ token, email }: { token: string; email: string }) {
   const { t, i18n } = useTranslation('auth')
   const [form, setForm] = useState({
-    email: '',
     password: '',
     confirmPassword: '',
     firstName: '',
@@ -54,8 +121,6 @@ export function RegisterPage() {
     if (fnErr) errs.firstName = fnErr
     const lnErr = validateName(form.lastName)
     if (lnErr) errs.lastName = lnErr
-    const emailErr = validateEmail(form.email)
-    if (emailErr) errs.email = emailErr
     const phoneErr = validatePhone(form.phone)
     if (phoneErr) errs.phone = phoneErr
     const pwErr = validatePassword(form.password, form.confirmPassword)
@@ -82,7 +147,7 @@ export function RegisterPage() {
     setLoading(true)
     try {
       await registerUser({
-        email: form.email,
+        invitationToken: token,
         password: form.password,
         firstName: form.firstName,
         lastName: form.lastName,
@@ -101,26 +166,12 @@ export function RegisterPage() {
 
   if (success) {
     return (
-      <div className={authStageClass}>
-        <div className={`${authCardClass} text-center`}>
-          <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-surface-100 mb-2">{t('register.successTitle')}</h2>
-          <p className="text-surface-300 mb-3">{t('register.successMessage')}</p>
-          <p className="text-sm text-surface-500 mb-6">
-            {t('register.successHint')}{' '}
-            <Link to="/resend-verification" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-              {t('login.resendVerification')}
-            </Link>
-          </p>
-          <Link to="/logowanie" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white font-medium">
-            {t('register.goToLogin')}
-          </Link>
-        </div>
-      </div>
+      <Notice title={t('register.successTitle')}>
+        <p className="mt-3 mb-6 text-surface-300">{t('register.successMessage')}</p>
+        <Link to="/logowanie" className={`${linkClass} font-medium`}>
+          {t('register.goToLogin')}
+        </Link>
+      </Notice>
     )
   }
 
@@ -170,6 +221,7 @@ export function RegisterPage() {
             </div>
           </div>
 
+          {/* The address is the invitation's, not the person's choice: shown, never edited. */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-surface-300 mb-1">
               {t('register.email')}
@@ -177,15 +229,12 @@ export function RegisterPage() {
             <input
               id="email"
               type="email"
-              required
-              value={form.email}
-              onChange={(e) => updateField('email', e.target.value)}
-              className={fieldErrors.email ? inputClassInvalid : inputClassMuted}
-              placeholder={t('register.emailPlaceholder')}
-              aria-invalid={!!fieldErrors.email}
-              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+              value={email}
+              readOnly
+              aria-describedby="email-hint"
+              className={`${inputClassMuted} text-surface-400`}
             />
-            {fieldErrors.email && <p id="email-error" className="text-xs text-rose-400/80 mt-1">{fieldErrors.email}</p>}
+            <p id="email-hint" className="text-xs text-surface-500 mt-1">{t('register.emailFromInvitation')}</p>
           </div>
 
           <div>
@@ -319,7 +368,7 @@ export function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-surface-400">
           {t('register.hasAccount')}{' '}
-          <Link to="/logowanie" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+          <Link to="/logowanie" className={linkClass}>
             {t('register.login')}
           </Link>
         </p>

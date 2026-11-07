@@ -3,8 +3,9 @@ import { ApiError, parseRetryAfter } from '../utils/errors'
 
 const API_BASE = '/api/auth'
 
+/** No e-mail: the account gets the address the invitation was sent to. */
 export interface RegisterRequest {
-  email: string
+  invitationToken: string
   password: string
   firstName: string
   lastName: string
@@ -71,6 +72,12 @@ async function authFetch<T>(endpoint: string, body: unknown): Promise<T> {
   }
 
   return response.json()
+}
+
+/** The address an invitation link was sent to; rejects when the link is unknown, used or expired. */
+export function getInvitation(token: string): Promise<{ email: string }> {
+  // In the body, never the URL: a query string lands in every proxy's access log.
+  return authFetch('/invitation', { token })
 }
 
 export function registerUser(data: RegisterRequest): Promise<MessageResponse> {

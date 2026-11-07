@@ -7,10 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kdtraining.api.InvalidRefreshTokenException;
+import pl.kdtraining.api.admin.invitation.InvitationService;
 import pl.kdtraining.api.auth.AuthDtos.*;
 import pl.kdtraining.domain.auth.AuthToken;
 import pl.kdtraining.domain.auth.AuthTokenRepository;
 import pl.kdtraining.domain.auth.TokenType;
+import pl.kdtraining.domain.invitation.Invitation;
 import pl.kdtraining.config.AdminEmailConfig;
 import pl.kdtraining.domain.user.User;
 import pl.kdtraining.domain.user.UserRepository;
@@ -62,6 +64,7 @@ public class AuthService {
     private final AdminEmailConfig adminEmailConfig;
     private final MessageService msg;
     private final PasswordPolicyValidator passwordPolicy;
+    private final InvitationService invitationService;
 
     // One counter per recipient, both flows sharing it: the thing being rationed is somebody else's
     // inbox, not either endpoint. In memory on purpose — a restart resetting it costs nothing, and a
@@ -79,7 +82,8 @@ public class AuthService {
             AuthMailService authMailService,
             AdminEmailConfig adminEmailConfig,
             MessageService msg,
-            PasswordPolicyValidator passwordPolicy) {
+            PasswordPolicyValidator passwordPolicy,
+            InvitationService invitationService) {
         this.userRepository = userRepository;
         this.authTokenRepository = authTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -88,31 +92,47 @@ public class AuthService {
         this.adminEmailConfig = adminEmailConfig;
         this.msg = msg;
         this.passwordPolicy = passwordPolicy;
+        this.invitationService = invitationService;
+    }
+
+    /** The address behind an invitation link, so the form can show whom the account is for. */
+    public InvitationDetailsResponse invitationDetails(String token) {
+        Invitation invitation = invitationService.findValid(token)
+            .orElseThrow(() -> new IllegalArgumentException(msg.get("auth.invitation.invalid")));
+        return new InvitationDetailsResponse(invitation.getEmail());
     }
 
     // Intentionally NOT @Transactional, for the same reason as login below: the password policy calls
     // Have I Been Pwned over the network (up to a 3s timeout), and a transaction would pin a Hikari
     // connection for that entire wait. A slow or unreachable HIBP would then drain the small pool from
-    // an endpoint anyone can hit, taking down every DB-backed request with it. The policy check runs
-    // first, before any DB work, and the remaining writes are independent enough for per-call
-    // auto-commit: a failure between saving the user and issuing the verification token leaves an
-    // unverified account, which the "resend verification" flow already recovers.
+    // an endpoint anyone can hit, taking down every DB-backed request with it. The invitation lookup
+    // goes first: one indexed read that hands its connection straight back, and a request without a
+    // valid link never gets as far as the network call.
+    //
+    // The account is created verified: the link came to this mailbox, which is what verification
+    // proves. The invitation is used up only after the account is saved, so a failure in between
+    // leaves the link working for another try.
     public MessageResponse register(RegisterRequest request) {
-        // Before any DB access — this is the slow, network-bound check.
-        passwordPolicy.validate(request.password(), request.email(), request.firstName(), request.lastName());
+        Invitation invitation = invitationService.findValid(request.invitationToken())
+            .orElseThrow(() -> new IllegalArgumentException(msg.get("auth.invitation.invalid")));
+        String email = invitation.getEmail();
 
-        if (userRepository.existsByEmailIgnoreCase(request.email())) {
+        // Before any write — this is the slow, network-bound check.
+        passwordPolicy.validate(request.password(), email, request.firstName(), request.lastName());
+
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException(msg.get("auth.email.exists"));
         }
 
         User user = new User(
-            request.email(),
+            email,
             request.firstName(),
             request.lastName(),
             request.phone()
         );
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setPreferredLanguage(resolveLanguage(request.preferredLanguage()));
+        user.markEmailVerified();
         // Privacy policy consent is required (@AssertTrue validation) — we record the acceptance moment (GDPR).
         user.setPrivacyAcceptedAt(Instant.now());
         // Same for the terms of service (@AssertTrue) — the moment is the proof of acceptance.
@@ -130,15 +150,17 @@ public class AuthService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            // Two submissions of the same address racing past the existence check above (a double click,
+            // Two submissions from the same link racing past the existence check above (a double click,
             // or the client retrying a request that already landed) hit the users.email UNIQUE index.
             // Report it as the ordinary "this e-mail is taken" 400, not a 500.
             log.debug("Registration lost the race on a duplicate e-mail: {}", MailDispatcher.maskAddress(user.getEmail()));
             throw new IllegalArgumentException(msg.get("auth.email.exists"));
         }
-        log.info("User registered: {}", MailDispatcher.maskAddress(user.getEmail()));
+        invitationService.consume(invitation);
+        log.info("User registered by invitation: {}", user.getId());
 
-        sendVerificationEmail(user);
+        authMailService.sendWelcomeEmail(user);
+        authMailService.sendNewUserAdminNotification(user);
 
         return new MessageResponse(msg.get("auth.register.success"));
     }

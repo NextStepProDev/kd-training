@@ -49,6 +49,13 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
       })
     }
 
+    test('gość: rejestracja z zaproszenia', async ({ page }) => {
+      await stubApi(page, { '/api/auth/invitation': { email: 'anna@example.com' } })
+      await page.goto('/rejestracja?token=stub')
+      await expect(page.getByLabel('Email')).toHaveValue('anna@example.com')
+      await expectNoViolations(page)
+    })
+
     test('podopieczny: plan treningowy', async ({ page }) => {
       await signInAs(page, ATHLETE, {
         '/api/user/my-training/stats': STATS,
@@ -68,6 +75,9 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
     test('trener: użytkownicy', async ({ page }) => {
       await signInAs(page, ADMIN, {
         '/api/admin/users': { content: USERS, page: 0, size: 50, totalElements: USERS.length, totalPages: 1 },
+        '/api/admin/invitations': [
+          { id: 'i1', email: 'zaproszona@example.com', createdAt: iso(today), expiresAt: iso(today) },
+        ],
       })
       await page.goto('/admin/uzytkownicy')
       await expect(page.getByRole('button', { name: 'Katarzyna Lewandowska-Wiśniewska 0', exact: true })).toBeVisible()

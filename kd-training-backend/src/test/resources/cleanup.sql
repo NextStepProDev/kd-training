@@ -7,5 +7,6 @@ DELETE FROM training_deletions;
 DELETE FROM training_calendar_reads;
 DELETE FROM training_comments;
 DELETE FROM personal_trainings;
+DELETE FROM invitations;
 DELETE FROM auth_tokens;
 DELETE FROM users;

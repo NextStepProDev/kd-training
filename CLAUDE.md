@@ -51,6 +51,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Nowy kontroler = własna reguła w `RULES` albo świadomy wpis w allowliście `INTENTIONALLY_GENERIC`.
 - **Sesję kończy wyłącznie 401/403 od serwera.** 429, timeout ani błąd sieci — nigdy. Nierozpoznany błąd znaczy „nie wiem", a nie „wyloguj".
 - Hasło sprawdzane **przed** zgłoszeniem blokady konta (anty-enumeracja). Nie odwracać kolejności.
+- **Konto powstaje wyłącznie z zaproszenia** (`invitations`, V2). Każda nowa ścieżka zakładania konta (dziś: link z maila, Google) musi zużyć zaproszenie na ten adres — inaczej staje się obejściem. Pierwszy admin dostaje zaproszenie przy starcie produkcji (`AdminInvitationBootstrap`).
 - Google OAuth jest **wyłączone** flagą `GOOGLE_LOGIN_ENABLED`. Kolejność włączania: klucze → profil `oauth2` → flaga. Dopóki flaga stoi na `false`, markery „w przygotowaniu" w polityce prywatności **muszą** zostać.
 
 **Maile → [`API.md`](API.md)**
@@ -129,7 +130,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V1 (schemat startowy, jeszcze nigdzie niewdrożony). Kolejna migracja: V2.**
+**Obecny stan: V2 (V1 schemat startowy, V2 zaproszenia; jeszcze nigdzie niewdrożone). Kolejna migracja: V3.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).
@@ -142,10 +143,10 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Prefiks | Dostęp | Co tam jest |
 |---------|--------|-------------|
-| `/api/auth` | brak | rejestracja, logowanie, weryfikacja maila, reset hasła, refresh |
+| `/api/auth` | brak | rejestracja (tylko z zaproszenia), odczyt zaproszenia, logowanie, weryfikacja maila, reset hasła, refresh |
 | `/api/user` | zalogowany | profil, zgody (w tym art. 9), avatar, wylogowanie wszędzie, usunięcie konta |
 | `/api/user/my-training` | podopieczny (`is_athlete` + zgoda art. 9) | kalendarz 1:1, cele, statystyki, komentarze, zdjęcia |
-| `/api/admin` | ROLE_ADMIN | użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, biblioteka filmów, szablony, notatki |
+| `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, biblioteka filmów, szablony, notatki |
 | `/api/public` | brak | wypis z marketingu |
 | `/api/files` | brak | streaming plików z białej listy folderów (dziś tylko `avatars`) |
 | `/og/` · `/sitemap.xml` | brak | Open Graph strony głównej, mapa strony (`/`, `/polityka-prywatnosci`, `/regulamin`) |
@@ -158,7 +159,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | Ścieżka | Komponent | Opis |
 |---------|-----------|------|
 | `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening. „O mnie” to tekst Kacpra dosłownie, usługi zbudowane z niego; zdjęcia klienta w `public/images/`. Adres, telefon i prawdziwy mail jeszcze nie |
-| `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę |
+| `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę. Rejestracja **tylko z linku w zaproszeniu** (`?token=`): bez niego sama informacja, adres konta z zaproszenia (pole tylko do odczytu) |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
 | `/moje-konto/plan-treningowy` | MyTrainingCalendarPage | strefa podopiecznego: zgoda art. 9 → cele, kalendarz, wiadomości, statystyki |
@@ -166,7 +167,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/polityka-prywatnosci` | PrivacyPolicyPage | polityka — **wersja robocza** (dane administratora do uzupełnienia) |
 | `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy i weryfikacja prawna do zrobienia); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
 | `/wypisz-sie` | MarketingUnsubscribePage | rezygnacja z marketingu z linku w mailu |
-| `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
+| `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (zaproszenia, profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
 | `/verify-email` · `/reset-password` · `/forgot-password` · `/resend-verification` · `/oauth-callback` | — | przepływy konta |
 
 Nawigacja: Strona główna · (Moje konto — zalogowany) · (Panel admina — admin) · (Zaloguj się — gość).

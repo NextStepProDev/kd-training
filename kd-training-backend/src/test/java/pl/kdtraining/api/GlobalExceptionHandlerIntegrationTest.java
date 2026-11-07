@@ -20,7 +20,7 @@ class GlobalExceptionHandlerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"email":"omit-primitive@test.com","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","phone":"123456789"}
+                    {"invitationToken":"any","password":"StrongPass123","firstName":"Jan","lastName":"Kowalski","phone":"123456789"}
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("BAD_REQUEST"))

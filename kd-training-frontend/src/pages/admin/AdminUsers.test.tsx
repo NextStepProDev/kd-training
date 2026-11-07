@@ -40,6 +40,9 @@ vi.mock('../../api/admin', () => ({
   },
 }))
 
+// Its own unit, tested in AdminInvitations.test.tsx.
+vi.mock('./AdminInvitations', () => ({ AdminInvitations: () => null }))
+
 vi.mock('../../context/ToastContext', () => ({
   useToast: () => ({ showToast: vi.fn() }),
 }))

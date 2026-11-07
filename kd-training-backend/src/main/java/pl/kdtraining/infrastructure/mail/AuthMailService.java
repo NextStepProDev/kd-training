@@ -51,6 +51,35 @@ public class AuthMailService {
         mail.send(user.getEmail(), subject, brandedTemplate(content));
     }
 
+    /**
+     * The only way into an account: the link opens the registration form with this address filled in.
+     * Sent to someone who has no account yet, so there is no first name to greet and no preferred
+     * language to read; the default (Polish) applies.
+     */
+    @Async("mailExecutor")
+    public void sendInvitationEmail(String email, String token) {
+        String registerUrl = siteUrl + "/rejestracja?token=" + token;
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <div style="text-align: center; margin: 28px 0;">
+                            <a href="%s" style="display: inline-block; background-color: #ffffff; color: #141414; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">%s</a>
+                        </div>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+            """.formatted(
+                msg.get("email.invitation.heading"),
+                msg.get("email.invitation.body"),
+                registerUrl,
+                msg.get("email.invitation.button"),
+                msg.get("email.invitation.expiry"),
+                msg.get("email.invitation.ignore")
+        );
+
+        mail.send(email, msg.get("email.invitation.subject"), brandedTemplate(content));
+    }
+
     @Async("mailExecutor")
     public void sendWelcomeEmail(User user) {
         String lang = user.getPreferredLanguage();
@@ -119,9 +148,9 @@ public class AuthMailService {
     }
 
     /**
-     * Notifies the organizers about a new active account. Sent after email verification
-     * (email/password flow) or directly after account creation via Google OAuth — in both
-     * cases the account is already "real" (a verified mailbox owner).
+     * Notifies the organizers about a new active account. Sent right after registration from an
+     * invitation (email/password) or after account creation via Google OAuth — in both cases the
+     * account is already "real" (the invitation link or Google proved the mailbox).
      */
     @Async("mailExecutor")
     public void sendNewUserAdminNotification(User user) {

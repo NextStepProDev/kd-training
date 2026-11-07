@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.kdtraining.api.NotFoundException;
 import pl.kdtraining.api.Strings;
 import pl.kdtraining.api.trainingcalendar.TrainingCalendarDtos.*;
+import pl.kdtraining.domain.training.AthleteMaterialRepository;
 import pl.kdtraining.domain.training.ExerciseVideo;
 import pl.kdtraining.domain.training.ExerciseVideoRepository;
 import pl.kdtraining.domain.training.TrainingAttachmentRepository;
@@ -36,15 +37,18 @@ public class ExerciseVideoService {
 
     private final ExerciseVideoRepository repository;
     private final TrainingAttachmentRepository attachmentRepository;
+    private final AthleteMaterialRepository materialRepository;
     private final YouTubeOEmbedClient oEmbed;
     private final MessageService msg;
 
     public ExerciseVideoService(ExerciseVideoRepository repository,
                                 TrainingAttachmentRepository attachmentRepository,
+                                AthleteMaterialRepository materialRepository,
                                 YouTubeOEmbedClient oEmbed,
                                 MessageService msg) {
         this.repository = repository;
         this.attachmentRepository = attachmentRepository;
+        this.materialRepository = materialRepository;
         this.oEmbed = oEmbed;
         this.msg = msg;
     }
@@ -118,12 +122,13 @@ public class ExerciseVideoService {
 
     /**
      * Only ever possible for a clip nobody uses. Anything already attached must be archived instead,
-     * so the history of a completed session keeps the demonstration that belonged to it.
+     * so the history of a completed session keeps the demonstration that belonged to it. A client's
+     * material counts as a use too: both foreign keys are RESTRICT, and a miss here is a 500.
      */
     @Transactional
     public void delete(UUID id) {
         ExerciseVideo video = require(id);
-        if (attachmentRepository.existsByVideoId(id)) {
+        if (attachmentRepository.existsByVideoId(id) || materialRepository.existsByVideoId(id)) {
             throw new IllegalStateException(msg.get("exercisevideo.in.use"));
         }
         repository.delete(video);

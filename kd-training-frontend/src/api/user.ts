@@ -2,6 +2,7 @@ import { fetchApi } from './client'
 import type {
   CalendarRange, PersonalTraining,
   CreateTrainingBody, UpdateTrainingBody, PasteMode, TrainingComment, MyTrainingSummary, AthleteGoals, TrainingStats,
+  AthleteMaterial, MaterialQuestion,
 } from '../types'
 
 /**
@@ -61,6 +62,12 @@ export const myTrainingApi = {
     fetchApi<MyTrainingSummary>('/user/my-training/summary'),
   getGoals: () =>
     fetchApi<AthleteGoals>('/user/my-training/goals'),
+  getMaterials: () =>
+    fetchApi<AthleteMaterial[]>('/user/my-training/materials'),
+  askAboutMaterial: (materialId: string, body: string) =>
+    fetchApi<MaterialQuestion>(`/user/my-training/materials/${materialId}/questions`, {
+      method: 'POST', body: JSON.stringify({ body }),
+    }),
   getStats: () =>
     fetchApi<TrainingStats>('/user/my-training/stats'),
 }

@@ -9,6 +9,7 @@ import { QueryError } from '../../components/ui/QueryError'
 import { TrainingCalendar } from '../../components/training-calendar/TrainingCalendar'
 import { coachAdapter } from '../../components/training-calendar/adapter'
 import { GoalsBoard } from '../../components/goals/GoalsBoard'
+import { MaterialsBoard } from '../../components/materials/MaterialsBoard'
 import { TrainingStatsPanel } from '../../components/training-stats/TrainingStatsPanel'
 import type { AthleteSummary } from '../../types'
 import { SHORT_STALE_MS } from '../../utils/queryFreshness'
@@ -67,6 +68,7 @@ export function AdminAthletes({ openAthlete, onOpen }: {
         </div>
         <div className="space-y-6">
           <GoalsBoard athleteId={openAthlete.id} />
+          <MaterialsBoard athleteId={openAthlete.id} />
           <TrainingCalendar adapter={adapter} />
           <TrainingStatsPanel athleteId={openAthlete.id} />
         </div>

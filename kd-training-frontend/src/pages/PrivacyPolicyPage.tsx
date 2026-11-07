@@ -130,9 +130,10 @@ export function PrivacyPolicyPage() {
               'Oznaczenia wykonania treningu wraz z datą',
               'Ocena odczuwalnego wysiłku (skala 1–10) i Twój komentarz do wykonanego treningu',
               'Zadania z dziennym limitem kalorii (np. „utrzymaj się poniżej 2200 kcal") wraz z oznaczeniem ich wykonania',
-              'Wiadomości wymieniane z trenerem przy poszczególnych treningach',
+              'Wiadomości wymieniane z trenerem przy poszczególnych treningach i pod materiałami',
               'Cele treningowe ustawione przez trenera oraz data ich osiągnięcia',
               'Materiały treningowe przypisane do treningu (filmy z ćwiczeniami)',
+              'Materiały przekazane Ci przez trenera na stałe (filmy z ćwiczeniami i wskazówki) wraz z Twoimi pytaniami do nich',
             ]} />
             <p className="text-surface-500 text-sm mt-3 leading-relaxed">
               Wszystkie te dane są widoczne dla trenera prowadzącego — to podstawowy sens tej funkcji
@@ -326,7 +327,7 @@ export function PrivacyPolicyPage() {
             </p>
             <p>
               <span className="text-surface-200 font-medium">Dane z planu treningowego 1:1</span> (plan, wykonania,
-              oceny wysiłku, komentarze, cele, zadania kaloryczne) — przechowywane przez czas trwania współpracy
+              oceny wysiłku, komentarze, cele, materiały i pytania do nich, zadania kaloryczne) — przechowywane przez czas trwania współpracy
               trenerskiej i usuwane wraz z kontem. Po zakończeniu współpracy lub po wycofaniu zgody dane dotyczące
               zdrowia — limity kaloryczne oraz oceny wysiłku wraz z komentarzami — usuwamy najpóźniej w ciągu 30 dni.
               Samo wyłączenie planu przez trenera nie kasuje danych — ukrywa je, a po ponownym włączeniu wracają.

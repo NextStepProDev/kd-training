@@ -9,6 +9,7 @@ import { TrainingCalendar } from '../components/training-calendar/TrainingCalend
 import { TrainingConsentGate } from '../components/training-calendar/TrainingConsentGate'
 import { athleteAdapter } from '../components/training-calendar/adapter'
 import { GoalsBoard } from '../components/goals/GoalsBoard'
+import { MaterialsBoard } from '../components/materials/MaterialsBoard'
 import { TrainingStatsPanel } from '../components/training-stats/TrainingStatsPanel'
 
 export function MyTrainingCalendarPage() {
@@ -47,6 +48,8 @@ export function MyTrainingCalendarPage() {
         <>
           {/* Read-only for the client: goals are the coach's call. */}
           <GoalsBoard athleteId={null} />
+
+          <MaterialsBoard athleteId={null} />
 
           <TrainingCalendar adapter={adapter} />
 

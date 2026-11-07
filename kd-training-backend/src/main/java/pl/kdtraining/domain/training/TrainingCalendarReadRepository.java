@@ -110,6 +110,22 @@ public interface TrainingCalendarReadRepository
                                            @Param("athleteIds") Collection<UUID> athleteIds,
                                            @Param("fromAdmin") boolean fromAdmin);
 
+    /** Like the deletions: a material has no date, so its thread counts on time alone. */
+    @Query(value = """
+        SELECT m.athlete_id AS athlete_id, count(*) AS total
+        FROM material_questions q
+        JOIN athlete_materials m ON m.id = q.material_id
+        LEFT JOIN training_calendar_reads r
+               ON r.user_id = :viewerId AND r.athlete_id = m.athlete_id
+        WHERE m.athlete_id IN (:athleteIds)
+          AND q.author_is_admin = :fromAdmin
+          AND (r.seen_at IS NULL OR q.created_at > r.seen_at)
+        GROUP BY m.athlete_id
+        """, nativeQuery = true)
+    List<UnreadCount> countUnreadMaterialQuestions(@Param("viewerId") UUID viewerId,
+                                                   @Param("athleteIds") Collection<UUID> athleteIds,
+                                                   @Param("fromAdmin") boolean fromAdmin);
+
     /** Projection for the batched counts above. */
     interface UnreadCount {
         UUID getAthleteId();

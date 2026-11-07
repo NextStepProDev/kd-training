@@ -59,7 +59,7 @@ public class AdminUserDataExportService {
      */
     static final Set<String> EXPORTED_TABLES = Set.of(
         "users", "personal_trainings", "athlete_goals", "training_comments", "training_deletions",
-        "admin_private_notes");
+        "admin_private_notes", "athlete_materials", "material_questions");
 
     private static final String PROFILE_SQL = """
         SELECT first_name AS imie, last_name AS nazwisko, email, phone AS telefon,
@@ -112,6 +112,24 @@ public class AdminUserDataExportService {
         FROM athlete_goals
         WHERE athlete_id = ?
         ORDER BY created_at
+        """;
+
+    private static final String MATERIALS_SQL = """
+        SELECT m.id, m.title AS tytul, m.note AS opis, v.name AS film, v.url AS link_do_filmu,
+               m.created_at AS dodano
+        FROM athlete_materials m
+        LEFT JOIN exercise_videos v ON v.id = m.video_id
+        WHERE m.athlete_id = ?
+        ORDER BY m.created_at
+        """;
+
+    private static final String MATERIAL_QUESTIONS_SQL = """
+        SELECT q.material_id, CASE WHEN q.author_is_admin THEN 'trener' ELSE 'podopieczny' END AS autor,
+               q.body AS tresc, q.created_at AS dodano
+        FROM material_questions q
+        JOIN athlete_materials m ON m.id = q.material_id
+        WHERE m.athlete_id = ?
+        ORDER BY q.created_at
         """;
 
     /** The banner snapshot of a deleted future training: what was planned, when, and who removed it. */
@@ -183,6 +201,13 @@ public class AdminUserDataExportService {
         Map<String, Object> plan = new LinkedHashMap<>();
         plan.put("treningi_i_zadania", trainings);
         plan.put("cele", rows(GOALS_SQL, userId));
+        List<Map<String, @Nullable Object>> materials = rows(MATERIALS_SQL, userId);
+        List<Map<String, @Nullable Object>> materialQuestions = rows(MATERIAL_QUESTIONS_SQL, userId);
+        for (var material : materials) {
+            Object id = material.remove("id");
+            material.put("pytania", childrenOf(materialQuestions, "material_id", id));
+        }
+        plan.put("materialy", materials);
         plan.put("usuniete_treningi", rows(DELETIONS_SQL, userId));
         data.put("plan_1na1", plan);
         data.put("notatki_trenera", notes.exportForAthlete(userId).stream()

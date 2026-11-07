@@ -1,5 +1,5 @@
 import { fetchApi } from './client'
-import type { AdminUser, PagedUsers, AdminUserDetail, AthleteSummary, CalendarRange, PersonalTraining, CreateTrainingBody, UpdateTrainingBody, PasteMode, TrainingComment, ExerciseVideo, PagedExerciseVideos, ExerciseVideoInput, VideoMetadata, TrainingTemplate, TrainingTemplateInput, AthleteGoal, AthleteGoals, GoalInput, TrainingStats } from '../types'
+import type { AdminUser, PagedUsers, AdminUserDetail, AthleteSummary, CalendarRange, PersonalTraining, CreateTrainingBody, UpdateTrainingBody, PasteMode, TrainingComment, ExerciseVideo, PagedExerciseVideos, ExerciseVideoInput, VideoMetadata, TrainingTemplate, TrainingTemplateInput, AthleteGoal, AthleteGoals, GoalInput, TrainingStats, AthleteMaterial, MaterialInput, MaterialQuestion } from '../types'
 
 export type EmailAudience = 'MARKETING' | 'ALL' | 'SELECTED'
 
@@ -113,6 +113,22 @@ export const adminApi = {
     fetchApi<TrainingStats>(`/admin/personal-trainings/stats?athleteId=${athleteId}`),
 
   // Goals (coach sets them; the client only reads)
+  getAthleteMaterials: (athleteId: string) =>
+    fetchApi<AthleteMaterial[]>(`/admin/personal-trainings/materials?athleteId=${athleteId}`),
+  createAthleteMaterial: (athleteId: string, input: MaterialInput) =>
+    fetchApi<AthleteMaterial>(`/admin/personal-trainings/materials?athleteId=${athleteId}`, {
+      method: 'POST', body: JSON.stringify(input),
+    }),
+  updateAthleteMaterial: (materialId: string, input: MaterialInput) =>
+    fetchApi<AthleteMaterial>(`/admin/personal-trainings/materials/${materialId}`, {
+      method: 'PUT', body: JSON.stringify(input),
+    }),
+  deleteAthleteMaterial: (materialId: string) =>
+    fetchApi<void>(`/admin/personal-trainings/materials/${materialId}`, { method: 'DELETE' }),
+  replyToMaterial: (materialId: string, body: string) =>
+    fetchApi<MaterialQuestion>(`/admin/personal-trainings/materials/${materialId}/questions`, {
+      method: 'POST', body: JSON.stringify({ body }),
+    }),
   getAthleteGoals: (athleteId: string) =>
     fetchApi<AthleteGoals>(`/admin/personal-trainings/goals?athleteId=${athleteId}`),
   createAthleteGoal: (athleteId: string, data: GoalInput) =>

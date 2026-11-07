@@ -126,6 +126,12 @@ class AdminUserDataExportIntegrationTest extends BaseIntegrationTest {
         jdbc.update("INSERT INTO training_comments (training_id, author_id, author_is_admin, body, photo_filename)"
             + " VALUES (?::uuid, ?, false, 'stare zdjecie', ?)", marekTraining, marekId, gone);
 
+        String material = jdbc.queryForObject("INSERT INTO athlete_materials (athlete_id, title, note)"
+            + " VALUES (?, 'Rozciaganie Marka', 'po treningu') RETURNING id::text", String.class, marekId);
+        jdbc.update("INSERT INTO material_questions (material_id, author_id, author_is_admin, body)"
+            + " VALUES (?::uuid, ?, false, 'ile serii?')", material, marekId);
+        jdbc.update("INSERT INTO athlete_materials (athlete_id, title, note) VALUES (?, 'Material Oli', 'x')", olaId);
+
         note("/api/admin/notes/training/" + marekTraining, admin, "notatka o treningu Marka");
         note("/api/admin/notes/training/" + olaTraining, admin, "notatka o Oli");
 
@@ -148,6 +154,10 @@ class AdminUserDataExportIntegrationTest extends BaseIntegrationTest {
         assertEquals(2, trainings.at("/0/komentarze").size());
         assertEquals(1, data.at("/plan_1na1/cele").size());
         assertEquals("Martwy ciąg 100 kg", data.at("/plan_1na1/cele/0/tresc").asText());
+
+        assertEquals(1, data.at("/plan_1na1/materialy").size());
+        assertEquals("Rozciaganie Marka", data.at("/plan_1na1/materialy/0/tytul").asText());
+        assertEquals("ile serii?", data.at("/plan_1na1/materialy/0/pytania/0/tresc").asText());
 
         assertEquals(1, data.at("/notatki_trenera").size());
         assertTrue(raw.contains("notatka o treningu Marka"));

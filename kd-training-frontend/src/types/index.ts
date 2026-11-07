@@ -264,6 +264,31 @@ export interface ExerciseVideo {
   archived: boolean
 }
 
+/** A clip, a tip, or both, that the coach gave one client to keep; questions sit under it. */
+export interface AthleteMaterial {
+  id: string
+  title: string
+  note: string | null
+  video: ExerciseVideo | null
+  createdAt: string
+  questions: MaterialQuestion[]
+  /** Absent on writes; otherwise whether it, or a message under it, is new to the viewer. */
+  unread?: boolean | null
+}
+
+export interface MaterialQuestion {
+  id: string
+  fromCoach: boolean
+  body: string
+  createdAt: string
+}
+
+export interface MaterialInput {
+  title: string
+  note: string | null
+  videoId: string | null
+}
+
 export interface PagedExerciseVideos {
   content: ExerciseVideo[]
   page: number

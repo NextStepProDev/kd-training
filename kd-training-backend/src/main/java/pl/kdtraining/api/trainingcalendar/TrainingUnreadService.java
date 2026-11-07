@@ -26,7 +26,9 @@ import java.util.UUID;
  *   <li>a training the coach created or edited</li>
  *   <li>a comment written by the coach</li>
  *   <li>a future training the coach deleted</li>
- *   <li>a goal the coach set — the one source with no counterpart below</li>
+ *   <li>a goal the coach set — no counterpart below</li>
+ *   <li>a material the coach gave — no counterpart below either</li>
+ *   <li>a reply the coach wrote under a material</li>
  * </ol>
  *
  * <p><b>News for the coach (from the client):</b>
@@ -34,11 +36,13 @@ import java.util.UUID;
  *   <li>a training the client created or edited — this covers ticking off AND undoing it</li>
  *   <li>a comment written by the client</li>
  *   <li>a future training the client deleted</li>
+ *   <li>a question the client asked under a material</li>
  * </ol>
  *
  * <p>Symmetry is the point for the six that pair up: both directions are computed by the same code
  * with the role flag flipped, so a rule cannot be enforced one way and forgotten the other. Goals
- * are the deliberate exception, and the code says so at the point where it breaks the symmetry.
+ * and materials are the deliberate exception, and the code says so at the point where it breaks the
+ * symmetry. Materials and their threads carry no date, so like goals they count on time alone.
  *
  * <p><b>Being caught up has two edges.</b> "As of when" is not enough on its own: the calendar is
  * read one page at a time, so opening this week said nothing about next month — yet it used to stamp
@@ -54,17 +58,23 @@ public class TrainingUnreadService {
     private final TrainingDeletionRepository deletionRepository;
     private final TrainingCalendarReadRepository readRepository;
     private final AthleteGoalRepository goalRepository;
+    private final AthleteMaterialRepository materialRepository;
+    private final MaterialQuestionRepository materialQuestionRepository;
 
     public TrainingUnreadService(PersonalTrainingRepository trainingRepository,
                                  TrainingCommentRepository commentRepository,
                                  TrainingDeletionRepository deletionRepository,
                                  TrainingCalendarReadRepository readRepository,
-                                 AthleteGoalRepository goalRepository) {
+                                 AthleteGoalRepository goalRepository,
+                                 AthleteMaterialRepository materialRepository,
+                                 MaterialQuestionRepository materialQuestionRepository) {
         this.trainingRepository = trainingRepository;
         this.commentRepository = commentRepository;
         this.deletionRepository = deletionRepository;
         this.readRepository = readRepository;
         this.goalRepository = goalRepository;
+        this.materialRepository = materialRepository;
+        this.materialQuestionRepository = materialQuestionRepository;
     }
 
     /**
@@ -113,16 +123,19 @@ public class TrainingUnreadService {
                 + commentRepository.countSince(athleteId, fromAdmin, seen.at(), seen.reach())
                 // Deletions carry no page of their own — the banner shows them whatever window is
                 // open — so they are counted on time alone.
-                + deletionRepository.countSince(athleteId, fromAdmin, seen.at());
-        // Goals are the coach's alone, so a new one is news for the client and never the other way.
+                + deletionRepository.countSince(athleteId, fromAdmin, seen.at())
+                + materialQuestionRepository.countSince(athleteId, fromAdmin, seen.at());
+        // Goals and materials are the coach's alone, so a new one is news for the client and never
+        // the other way.
         if (!viewerIsAdmin) {
-            count += goalRepository.countCreatedSince(athleteId, seen.at());
+            count += goalRepository.countCreatedSince(athleteId, seen.at())
+                    + materialRepository.countCreatedSince(athleteId, seen.at());
         }
         return count;
     }
 
     /**
-     * Unread counts for a whole roster in three queries, whatever its size.
+     * Unread counts for a whole roster in four queries, whatever its size.
      * <p>
      * Calling {@link #countUnread} per athlete would cost 1 + 4N — 61 queries on a roster of
      * fifteen. Each athlete has their own seen marker, so the batching happens through a LEFT JOIN
@@ -143,6 +156,9 @@ public class TrainingUnreadService {
             totals.merge(row.getAthleteId(), row.getTotal(), Long::sum);
         }
         for (var row : readRepository.countUnreadDeletions(viewerId, athleteIds, fromAdmin)) {
+            totals.merge(row.getAthleteId(), row.getTotal(), Long::sum);
+        }
+        for (var row : readRepository.countUnreadMaterialQuestions(viewerId, athleteIds, fromAdmin)) {
             totals.merge(row.getAthleteId(), row.getTotal(), Long::sum);
         }
         return totals;

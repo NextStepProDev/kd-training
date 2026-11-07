@@ -60,8 +60,19 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
       await signInAs(page, ATHLETE, {
         '/api/user/my-training/stats': STATS,
         '/api/user/my-training/calendar': CALENDAR,
+        '/api/user/my-training/materials': [{
+          id: 'm1', title: 'Oddech przeponowy', note: 'Wdech nosem, pięć minut dziennie.',
+          video: {
+            id: 'v1', name: 'Przysiad', url: 'https://youtu.be/abc12345678', description: null,
+            embedUrl: 'https://www.youtube-nocookie.com/embed/abc12345678',
+            thumbnailUrl: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', archived: false,
+          },
+          createdAt: iso(today), unread: true,
+          questions: [{ id: 'q1', fromCoach: true, body: 'Pamiętaj o żebrach.', createdAt: iso(today) }],
+        }],
       })
       await page.goto('/moje-konto/plan-treningowy')
+      await expect(page.getByText('Oddech przeponowy')).toBeVisible()
       await expect(page.getByRole('img', { name: 'Aktywność w ostatnim roku' })).toBeVisible()
       await expectNoViolations(page)
     })

@@ -316,6 +316,38 @@ public final class TrainingCalendarDtos {
             @Nullable LocalDate targetDate
     ) {}
 
+    /** A clip, a tip, or both; the service refuses a title alone. */
+    public record MaterialRequest(
+            @NotBlank @Size(max = 150) String title,
+            @Nullable @Size(max = 2000) String note,
+            @Nullable UUID videoId
+    ) {}
+
+    public record MaterialQuestionRequest(
+            @NotBlank @Size(max = 1000) String body
+    ) {}
+
+    public record MaterialQuestionResponse(
+            UUID id,
+            boolean fromCoach,
+            String body,
+            Instant createdAt
+    ) {}
+
+    /**
+     * @param unread null for writes (nothing you just saved is news to you); otherwise whether the
+     *               material, or a message under it, arrived from the other side since the last visit
+     */
+    public record MaterialResponse(
+            UUID id,
+            String title,
+            @Nullable String note,
+            @Nullable ExerciseVideoResponse video,
+            Instant createdAt,
+            List<MaterialQuestionResponse> questions,
+            @Nullable Boolean unread
+    ) {}
+
     /** Back-datable: the coach usually notices a goal was reached some days later. */
     public record AchieveGoalRequest(
             @Nullable LocalDate achievedDate

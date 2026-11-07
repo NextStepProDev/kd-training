@@ -21,13 +21,16 @@ public class AdminPersonalTrainingController {
     private final PersonalTrainingService service;
     private final AthleteGoalService goalService;
     private final TrainingStatsService statsService;
+    private final AthleteMaterialService materialService;
 
     public AdminPersonalTrainingController(PersonalTrainingService service,
                                            AthleteGoalService goalService,
-                                           TrainingStatsService statsService) {
+                                           TrainingStatsService statsService,
+                                           AthleteMaterialService materialService) {
         this.service = service;
         this.goalService = goalService;
         this.statsService = statsService;
+        this.materialService = materialService;
     }
 
     @GetMapping
@@ -140,5 +143,36 @@ public class AdminPersonalTrainingController {
     @PostMapping("/goals/{goalId}/achieve")
     public GoalResponse achieveGoal(@PathVariable UUID goalId, @Valid @RequestBody AchieveGoalRequest request) {
         return goalService.achieve(goalId, request);
+    }
+
+    // --- Materials. Written by the coach for one client, kept with no date; questions under each. ---
+
+    @GetMapping("/materials")
+    public List<MaterialResponse> materials(@CurrentUserId UUID adminId, @RequestParam UUID athleteId) {
+        return materialService.list(athleteId, adminId, true);
+    }
+
+    @PostMapping("/materials")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MaterialResponse createMaterial(@RequestParam UUID athleteId, @Valid @RequestBody MaterialRequest request) {
+        return materialService.create(athleteId, request);
+    }
+
+    @PutMapping("/materials/{materialId}")
+    public MaterialResponse updateMaterial(@PathVariable UUID materialId, @Valid @RequestBody MaterialRequest request) {
+        return materialService.update(materialId, request);
+    }
+
+    @DeleteMapping("/materials/{materialId}")
+    public ResponseEntity<Void> deleteMaterial(@PathVariable UUID materialId) {
+        materialService.delete(materialId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/materials/{materialId}/questions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MaterialQuestionResponse replyToMaterial(@CurrentUserId UUID adminId, @PathVariable UUID materialId,
+                                                    @Valid @RequestBody MaterialQuestionRequest request) {
+        return materialService.ask(materialId, adminId, true, request);
     }
 }

@@ -18,12 +18,6 @@ updates:
         update-types:
           - minor
           - patch
-    ignore:
-      # typescript-eslint pins its peer to `typescript <6.1.0`, so a TypeScript major PR cannot even
-      # pass `npm ci` (ERESOLVE) and only sits red. Drop this entry once typescript-eslint's
-      # peerDependencies accept the next major (`npm view typescript-eslint peerDependencies`).
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: gradle
     directory: /mocny-grzbiet-backend

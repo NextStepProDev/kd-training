@@ -118,13 +118,16 @@ pomijany, więc skrypt działa i bez niego.
   - Sprzątanie dotyczy tylko `mocny-grzbiet-backend` i `mocny-grzbiet-frontend`; `postgres` i `alpine` (backup) są poza zasięgiem. Sprzątanie nigdy nie wywala deployu.
   - Odwrotnie `pull` i `up -d`: mają `|| exit 1`. Skrypt SSH nie ma `set -e` (`appleboy/ssh-action` v1.2.5 nie ma `script_stop`), więc krok zwraca wynik **ostatniej** komendy. Nieudany pull zostawiłby stare kontenery, a deploy świeciłby na zielono.
   - Z tego samego powodu „Verify deployment health” najpierw sprawdza, że oba kontenery chodzą na **wdrażanym tagu**. Stary backend też jest `healthy`.
-- **Dependabot — dwa świadome wyjątki we froncie** (08.11.2026):
-  - `overrides.minimatch` w `package.json` (dziś `^11.0.5`). Alert GHSA-g3hv-75wg-m249 obejmuje całą linię 10.x,
-    poprawka jest dopiero w 11.0.1, a `eslint` żąda `minimatch@^10.2.6` — aktualizacja bezpieczeństwa Dependabota
-    padała więc przy każdym przebiegu („would downgrade @eslint/js”). Sprawdzone: lint łapie błędy w `src/`
-    i dalej pomija `dist/`. **Do usunięcia**, gdy `npm view eslint dependencies.minimatch` pokaże `^11`.
-  - `ignore` dla majora `typescript` w `dependabot.yml`: `typescript-eslint` ma peer `typescript <6.1.0`, więc PR
-    z TS 7 nie przechodzi nawet `npm ci` (ERESOLVE). Zdjąć, gdy `npm view typescript-eslint peerDependencies` przyjmie 7.
+- **Dependabot — gdy aktualizacja nie może przejść** (ustalone 08.11.2026, po cofnięciu obejść z PR #39):
+  - **Major zablokowany przez cudzy peer** (np. TypeScript 7 przy `typescript-eslint` z peerem `<6.1.0`): PR
+    zamykamy zwykłym „Close”, **bez** `ignore` w `dependabot.yml` i bez komentarza `@dependabot ignore`. Zamknięcie
+    pomija tylko tę jedną wersję, więc następne wydanie przyjdzie nowym PR-em — czerwonym, dopóki blokada trwa,
+    zielonym, gdy zniknie. Ten PR jest przypomnieniem; `ignore` w konfiguracji milczy na zawsze.
+  - **Alert w zależności tylko deweloperskiej, którego nie da się podbić** (np. `minimatch` pod ESLintem, GHSA-g3hv-75wg-m249,
+    medium): alert odrzucamy („Risk is tolerable”) z uzasadnieniem, a **nie** wymuszamy wersji przez `overrides`.
+    `overrides` ponad zakres zadeklarowany przez paczkę to połączenie, którego jej autorzy nie testowali, i wyjątek,
+    który ktoś musi pamiętać zdjąć. Poprawka przyjdzie sama zwykłym PR-em, gdy paczka-rodzic ją przyjmie.
+    Nie dotyczy `high`/`critical` ani niczego, co trafia na produkcję — to naprawiamy od razu.
 
 ### Zmienne środowiskowe (`.env`)
 `POSTGRES_DB/USER/PASSWORD`, `MAIL_HOST/PORT/USERNAME/PASSWORD`, `JWT_SECRET`, `GHCR_OWNER`, `VERSION`, `ADMIN_EMAIL`, `CORS_ORIGINS`, `APP_BASE_URL`, `SITE_URL`

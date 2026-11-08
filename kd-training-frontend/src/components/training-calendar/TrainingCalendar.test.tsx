@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TrainingCalendar } from './TrainingCalendar'
 import type { TrainingCalendarAdapter } from './adapter'
 import { formatLongDate, todayIso, weekRange } from '../../utils/calendarRange'
-import type { CalendarRange, DeletedTrainingNotice, PersonalTraining } from '../../types'
+import type { CalendarRange, DayOff, DeletedTrainingNotice, PersonalTraining } from '../../types'
 
 // The calendar always opens on the current week, so fixtures have to live there rather than on a
 // fixed date — otherwise they render outside the visible range and nothing is found.
@@ -28,6 +28,7 @@ const tMap: Record<string, string> = {
   'detail.markDone': 'Oznacz jako wykonany',
   'detail.markTaskDone': 'Oznacz jako zrobione',
   'empty': 'Brak treningów w tym okresie.',
+  'dayOff.label': 'Trener ma wolne',
 }
 
 vi.mock('react-i18next', () => ({
@@ -52,9 +53,10 @@ function stubAdapter(
   trainings: PersonalTraining[],
   over: Partial<TrainingCalendarAdapter> = {},
   deletions: DeletedTrainingNotice[] = [],
+  daysOff: DayOff[] = [],
 ): TrainingCalendarAdapter {
   const week = weekRange(TODAY)
-  const range: CalendarRange = { from: week.from, to: week.to, trainings, deletions }
+  const range: CalendarRange = { from: week.from, to: week.to, trainings, deletions, daysOff }
   return {
     role: 'coach',
     athleteId: 'a1',
@@ -122,6 +124,27 @@ describe('TrainingCalendar', () => {
     vi.clearAllMocks()
     vi.unstubAllGlobals()
     sessionStorage.clear()
+  })
+
+  it('marks the coach\'s day off on the day, with the note, without hiding what is planned', async () => {
+    // A holiday added after the plan: the session is still there for the coach to decide on, and the
+    // client sees both that it is planned and that the coach is off.
+    const dayOff = { id: 'd1', startDate: TODAY, endDate: TODAY, note: 'Urlop' }
+    await renderWeek(stubAdapter([training()], {}, [], [dayOff]))
+
+    expect(await screen.findByText('Trener ma wolne')).toBeInTheDocument()
+    expect(screen.getByText('Urlop')).toBeInTheDocument()
+    expect(screen.getByText('Siła')).toBeInTheDocument()
+  })
+
+  it('says the day is off in the phone month cell\'s name', async () => {
+    mockCompactViewport()
+    const dayOff = { id: 'd1', startDate: TODAY, endDate: TODAY, note: null }
+    renderCalendar(stubAdapter([], {}, [], [dayOff]))
+
+    expect(await screen.findByRole('button', {
+      name: `Pokaż dzień ${formatLongDate(TODAY)}, Trener ma wolne`,
+    })).toBeInTheDocument()
   })
 
   it('opens on the month view, a fixed 42-cell grid', async () => {
@@ -432,7 +455,7 @@ describe('TrainingCalendar', () => {
     // While the range is still in flight nothing is marked
     expect(markSeen).not.toHaveBeenCalled()
 
-    resolveRange({ from: week.from, to: week.to, trainings: [training()], deletions: [] })
+    resolveRange({ from: week.from, to: week.to, trainings: [training()], deletions: [], daysOff: [] })
 
     await screen.findByText('Siła')
     await waitFor(() => expect(markSeen).toHaveBeenCalledTimes(1))
@@ -471,7 +494,7 @@ describe('TrainingCalendar', () => {
     const midMonth = `${TODAY.slice(0, 7)}-15`
     const first: CalendarRange = {
       from: week.from, to: week.to,
-      trainings: [training({ date: midMonth })], deletions: [],
+      trainings: [training({ date: midMonth })], deletions: [], daysOff: [],
     }
     let resolveNext: (value: CalendarRange) => void = () => {}
     const fetchRange = vi.fn()

@@ -128,6 +128,22 @@ export interface CalendarRange {
   to: string
   trainings: PersonalTraining[]
   deletions: DeletedTrainingNotice[]
+  /** The coach's days off touching the range; the same for every client. */
+  daysOff: DayOff[]
+}
+
+/** Both ends inclusive. */
+export interface DayOff {
+  id: string
+  startDate: string
+  endDate: string
+  note: string | null
+}
+
+export interface DayOffInput {
+  startDate: string
+  endDate: string
+  note?: string | null
 }
 
 export interface TrainingComment {

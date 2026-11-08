@@ -1,5 +1,5 @@
 import { fetchApi } from './client'
-import type { AdminUser, PagedUsers, AdminUserDetail, AthleteSummary, CalendarRange, PersonalTraining, CreateTrainingBody, UpdateTrainingBody, PasteMode, TrainingComment, ExerciseVideo, PagedExerciseVideos, ExerciseVideoInput, VideoMetadata, TrainingTemplate, TrainingTemplateInput, AthleteGoal, AthleteGoals, GoalInput, TrainingStats, AthleteMaterial, MaterialInput, MaterialQuestion } from '../types'
+import type { AdminUser, PagedUsers, AdminUserDetail, AthleteSummary, CalendarRange, PersonalTraining, CreateTrainingBody, UpdateTrainingBody, PasteMode, TrainingComment, ExerciseVideo, PagedExerciseVideos, ExerciseVideoInput, VideoMetadata, TrainingTemplate, TrainingTemplateInput, AthleteGoal, AthleteGoals, GoalInput, TrainingStats, AthleteMaterial, MaterialInput, MaterialQuestion, DayOff, DayOffInput } from '../types'
 
 export type EmailAudience = 'MARKETING' | 'ALL' | 'SELECTED'
 
@@ -74,6 +74,13 @@ export const adminApi = {
       method: 'PUT', body: JSON.stringify(body),
     }),
   /** `following` also deletes the later occurrences of the entry's weekly series. */
+  // The coach's days off: marked once, shown in every client's calendar
+  getDaysOff: () =>
+    fetchApi<DayOff[]>('/admin/personal-trainings/days-off'),
+  addDayOff: (body: DayOffInput) =>
+    fetchApi<DayOff>('/admin/personal-trainings/days-off', { method: 'POST', body: JSON.stringify(body) }),
+  deleteDayOff: (id: string) =>
+    fetchApi<void>(`/admin/personal-trainings/days-off/${id}`, { method: 'DELETE' }),
   deletePersonalTraining: (id: string, following = false) =>
     fetchApi<void>(`/admin/personal-trainings/${id}${following ? '?following=true' : ''}`, { method: 'DELETE' }),
   duplicatePersonalTraining: (id: string, offsetDays?: number) =>

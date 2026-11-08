@@ -13,6 +13,22 @@
     "empty": "Nic tego dnia.",
     "weekendFree": "wolne"
   },
+  "dayOff": {
+    "label": "Trener ma wolne",
+    "title": "Dni wolne",
+    "hint": "Urlop, kurs, choroba: zaznacz raz, a każdy podopieczny zobaczy to w swoim kalendarzu. Treningi zaplanowane na te dni zostają, o każdym decydujesz osobno.",
+    "from": "Od",
+    "to": "Do",
+    "note": "Notatka (widzi ją każdy podopieczny)",
+    "notePlaceholder": "np. urlop",
+    "add": "Dodaj",
+    "added": "Dodano dni wolne.",
+    "deleted": "Usunięto dni wolne.",
+    "deleteFor": "Usuń wolne: {{range}}",
+    "endBeforeStart": "Wybierz pierwszy i ostatni dzień. Ostatni nie może być wcześniejszy niż pierwszy.",
+    "empty": "Nie masz zaplanowanych dni wolnych.",
+    "loadError": "Nie udało się wczytać dni wolnych."
+  },
   "empty": "Nic zaplanowanego w tym okresie.",
   "status": {
     "PLANNED": "Zaplanowany",

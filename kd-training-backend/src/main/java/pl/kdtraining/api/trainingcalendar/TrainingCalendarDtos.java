@@ -83,7 +83,23 @@ public final class TrainingCalendarDtos {
             LocalDate to,
             List<PersonalTrainingResponse> trainings,
             /** Deleted future trainings the viewer has not dismissed yet. */
-            List<DeletedTrainingNotice> deletions
+            List<DeletedTrainingNotice> deletions,
+            /** The coach's days off touching the range; the same for every client. */
+            List<DayOffResponse> daysOff
+    ) {}
+
+    /** Both ends inclusive. The note is shown to every client, so it is an announcement, not a diary. */
+    public record DayOffRequest(
+            @NotNull LocalDate startDate,
+            @NotNull LocalDate endDate,
+            @Nullable @Size(max = 200) String note
+    ) {}
+
+    public record DayOffResponse(
+            UUID id,
+            LocalDate startDate,
+            LocalDate endDate,
+            @Nullable String note
     ) {}
 
     public record DeletedTrainingNotice(

@@ -18,7 +18,8 @@ const RULES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']
 
 const today = new Date()
 const iso = (d: Date) => d.toISOString().slice(0, 10)
-const CALENDAR = { from: iso(today), to: iso(today), trainings: [], deletions: [] }
+const CALENDAR = { from: iso(today), to: iso(today), trainings: [], deletions: [],
+  daysOff: [{ id: 'd1', startDate: iso(today), endDate: iso(today), note: 'Urlop' }] }
 
 async function expectNoViolations(page: Page) {
   // Wait for the page's own content rather than a fixed delay: an audit of a spinner proves nothing.
@@ -80,6 +81,20 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
     test('podopieczny: ustawienia', async ({ page }) => {
       await signInAs(page, ATHLETE)
       await page.goto('/settings')
+      await expectNoViolations(page)
+    })
+
+    test('trener: podopieczni i dni wolne', async ({ page }) => {
+      await signInAs(page, ADMIN, {
+        '/api/admin/athletes': [],
+        '/api/admin/exercise-videos': { content: [], page: 0, size: 50, totalElements: 0, totalPages: 0 },
+        '/api/admin/training-templates': [],
+        '/api/admin/personal-trainings/days-off': [
+          { id: 'd1', startDate: iso(today), endDate: iso(today), note: 'Urlop' },
+        ],
+      })
+      await page.goto('/admin/podopieczni')
+      await expect(page.getByText('Urlop', { exact: true })).toBeVisible()
       await expectNoViolations(page)
     })
 

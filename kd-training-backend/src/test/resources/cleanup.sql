@@ -10,5 +10,6 @@ DELETE FROM training_calendar_reads;
 DELETE FROM training_comments;
 DELETE FROM personal_trainings;
 DELETE FROM invitations;
+DELETE FROM coach_days_off;
 DELETE FROM auth_tokens;
 DELETE FROM users;

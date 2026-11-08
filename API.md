@@ -85,6 +85,7 @@ Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, ter
 `POST /training-photos` (multipart `trainingId`,`file`,opc. `body` — **osobny prefiks pod kubełek rate-limitu**) · `GET|DELETE /personal-trainings/comments/{commentId}/photo`
 `GET /personal-trainings/stats?athleteId=` (**z sygnałem przetrenowania**)
 `GET|POST /personal-trainings/goals` · `PUT|DELETE /personal-trainings/goals/{id}` · `POST /personal-trainings/goals/{id}/achieve`
+`GET|POST /personal-trainings/days-off` · `DELETE /personal-trainings/days-off/{id}` (dni wolne trenera, `{startDate, endDate, note}`, oba końce włącznie, najwyżej 92 dni; GET zwraca trwające i przyszłe). Każdy podopieczny dostaje je w `daysOff` odpowiedzi kalendarza (te, które dotykają zakresu)
 `GET|POST /personal-trainings/materials?athleteId=` · `PUT|DELETE /personal-trainings/materials/{id}` · `POST /personal-trainings/materials/{id}/questions` (odpowiedź trenera). Materiał to tytuł + film z biblioteki i/lub opis (sam tytuł → 400); lista zwraca wątki pytań w środku i `unread` na materiale
 `GET|POST|PUT|DELETE /exercise-videos[/{id}]` · `GET /exercise-videos/search?query=` · `POST /exercise-videos/{id}/archive|/restore` · `GET|POST|PUT|DELETE /training-templates[/{id}]`
 

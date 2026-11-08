@@ -4,7 +4,7 @@
 
 ## Stan
 
-**Obecny stan: V4. Kolejna migracja: V5.**
+**Obecny stan: V5. Kolejna migracja: V6.**
 
 | Wersja | Co dodaje |
 |--------|-----------|
@@ -12,6 +12,7 @@
 | V2 | `invitations`: rejestracja tylko z zaproszenia (adres, hash tokenu, ważność; jedno otwarte zaproszenie na adres; bez klucza do `users`) |
 | V3 | `athlete_materials` (materiały na stałe dla jednej osoby: tytuł + film z biblioteki i/lub opis; `video_id` RESTRICT) i `material_questions` (wątek pytań pod materiałem) |
 | V4 | `personal_trainings.series_id`: serie co tydzień (każdy termin to zwykły wiersz; kopie nie dostają `series_id`) |
+| V5 | `coach_days_off`: dni wolne trenera (zakres dat włącznie + notatka widoczna dla wszystkich; bez klucza do `users`) |
 
 ## Jak powstała V1 (26.10.2026)
 

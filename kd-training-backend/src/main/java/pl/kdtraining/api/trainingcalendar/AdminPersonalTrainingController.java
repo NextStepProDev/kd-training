@@ -22,11 +22,14 @@ public class AdminPersonalTrainingController {
     private final AthleteGoalService goalService;
     private final TrainingStatsService statsService;
     private final AthleteMaterialService materialService;
+    private final CoachDayOffService dayOffService;
 
     public AdminPersonalTrainingController(PersonalTrainingService service,
                                            AthleteGoalService goalService,
                                            TrainingStatsService statsService,
-                                           AthleteMaterialService materialService) {
+                                           AthleteMaterialService materialService,
+                                           CoachDayOffService dayOffService) {
+        this.dayOffService = dayOffService;
         this.service = service;
         this.goalService = goalService;
         this.statsService = statsService;
@@ -40,6 +43,24 @@ public class AdminPersonalTrainingController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return service.getRange(athleteId, from, to, adminId, true);
+    }
+
+    /** The coach's days off still ahead or going on; every client sees them in the calendar. */
+    @GetMapping("/days-off")
+    public List<DayOffResponse> daysOff() {
+        return dayOffService.upcoming();
+    }
+
+    @PostMapping("/days-off")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DayOffResponse addDayOff(@Valid @RequestBody DayOffRequest request) {
+        return dayOffService.create(request);
+    }
+
+    @DeleteMapping("/days-off/{id}")
+    public ResponseEntity<Void> deleteDayOff(@PathVariable UUID id) {
+        dayOffService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping

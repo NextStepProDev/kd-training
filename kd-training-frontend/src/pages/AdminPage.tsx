@@ -7,6 +7,7 @@ import { AdminUsers } from './admin/AdminUsers'
 import { AdminAthletes } from './admin/AdminAthletes'
 import { AdminExerciseVideos } from './admin/AdminExerciseVideos'
 import { AdminTrainingTemplates } from './admin/AdminTrainingTemplates'
+import { AdminDaysOff } from './admin/AdminDaysOff'
 import type { AthleteSummary } from '../types'
 
 const tabs = [
@@ -58,6 +59,7 @@ export function AdminPage() {
           ? <AdminAthletes openAthlete={openAthlete} onOpen={setOpenAthlete} />
           : <div className="space-y-12">
               <AdminAthletes openAthlete={null} onOpen={setOpenAthlete} />
+              <AdminDaysOff />
               <AdminExerciseVideos />
               <AdminTrainingTemplates />
             </div>

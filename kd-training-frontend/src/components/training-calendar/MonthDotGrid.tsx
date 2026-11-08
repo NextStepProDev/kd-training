@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { dayOfMonth, formatLongDate, isOutsideMonth, todayIso, weekdayShort } from '../../utils/calendarRange'
-import type { PersonalTraining } from '../../types'
+import type { DayOff, PersonalTraining } from '../../types'
 
 /** Beyond this the dots stop being countable and a number says it better. */
 const MAX_DOTS = 4
@@ -20,9 +20,10 @@ interface MonthDotGridProps {
   days: string[]
   anchor: string
   byDay: Map<string, PersonalTraining[]>
+  dayOffByDay?: Map<string, DayOff>
   pasteArmed: boolean
   onSelectDay: (date: string) => void
-  labels: { openDay: string; unread: string; pasteHere: string }
+  labels: { openDay: string; unread: string; pasteHere: string; dayOff: string }
 }
 
 /**
@@ -34,7 +35,7 @@ interface MonthDotGridProps {
  * scrolling, most of it empty days, and no way to see a month at all.
  */
 export function MonthDotGrid({
-  days, anchor, byDay, pasteArmed, onSelectDay, labels,
+  days, anchor, byDay, dayOffByDay, pasteArmed, onSelectDay, labels,
 }: MonthDotGridProps) {
   const today = todayIso()
 
@@ -55,6 +56,7 @@ export function MonthDotGrid({
           const isToday = date === today
           const unread = trainings.some(training => training.unread)
           const total = trainings.length
+          const off = dayOffByDay?.has(date) ?? false
 
           return (
             <button
@@ -63,7 +65,7 @@ export function MonthDotGrid({
               onClick={() => onSelectDay(date)}
               // The date spelled out, so the cell's visible number ("2") is part of its name — "Pokaż
               // dzień 2026-11-02" read the ISO string aloud and did not contain the "2" on screen.
-              aria-label={`${labels.openDay} ${formatLongDate(date)}`}
+              aria-label={`${labels.openDay} ${formatLongDate(date)}${off ? `, ${labels.dayOff}` : ''}`}
               className={clsx(
                 'relative flex aspect-square flex-col items-center justify-start gap-1 rounded-xl',
                 'border p-1 transition-colors',
@@ -77,6 +79,12 @@ export function MonthDotGrid({
                 isToday ? 'text-surface-950' : 'text-surface-200')}>
                 {dayOfMonth(date)}
               </span>
+
+              {off && (
+                // A short bar under the number: the day is the coach's off, whatever dots follow.
+                <span aria-hidden="true"
+                  className={clsx('h-0.5 w-3 rounded-full', isToday ? 'bg-surface-950' : 'bg-surface-300')} />
+              )}
 
               {/* One row of dots. */}
               <span className="flex flex-wrap items-center justify-center gap-0.5">

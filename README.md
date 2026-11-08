@@ -47,9 +47,9 @@ One application with three roles:
 ## Under the hood (in brief)
 
 ```
-kd-training-backend/    # Java 25 / Spring Boot 4 — REST API, PostgreSQL (Flyway), security, email
-kd-training-frontend/   # React 19 / TypeScript / Vite — site, client space, coach's panel
-kd-training-hub/        # Docker Compose (dev / prod), backups, restore guide
+mocny-grzbiet-backend/    # Java 25 / Spring Boot 4 — REST API, PostgreSQL (Flyway), security, email
+mocny-grzbiet-frontend/   # React 19 / TypeScript / Vite — site, client space, coach's panel
+mocny-grzbiet-hub/        # Docker Compose (dev / prod), backups, restore guide
 ```
 
 CI builds and tests both parts, scans the images, and publishes them to GHCR; deployment is a manual workflow.

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - kd-training-frontend/**
+      - mocny-grzbiet-frontend/**
       - VERSION
       # This workflow tests itself. Without this line a PR touching only CI never runs CI and reaches
       # main unexercised — which mattered little while these files were thin, and matters now that
@@ -14,7 +14,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - kd-training-frontend/**
+      - mocny-grzbiet-frontend/**
       - VERSION
       - .github/workflows/ci-frontend.yml
 
@@ -43,7 +43,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: kd-training-frontend
+        working-directory: mocny-grzbiet-frontend
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -54,9 +54,9 @@ jobs:
           # shipped from another. Pinned to 26 after measuring, not by inheritance: 42 files /
           # 258 tests, lint, tsc and the prerendering build all pass on 26.8.1, so the version
           # production was already built on is the one that stays.
-          node-version-file: kd-training-frontend/.nvmrc
+          node-version-file: mocny-grzbiet-frontend/.nvmrc
           cache: npm
-          cache-dependency-path: kd-training-frontend/package-lock.json
+          cache-dependency-path: mocny-grzbiet-frontend/package-lock.json
       - run: npm ci
       # Two steps on purpose. The report always prints the full advisory list so a new "high" is visible
       # in the log; the gate only fails the build on "critical". Reason for the gap: GHSA-qwww-vcr4-c8h2
@@ -82,7 +82,7 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: kd-training-frontend/playwright-report/
+          path: mocny-grzbiet-frontend/playwright-report/
           retention-days: 7
       # `npm run build` is `tsc -b && vite build && node scripts/prerender.mjs`. This bundle is the
       # one that ships: the docker job packages this dist/ instead of compiling a second one.
@@ -93,7 +93,7 @@ jobs:
         with:
           name: frontend-dist
           # Relative to the REPOSITORY ROOT, not to defaults.run.working-directory.
-          path: kd-training-frontend/dist
+          path: mocny-grzbiet-frontend/dist
           # Default is `warn`: an empty upload would go green here and fail two jobs later as
           # "artifact not found", nowhere near the cause.
           if-no-files-found: error
@@ -132,23 +132,23 @@ jobs:
           # upload-artifact packs a directory's CONTENTS, so this restores dist/* here rather than
           # dist/dist — which is what the Dockerfile's `COPY dist` expects. Asserted below rather
           # than assumed.
-          path: kd-training-frontend/dist
+          path: mocny-grzbiet-frontend/dist
       - name: Verify the bundle before it becomes an image
         run: |
           # A dist/dist layout builds an image that serves nginx's welcome page instead of the app,
           # and nothing about that failure points back here. One line beats that diagnosis.
-          if [ ! -f kd-training-frontend/dist/index.html ] || [ ! -d kd-training-frontend/dist/assets ]; then
+          if [ ! -f mocny-grzbiet-frontend/dist/index.html ] || [ ! -d mocny-grzbiet-frontend/dist/assets ]; then
             echo "::error::dist/index.html or dist/assets is missing after download-artifact — the artifact layout changed."
-            ls -R kd-training-frontend/dist | head -20
+            ls -R mocny-grzbiet-frontend/dist | head -20
             exit 1
           fi
           # Dot-directories travel only with include-hidden-files on the upload; without it the image
           # ships with no security.txt and nothing else notices.
-          if [ ! -f kd-training-frontend/dist/.well-known/security.txt ]; then
+          if [ ! -f mocny-grzbiet-frontend/dist/.well-known/security.txt ]; then
             echo "::error::dist/.well-known/security.txt is missing — check include-hidden-files on the upload."
             exit 1
           fi
-          echo "bundle: $(find kd-training-frontend/dist -type f | wc -l) files"
+          echo "bundle: $(find mocny-grzbiet-frontend/dist -type f | wc -l) files"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
@@ -158,14 +158,14 @@ jobs:
       - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta
         with:
-          images: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend
+          images: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-frontend
           tags: |
             type=ref,event=branch
             type=sha,prefix=sha-
             type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: kd-training-frontend
+          context: mocny-grzbiet-frontend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -189,7 +189,7 @@ jobs:
       - name: Trivy report (SARIF, never fails)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-frontend:${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-frontend.sarif
           severity: HIGH,CRITICAL
@@ -214,7 +214,7 @@ jobs:
       - name: Trivy gate (CRITICAL fails the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-frontend:${{ steps.version.outputs.version }}
           format: table
           severity: CRITICAL
           ignore-unfixed: true
@@ -246,7 +246,7 @@ jobs:
       - name: Trivy report (SARIF, never fails)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-frontend:${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-frontend.sarif
           severity: HIGH,CRITICAL
@@ -265,7 +265,7 @@ jobs:
       - name: Trivy gate (CRITICAL fails the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-frontend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-frontend:${{ steps.version.outputs.version }}
           format: table
           severity: CRITICAL
           ignore-unfixed: true

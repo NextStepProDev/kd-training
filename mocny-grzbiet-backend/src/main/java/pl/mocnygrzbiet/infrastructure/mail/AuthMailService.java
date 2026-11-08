@@ -1,0 +1,195 @@
+package pl.mocnygrzbiet.infrastructure.mail;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
+import pl.mocnygrzbiet.config.AdminEmailConfig;
+import pl.mocnygrzbiet.config.AppConfig;
+import pl.mocnygrzbiet.domain.user.User;
+import pl.mocnygrzbiet.infrastructure.i18n.MessageService;
+
+@Service
+public class AuthMailService {
+
+    private final BrandedMailSender mail;
+    private final AdminEmailConfig adminEmailConfig;
+    private final MessageService msg;
+    private final String siteUrl;
+
+    public AuthMailService(BrandedMailSender mail, AppConfig appConfig,
+                           AdminEmailConfig adminEmailConfig, MessageService msg) {
+        this.mail = mail;
+        this.adminEmailConfig = adminEmailConfig;
+        this.msg = msg;
+        this.siteUrl = appConfig.getSiteUrl();
+    }
+
+    /**
+     * The only way into an account: the link opens the registration form with this address filled in.
+     * Sent to someone who has no account yet, so there is no first name to greet and no preferred
+     * language to read; the default (Polish) applies.
+     */
+    @Async("mailExecutor")
+    public void sendInvitationEmail(String email, String token) {
+        String registerUrl = siteUrl + "/rejestracja?token=" + token;
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <div style="text-align: center; margin: 28px 0;">
+                            <a href="%s" style="display: inline-block; background-color: #ffffff; color: #141414; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">%s</a>
+                        </div>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+            """.formatted(
+                msg.get("email.invitation.heading"),
+                msg.get("email.invitation.body"),
+                registerUrl,
+                msg.get("email.invitation.button"),
+                msg.get("email.invitation.expiry"),
+                msg.get("email.invitation.ignore")
+        );
+
+        mail.send(email, msg.get("email.invitation.subject"), brandedTemplate(content));
+    }
+
+    @Async("mailExecutor")
+    public void sendWelcomeEmail(User user) {
+        String lang = user.getPreferredLanguage();
+        String subject = msg.getForLang("email.welcome.subject", lang);
+        String safeFirstName = HtmlUtils.htmlEscape(user.getFirstName());
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+            """.formatted(
+                msg.getForLang("email.welcome.greeting", lang, safeFirstName),
+                msg.getForLang("email.welcome.body", lang),
+                msg.getForLang("email.welcome.see.you", lang)
+        );
+
+        mail.send(user.getEmail(), subject, brandedTemplate(content));
+    }
+
+    @Async("mailExecutor")
+    public void sendPasswordResetEmail(User user, String token) {
+        String lang = user.getPreferredLanguage();
+        String resetUrl = siteUrl + "/reset-password?token=" + token;
+        String subject = msg.getForLang("email.reset.subject", lang);
+        String safeFirstName = HtmlUtils.htmlEscape(user.getFirstName());
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <div style="text-align: center; margin: 28px 0;">
+                            <a href="%s" style="display: inline-block; background-color: #ffffff; color: #141414; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">%s</a>
+                        </div>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
+            """.formatted(
+                msg.getForLang("email.reset.greeting", lang, safeFirstName),
+                msg.getForLang("email.reset.body", lang),
+                msg.getForLang("email.reset.action", lang),
+                resetUrl,
+                msg.getForLang("email.reset.button", lang),
+                msg.getForLang("email.reset.expiry", lang),
+                msg.getForLang("email.reset.ignore", lang)
+        );
+
+        mail.send(user.getEmail(), subject, brandedTemplate(content));
+    }
+
+    @Async("mailExecutor")
+    public void sendPasswordChangedNotification(User user) {
+        String lang = user.getPreferredLanguage();
+        String subject = msg.getForLang("email.password.changed.subject", lang);
+        String safeFirstName = HtmlUtils.htmlEscape(user.getFirstName());
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+            """.formatted(
+                msg.getForLang("email.password.changed.greeting", lang, safeFirstName),
+                msg.getForLang("email.password.changed.body", lang),
+                msg.getForLang("email.password.changed.warning", lang)
+        );
+
+        mail.send(user.getEmail(), subject, brandedTemplate(content));
+    }
+
+    /**
+     * Notifies the organizers about a new active account. Sent right after registration from an
+     * invitation (email/password) or after account creation via Google OAuth — in both cases the
+     * account is already "real" (the invitation link or Google proved the mailbox).
+     */
+    @Async("mailExecutor")
+    public void sendNewUserAdminNotification(User user) {
+        if (adminEmailConfig.getAdminEmails().isEmpty()) {
+            return;
+        }
+        String fullName = (user.getFirstName() + " " + user.getLastName()).trim();
+        String subject = msg.get("email.admin.new.user.subject", fullName);
+
+        String safeFullName = HtmlUtils.htmlEscape(fullName);
+        String safeEmail = HtmlUtils.htmlEscape(user.getEmail());
+        String phone = user.getPhone();
+        String safePhone = (phone == null || phone.isBlank())
+                ? msg.get("email.admin.new.user.phone.none")
+                : HtmlUtils.htmlEscape(phone);
+        String source = user.getOauthProvider() != null
+                ? msg.get("email.admin.new.user.source.google")
+                : msg.get("email.admin.new.user.source.email");
+        String marketing = user.getMarketingConsentAt() != null
+                ? msg.get("email.admin.new.user.marketing.yes")
+                : msg.get("email.admin.new.user.marketing.no");
+
+        String adminUrl = siteUrl + "/admin/uzytkownicy";
+
+        String content = """
+                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
+                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
+                        <div style="background-color: #2a2a2a; border-radius: 12px; padding: 16px; margin: 16px 0;">
+                            <p style="font-size: 15px; margin: 4px 0;">%s</p>
+                            <p style="font-size: 15px; margin: 4px 0;">%s</p>
+                            <p style="font-size: 15px; margin: 4px 0;">%s</p>
+                            <p style="font-size: 15px; margin: 4px 0;">%s</p>
+                            <p style="font-size: 15px; margin: 4px 0;">%s</p>
+                        </div>
+                        <div style="text-align: center; margin: 28px 0;">
+                            <a href="%s" style="display: inline-block; background-color: #ffffff; color: #141414; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">%s</a>
+                        </div>
+            """.formatted(
+                msg.get("email.admin.new.user.heading"),
+                msg.get("email.admin.new.user.intro"),
+                msg.get("email.admin.new.user.name", safeFullName),
+                msg.get("email.admin.new.user.email", safeEmail),
+                msg.get("email.admin.new.user.phone", safePhone),
+                msg.get("email.admin.new.user.source", source),
+                msg.get("email.admin.new.user.marketing", marketing),
+                adminUrl,
+                msg.get("email.admin.new.user.button")
+        );
+
+        String body = brandedTemplate(content);
+        for (String adminEmail : adminEmailConfig.getAdminEmails()) {
+            mail.send(adminEmail, subject, body);
+        }
+    }
+
+
+    /**
+     * Account mail carries no section, so it always renders in Mocny Grzbiet branding. The sign-off is left
+     * to the shared rule: skipped when the content already closes warmly („Do zobaczenia" in the welcome
+     * mail) or signs off itself.
+     * <p>
+     * The footer strings now resolve through {@code msg.get} rather than the user's language. With a single
+     * {@code messages.properties} and Polish as the only supported language those are the same lookup; if a
+     * second language is ever added, this is where account mail would need its language back.
+     */
+    private String brandedTemplate(String content) {
+        return mail.template(content);
+    }
+}

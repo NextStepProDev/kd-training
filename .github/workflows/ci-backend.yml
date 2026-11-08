@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - kd-training-backend/**
+      - mocny-grzbiet-backend/**
       - VERSION
       # This workflow tests itself. Without this line a PR touching only CI never runs CI and reaches
       # main unexercised — which mattered little while these files were thin, and matters now that
@@ -14,7 +14,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - kd-training-backend/**
+      - mocny-grzbiet-backend/**
       - VERSION
       - .github/workflows/ci-backend.yml
 
@@ -45,7 +45,7 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     defaults:
       run:
-        working-directory: kd-training-backend
+        working-directory: mocny-grzbiet-backend
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -66,7 +66,7 @@ jobs:
         if: always()
         with:
           name: test-reports
-          path: kd-training-backend/build/reports/tests/
+          path: mocny-grzbiet-backend/build/reports/tests/
           retention-days: 7
       # Only the deployable branch needs the artifact stored.
       - name: Stage the jar for the image
@@ -91,7 +91,7 @@ jobs:
         with:
           name: backend-jar
           # Relative to the REPOSITORY ROOT, not to defaults.run.working-directory.
-          path: kd-training-backend/app.jar
+          path: mocny-grzbiet-backend/app.jar
           # Default is `warn`: an empty upload would go green here and fail two jobs later as
           # "artifact not found", nowhere near the cause.
           if-no-files-found: error
@@ -126,14 +126,14 @@ jobs:
           name: backend-jar
           # upload-artifact packs the CONTENTS of what it was given, so this restores app.jar here
           # rather than in a nested directory. Asserted below rather than assumed.
-          path: kd-training-backend
+          path: mocny-grzbiet-backend
       # Two things the release path should refuse to ship, checked here because this is the last
       # point where either is cheap to see.
       - name: Verify the jar before it becomes an image
         run: |
-          if [ ! -f kd-training-backend/app.jar ]; then
+          if [ ! -f mocny-grzbiet-backend/app.jar ]; then
             echo "::error::app.jar is missing after download-artifact — the artifact layout changed."
-            ls -R kd-training-backend | head -20
+            ls -R mocny-grzbiet-backend | head -20
             exit 1
           fi
           # The same defect this change fixes in build.gradle, caught from the opposite side: a jar
@@ -145,7 +145,7 @@ jobs:
           # pipeline as 141 — turning the SUCCESS case into an intermittent failure that depends on
           # whether the file was small enough to be written before grep left. sed reads to the end.
           version=$(cat VERSION)
-          stamped=$(unzip -p kd-training-backend/app.jar BOOT-INF/classes/application.yml \
+          stamped=$(unzip -p mocny-grzbiet-backend/app.jar BOOT-INF/classes/application.yml \
             | sed -n "s/^ *version: '\(.*\)'.*/\1/p")
           if [ "$stamped" != "$version" ]; then
             echo "::error::app.jar declares '$stamped' but this build is tagged '$version'."
@@ -161,14 +161,14 @@ jobs:
       - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta
         with:
-          images: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend
+          images: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-backend
           tags: |
             type=ref,event=branch
             type=sha,prefix=sha-
             type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: kd-training-backend
+          context: mocny-grzbiet-backend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -194,7 +194,7 @@ jobs:
       - name: Trivy report (SARIF, never fails)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-backend:${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-backend.sarif
           severity: HIGH,CRITICAL
@@ -221,7 +221,7 @@ jobs:
       - name: Trivy gate (CRITICAL fails the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-backend:${{ steps.version.outputs.version }}
           format: table
           severity: CRITICAL
           ignore-unfixed: true
@@ -253,7 +253,7 @@ jobs:
       - name: Trivy report (SARIF, never fails)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-backend:${{ steps.version.outputs.version }}
           format: sarif
           output: trivy-backend.sarif
           severity: HIGH,CRITICAL
@@ -272,7 +272,7 @@ jobs:
       - name: Trivy gate (CRITICAL fails the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/kd-training-backend:${{ steps.version.outputs.version }}
+          image-ref: ghcr.io/${{ steps.version.outputs.owner }}/mocny-grzbiet-backend:${{ steps.version.outputs.version }}
           format: table
           severity: CRITICAL
           ignore-unfixed: true
@@ -311,9 +311,9 @@ jobs:
           # `grep -m1` rather than `grep ... | head -1`: the shell here is `bash -e -o pipefail`, and
           # head leaving early can hand grep a SIGPIPE, which pipefail then reports as a failed step
           # for a lookup that actually succeeded. Same hazard as the version check in the docker job.
-          image=$(grep -m1 -oE 'postgres:[0-9]+[a-z0-9.-]*' kd-training-hub/docker-compose.prod.yml)
+          image=$(grep -m1 -oE 'postgres:[0-9]+[a-z0-9.-]*' mocny-grzbiet-hub/docker-compose.prod.yml)
           if [ -z "$image" ]; then
-            echo "::error::Could not find a postgres image pin in kd-training-hub/docker-compose.prod.yml"
+            echo "::error::Could not find a postgres image pin in mocny-grzbiet-hub/docker-compose.prod.yml"
             exit 1
           fi
           echo "image=$image" >> "$GITHUB_OUTPUT"

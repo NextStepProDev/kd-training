@@ -45,7 +45,7 @@ Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, ter
 ### SEO (brak auth)
 `GET /sitemap.xml` (`SitemapController` — dziś trzy stałe strony: `/`, `/polityka-prywatnosci` i `/regulamin`). Build frontu odpala `scripts/prerender.mjs` (`npm run build` = `tsc -b && vite build && prerender`) — dosypuje statyczne `<head>` dla tych samych tras; przy błędzie loguje `[prerender] skipped` i zostawia zwykły SPA fallback, więc build się nie wywala.
 
-> ⚠️ **GOTCHA — CSP w `nginx.conf` musi wymieniać hosty YouTube, a `frame-src` trzeba napisać wprost.** Biblioteka filmów ładuje miniatury z `img.youtube.com` (przekierowanie na `i.ytimg.com`) i odtwarzacz w `<iframe>` z `www.youtube-nocookie.com`. Bez `img-src`/`frame-src` dla tych hostów podopieczny widzi pustą ramkę zamiast filmu, a trener połamane miniatury — **tylko na produkcji**, bo dev server Vite nie wysyła CSP w ogóle, więc lokalnie i w testach wszystko wygląda dobrze. Brak `frame-src` jest szczególnie zdradliwy: ramki spadają wtedy na `default-src 'self'` i milczą. Pilnuje tego sekcja 4 w `kd-training-hub/seo-smoke.sh` (odpalana na końcu `deploy.yml`) — dokładając zewnętrzny zasób, dopisz host do CSP i do tego testu.
+> ⚠️ **GOTCHA — CSP w `nginx.conf` musi wymieniać hosty YouTube, a `frame-src` trzeba napisać wprost.** Biblioteka filmów ładuje miniatury z `img.youtube.com` (przekierowanie na `i.ytimg.com`) i odtwarzacz w `<iframe>` z `www.youtube-nocookie.com`. Bez `img-src`/`frame-src` dla tych hostów podopieczny widzi pustą ramkę zamiast filmu, a trener połamane miniatury — **tylko na produkcji**, bo dev server Vite nie wysyła CSP w ogóle, więc lokalnie i w testach wszystko wygląda dobrze. Brak `frame-src` jest szczególnie zdradliwy: ramki spadają wtedy na `default-src 'self'` i milczą. Pilnuje tego sekcja 4 w `mocny-grzbiet-hub/seo-smoke.sh` (odpalana na końcu `deploy.yml`) — dokładając zewnętrzny zasób, dopisz host do CSP i do tego testu.
 
 > ⚠️ **GOTCHA — lista botów dla `/og/` NIGDY nie zawiera wyszukiwarek** (dotyczy podstron z podglądem, gdy wrócą). Reguła `if ($http_user_agent ~* ...)` przepisuje bota na `/og/*`, a `OgController` zwraca stub z `<meta http-equiv="refresh">` na ten sam URL. Crawler renderujący JS (Googlebot/bingbot/Baidu/Yandex) podąża za refreshem → znowu reguła bota → **pętla = GSC „Redirect error"** + pusta strona. Trzymaj tam wyłącznie scrapery social (FB/WhatsApp/Twitter/LinkedIn/Slack/Telegram/Discord). Ten błąd był w Fire i w climbing; sekcja 3 `seo-smoke.sh` sprawdza, że Googlebot nie dostaje meta-refresh.
 
@@ -75,7 +75,7 @@ Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, ter
 
 `/notes` — prywatne notatki trenera: `GET|PUT|DELETE /training/{id}` · `GET /markers?athleteId=&from=&to=` (wszystkie trzy wymagane; same identyfikatory, nigdy treść; okno ≤ 62 dni). Rodzaj celu zostaje segmentem ścieżki (dziś jedyny: `training`). Szczegóły i niezmienniki → [`DECISIONS-TRAINING.md`](DECISIONS-TRAINING.md), sekcja „Prywatne notatki właściciela"
 
-### Kalendarz treningów 1:1 — `pl.kdtraining.api.trainingcalendar`
+### Kalendarz treningów 1:1 — `pl.mocnygrzbiet.api.trainingcalendar`
 > Kontrolery trenera i podopiecznego siedzą w **jednym pakiecie** (nie w `api/admin`), żeby dzielić rekordy DTO — obie role dostają identyczny kształt odpowiedzi, bo front renderuje jeden komponent dla obu. Ochrona ról bierze się ze **ścieżki**, nie z pakietu.
 
 **Trener** `/api/admin` (ROLE_ADMIN):

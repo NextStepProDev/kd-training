@@ -190,7 +190,13 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
               <p className="font-medium text-surface-100">{t('users.detail.blockTitle')}</p>
               <p className="text-sm text-surface-400 mt-0.5">
                 {user.blockedAt
-                  ? t('users.detail.blockOnDesc', { date: new Date(user.blockedAt).toLocaleDateString('pl-PL') })
+                  ? t('users.detail.blockOnDesc', {
+                      date: new Date(user.blockedAt).toLocaleDateString('pl-PL'),
+                      // From the server, which owns the retention period — not recomputed here.
+                      deleteDate: user.scheduledDeletionAt
+                        ? new Date(user.scheduledDeletionAt).toLocaleDateString('pl-PL')
+                        : '',
+                    })
                   : t('users.detail.blockOffDesc')}
               </p>
             </div>

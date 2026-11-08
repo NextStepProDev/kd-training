@@ -64,6 +64,8 @@ public final class AdminUserDtos {
             boolean oauthLinked,
             @Nullable String avatarUrl,
             @Nullable Instant blockedAt,
+            /** A blocked account is deleted with all its data at this moment; null while it is active. */
+            @Nullable Instant scheduledDeletionAt,
             Instant createdAt
     ) {}
 }

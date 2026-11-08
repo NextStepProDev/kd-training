@@ -72,6 +72,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // also have NULL and must NOT be caught here. For automatic cleanup (GDPR — we don't keep data without consent).
     List<User> findByOauthProviderIsNotNullAndPrivacyAcceptedAtIsNullAndCreatedAtBefore(Instant cutoff);
 
+    /** Accounts blocked before the cutoff — see {@link User#BLOCKED_ACCOUNT_RETENTION}. */
+    List<User> findByBlockedAtBefore(Instant cutoff);
+
     boolean existsByEmail(String email);
 
     boolean existsByEmailIgnoreCase(String email);

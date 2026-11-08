@@ -348,6 +348,19 @@ public class User {
         return blockedAt;
     }
 
+    /**
+     * How long a blocked account waits for its owner to come back before it is deleted with all its
+     * data (the client's answer, 08.11.2026: a year). GDPR does not allow keeping it without end, and
+     * the person cannot log in to delete it themselves. Unblocking restarts the clock.
+     */
+    public static final Duration BLOCKED_ACCOUNT_RETENTION = Duration.ofDays(365);
+
+    /** When this blocked account goes; null while it is active. */
+    @Nullable
+    public Instant getScheduledDeletionAt() {
+        return blockedAt == null ? null : blockedAt.plus(BLOCKED_ACCOUNT_RETENTION);
+    }
+
     /** Idempotent: blocking again keeps the original date. */
     public void block() {
         if (blockedAt == null) {

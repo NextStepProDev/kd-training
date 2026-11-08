@@ -24,6 +24,7 @@ public final class AdminUserDtos {
             boolean emailVerified,
             boolean marketingConsent,
             boolean isAthlete,
+            boolean blocked,
             Instant createdAt
     ) {}
 
@@ -62,6 +63,7 @@ public final class AdminUserDtos {
             boolean hasPassword,
             boolean oauthLinked,
             @Nullable String avatarUrl,
+            @Nullable Instant blockedAt,
             Instant createdAt
     ) {}
 }

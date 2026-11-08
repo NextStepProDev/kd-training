@@ -96,6 +96,11 @@ public class User {
     @Nullable
     private Instant lockedUntil;
 
+    /** Set when the coach ends the cooperation; unlike {@link #lockedUntil} it never runs out on its own. */
+    @Column(name = "blocked_at")
+    @Nullable
+    private Instant blockedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -332,6 +337,26 @@ public class User {
     @Nullable
     public Instant getLockedUntil() {
         return lockedUntil;
+    }
+
+    public boolean isBlocked() {
+        return blockedAt != null;
+    }
+
+    @Nullable
+    public Instant getBlockedAt() {
+        return blockedAt;
+    }
+
+    /** Idempotent: blocking again keeps the original date. */
+    public void block() {
+        if (blockedAt == null) {
+            blockedAt = Instant.now();
+        }
+    }
+
+    public void unblock() {
+        blockedAt = null;
     }
 
     public boolean isAccountLocked() {

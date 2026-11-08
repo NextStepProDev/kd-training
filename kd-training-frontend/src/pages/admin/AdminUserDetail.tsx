@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, BadgeCheck, CheckCircle, Download, Dumbbell, KeyRound, Mail, MailCheck, MailX, Phone, Trash2, XCircle } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Ban, CheckCircle, Download, Dumbbell, KeyRound, Mail, MailCheck, MailX, Phone, Trash2, XCircle } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
@@ -18,6 +18,7 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
 
   const [confirmUnflagAthlete, setConfirmUnflagAthlete] = useState(false)
   const [confirmErasePlan, setConfirmErasePlan] = useState(false)
+  const [confirmBlock, setConfirmBlock] = useState(false)
 
   const userQuery = useQuery({
     queryKey: ['admin-user', userId],
@@ -76,6 +77,19 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
     onError: (e: Error) => showToast(e.message, 'error'),
   })
 
+  // End of cooperation without deleting: the person loses every way in, the data waits for a return.
+  const blockMutation = useMutation({
+    mutationFn: (block: boolean) => block ? adminApi.blockUser(userId) : adminApi.unblockUser(userId),
+    onSuccess: (_data, block) => {
+      showToast(t(block ? 'users.detail.blocked' : 'users.detail.unblocked'))
+      setConfirmBlock(false)
+      invalidate()
+      queryClient.invalidateQueries({ queryKey: ['admin', 'athletes'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  })
+
   if (userQuery.isLoading) return <LoadingSpinner />
   if (userQuery.isError || !userQuery.data) {
     return (
@@ -98,6 +112,12 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
         <div>
           <h2 className="text-display text-3xl text-white">{user.firstName} {user.lastName}</h2>
           <p className="text-surface-400 text-sm flex items-center gap-1"><Mail className="w-4 h-4" /> {user.email}</p>
+          {user.blockedAt && (
+            <span className="inline-flex items-center gap-1 mt-2 mr-2 text-xs px-2 py-1 rounded-full border border-white/25 text-surface-200">
+              <Ban className="w-3.5 h-3.5" />
+              {t('users.blockedBadge')}
+            </span>
+          )}
           {user.role === 'ADMIN' && (
             <span className="inline-flex items-center gap-1 mt-2 text-xs px-2 py-1 rounded-full bg-white font-medium text-surface-950">
               <BadgeCheck className="w-3.5 h-3.5" />
@@ -160,6 +180,32 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
         </Button>
       </div>
 
+      {/* Blocking is the default end of cooperation (the client chose it over deletion): reversible,
+          nothing deleted. Admins cannot be blocked, so the card is not offered for them. */}
+      {!user.isAdmin && (
+        <div className="rounded-2xl border border-white/[0.07] bg-surface-900 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Ban className={clsx('w-5 h-5 mt-0.5 shrink-0', user.blockedAt ? 'text-white' : 'text-surface-500')} />
+            <div>
+              <p className="font-medium text-surface-100">{t('users.detail.blockTitle')}</p>
+              <p className="text-sm text-surface-400 mt-0.5">
+                {user.blockedAt
+                  ? t('users.detail.blockOnDesc', { date: new Date(user.blockedAt).toLocaleDateString('pl-PL') })
+                  : t('users.detail.blockOffDesc')}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant={user.blockedAt ? 'primary' : 'ghost'}
+            size="sm"
+            loading={blockMutation.isPending}
+            onClick={() => (user.blockedAt ? blockMutation.mutate(false) : setConfirmBlock(true))}
+          >
+            {user.blockedAt ? t('users.detail.unblockAction') : t('users.detail.blockAction')}
+          </Button>
+        </div>
+      )}
+
       {/* Erasing the plan is a different act from hiding it, so it gets a different button and a
           different colour. Shown regardless of the athlete flag: an account that already lost the
           flag is precisely the one whose plan data has no other route out of the panel. */}
@@ -186,6 +232,16 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
         message={t('users.detail.athleteDisableMessage', { name: `${user.firstName} ${user.lastName}` })}
         confirmLabel={t('users.detail.athleteDisable')}
         loading={athleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmBlock}
+        onClose={() => setConfirmBlock(false)}
+        onConfirm={() => blockMutation.mutate(true)}
+        title={t('users.detail.blockTitle')}
+        message={t('users.detail.blockMessage', { name: `${user.firstName} ${user.lastName}` })}
+        confirmLabel={t('users.detail.blockAction')}
+        loading={blockMutation.isPending}
       />
 
       <ConfirmDialog

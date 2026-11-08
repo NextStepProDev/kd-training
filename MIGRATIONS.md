@@ -4,7 +4,7 @@
 
 ## Stan
 
-**Obecny stan: V5. Kolejna migracja: V6.**
+**Obecny stan: V6. Kolejna migracja: V7.**
 
 | Wersja | Co dodaje |
 |--------|-----------|
@@ -13,6 +13,7 @@
 | V3 | `athlete_materials` (materiały na stałe dla jednej osoby: tytuł + film z biblioteki i/lub opis; `video_id` RESTRICT) i `material_questions` (wątek pytań pod materiałem) |
 | V4 | `personal_trainings.series_id`: serie co tydzień (każdy termin to zwykły wiersz; kopie nie dostają `series_id`) |
 | V5 | `coach_days_off`: dni wolne trenera (zakres dat włącznie + notatka widoczna dla wszystkich; bez klucza do `users`) |
+| V6 | `users.blocked_at`: blokada konta po końcu współpracy (null = aktywne; dane zostają) |
 
 ## Jak powstała V1 (26.10.2026)
 

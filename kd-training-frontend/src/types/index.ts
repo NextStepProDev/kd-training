@@ -36,6 +36,8 @@ export interface AdminUser {
   emailVerified: boolean
   marketingConsent: boolean
   isAthlete: boolean
+  /** End of cooperation: no login, data kept. */
+  blocked: boolean
   createdAt: string
 }
 
@@ -63,6 +65,7 @@ export interface AdminUserDetail {
   hasPassword: boolean
   oauthLinked: boolean
   avatarUrl: string | null
+  blockedAt: string | null
   createdAt: string
 }
 

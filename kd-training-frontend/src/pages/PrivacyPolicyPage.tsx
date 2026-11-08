@@ -330,6 +330,12 @@ export function PrivacyPolicyPage() {
               zapomnianym.
             </p>
             <p>
+              <span className="text-surface-200 font-medium">Zablokowane konto</span> — po zakończeniu współpracy
+              trener może zablokować konto zamiast je usuwać. Nie da się wtedy zalogować, a dane czekają na wypadek
+              powrotu. Skoro nie możesz się zalogować, o usunięcie zablokowanego konta i wszystkich danych poproś,
+              pisząc na adres kontaktowy — usuniemy je bez zbędnej zwłoki.
+            </p>
+            <p>
               <span className="text-surface-200 font-medium">Dane z planu treningowego 1:1</span> (plan, wykonania,
               oceny wysiłku, komentarze, cele, materiały i pytania do nich, zadania kaloryczne) — przechowywane przez czas trwania współpracy
               trenerskiej i usuwane wraz z kontem. Po zakończeniu współpracy lub po wycofaniu zgody dane dotyczące

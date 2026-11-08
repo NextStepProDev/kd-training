@@ -56,8 +56,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
                                              @Param("excluded") Collection<String> excluded,
                                              Pageable pageable);
 
-    // Roster of 1-on-1 coaching clients. Backed by the partial index idx_users_athlete.
-    List<User> findByAthleteTrueOrderByFirstNameAscLastNameAsc();
+    // Roster of 1-on-1 coaching clients, without blocked accounts (the cooperation is over; their plan
+    // comes back with the unblock). Backed by the partial index idx_users_athlete.
+    List<User> findByAthleteTrueAndBlockedAtIsNullOrderByFirstNameAscLastNameAsc();
 
     // We treat emails case-insensitively (like all mail providers),
     // to avoid duplicate accounts and failed logins due to different letter casing.

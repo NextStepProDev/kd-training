@@ -80,6 +80,17 @@ public class AdminUserController {
         return ResponseEntity.noContent().build();
     }
 
+    /** End of cooperation: no login, data kept. See {@link AdminUserService#block}. */
+    @PostMapping("/{id}/block")
+    public AdminUserResponse block(@CurrentUserId UUID adminId, @PathVariable UUID id) {
+        return service.block(adminId, id);
+    }
+
+    @DeleteMapping("/{id}/block")
+    public AdminUserResponse unblock(@PathVariable UUID id) {
+        return service.unblock(id);
+    }
+
     @PostMapping("/{id}/promote")
     public AdminUserResponse promote(@CurrentUserId UUID adminId, @PathVariable UUID id) {
         return service.promote(adminId, id);

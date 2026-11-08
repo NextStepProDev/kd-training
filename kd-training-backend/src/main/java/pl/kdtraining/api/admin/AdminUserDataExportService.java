@@ -65,7 +65,7 @@ public class AdminUserDataExportService {
         SELECT first_name AS imie, last_name AS nazwisko, email, phone AS telefon,
                role AS rola, oauth_provider AS logowanie_przez, email_verified AS email_potwierdzony,
                email_verified_at AS email_potwierdzony_kiedy, preferred_language AS jezyk,
-               is_athlete AS podopieczny_1na1, created_at AS konto_utworzone, updated_at AS konto_zmienione
+               is_athlete AS podopieczny_1na1, blocked_at AS konto_zablokowane, created_at AS konto_utworzone, updated_at AS konto_zmienione
         FROM users WHERE id = ?
         """;
 

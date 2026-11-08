@@ -220,6 +220,12 @@ public class AuthService {
             throw new IllegalArgumentException(msg.get("auth.login.invalid"));
         }
 
+        // Blocked by the coach at the end of the cooperation. Reported only past the password check,
+        // like the lockout above, so it tells nothing to somebody guessing addresses.
+        if (user.isBlocked()) {
+            throw new IllegalStateException(msg.get("auth.account.blocked"));
+        }
+
         // Every way into an account marks the mailbox proven (invitation link, Google), so an unverified
         // account can only come from a hand-made row. It stays shut rather than slipping through; there
         // is no self-service way out any more, hence the message points at the coach.
@@ -249,8 +255,11 @@ public class AuthService {
 
         // A uniform message regardless of account existence, OAuth login (no password),
         // or cooldown (anti-enumeration). We send the email only when actually needed.
+        // A blocked account gets no reset link: a new password must not be a way back in. The answer
+        // stays the same, so this does not tell anyone the account is blocked either.
         boolean shouldSend = user != null
             && user.getPasswordHash() != null
+            && !user.isBlocked()
             && !authTokenRepository.hasRecentUnusedToken(user.getId(), TokenType.PASSWORD_RESET, Instant.now().minus(RESEND_COOLDOWN));
 
         if (shouldSend && claimMailQuota(request.email())) {
@@ -289,6 +298,10 @@ public class AuthService {
             .orElseThrow(() -> new IllegalArgumentException(msg.get("auth.reset.invalid")));
 
         User user = authToken.getUser();
+        // Blocking deletes the open links, so this only catches a link that raced the block.
+        if (user.isBlocked()) {
+            throw new IllegalArgumentException(msg.get("auth.reset.invalid"));
+        }
         passwordPolicy.validate(request.newPassword(), user.getEmail(), user.getFirstName(), user.getLastName());
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         // A password reset confirms mailbox access → we lift any account lockout
@@ -336,6 +349,10 @@ public class AuthService {
             });
 
         User user = storedToken.getUser();
+        // Blocking deletes the refresh tokens; this covers one presented in the same instant.
+        if (user.isBlocked()) {
+            throw new InvalidRefreshTokenException(msg.get("auth.refresh.revoked"));
+        }
 
         // Invalidate old refresh token (rotation). Only on first use — the grace window counts
         // from the first rotation, so the token truly dies 30s after it, not later.

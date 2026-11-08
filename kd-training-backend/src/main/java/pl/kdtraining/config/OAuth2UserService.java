@@ -78,6 +78,10 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             }
         }
 
+        // Google vouches for the address, not for the coach's decision: a blocked account stays shut.
+        if (user.isBlocked()) {
+            throw new OAuth2AuthenticationException("Account blocked");
+        }
         return new CustomOAuth2User(oAuth2User, user);
     }
 

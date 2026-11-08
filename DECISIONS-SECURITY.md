@@ -18,6 +18,16 @@
 > ⚠️ **Tożsamość od dostawcy jest sprawdzana tak samo jak adres e-mail — `sub` bez wartości odrzuca logowanie.** `extractOAuthId` castuje `attributes.get("sub")` z mapy, którą wypełnił Google, więc zadeklarowany `String` był obietnicą, której ta metoda nie mogła dotrzymać (sąsiednie `extractEmail` osłonę ma od zawsze). Brak claima przechodził dawniej po cichu: `oauthId` = null, zapytanie nie znajdowało nikogo, wchodziła gałąź po e-mailu i **powstawało konto bez tożsamości dostawcy — czyli takie, którym nie da się zalogować ponownie**, a jedynym objawem był klient, który nie wchodzi. Odkąd `config` jest `@NullMarked`, walidator Spring Data odrzuca nullowy argument i ten sam przypadek daje 500 przy logowaniu; nazwanie go tutaj zamienia obie te rzeczy w odmowę z powodem. `sub` jest w OpenID Connect obowiązkowy i Google go zawsze wysyła, więc to poprawka **wyprzedzająca** — dopięta, zanim flaga `GOOGLE_LOGIN_ENABLED` wpuści na tę ścieżkę kogokolwiek z produkcji. Pilnują jej `shouldRejectMissingSubjectFromProvider` i `shouldRejectBlankSubjectFromProvider`; pierwszy musi budować `OAuth2User` mockiem, bo `DefaultOAuth2User` odmawia powstania bez własnego atrybutu nazwy.
 
 - **Auto-admin:** email z `ADMIN_EMAIL` (env var) automatycznie dostaje ADMIN przy rejestracji. Skoro rejestracja wymaga zaproszenia, a zaprasza tylko admin, adres z `ADMIN_EMAIL` bez konta dostaje zaproszenie przy starcie produkcji (`AdminInvitationBootstrap`)
+- **Blokada konta przez trenera (V6, `users.blocked_at`), 08.11.2026.** Odpowiedź klienta na „co z kontem po
+  końcu współpracy”: „b albo c” — domyślnie blokada, usunięcie osobnym przyciskiem. Zablokowane konto nie ma
+  **żadnej** drogi do środka, a każda ścieżka ma osobne sprawdzenie, bo każda prowadzi gdzie indziej:
+  logowanie hasłem (zgłaszane dopiero po poprawnym haśle, jak blokada czasowa niżej), odświeżenie sesji,
+  Google (`OAuth2UserService`), reset hasła (link nie jest wysyłany, odpowiedź ta sama co zawsze) oraz filtr JWT —
+  blokada kasuje wszystkie tokeny osoby i czyści cache filtra, więc otwarta sesja pada na **następnym** żądaniu,
+  nie po 15 minutach. Admina nie da się zablokować (najpierw degradacja), siebie też nie — panel nie może
+  zamknąć ostatniej osoby, która umie to cofnąć. Dane zostają; zablokowany znika z listy podopiecznych
+  i z maili zbiorczych do wszystkich. Automatyczne kasowanie po czasie czeka na decyzję klienta (pytanie
+  o „rok” z 07.11.2026); do tego czasu usuwa się ręcznie, a polityka prywatności mówi, jak o to poprosić.
 - Account lockout: 5 nieudanych prób → 15 min blokady. ⚠️ **Hasło jest sprawdzane PRZED zgłoszeniem
   blokady i to jest cały sens tej kolejności.** Odwrotnie logowanie było jedynym miejscem w aplikacji,
   które odpowiada na pytanie „czy ten adres ma konto”: pięć złych strzałów i szóste żądanie zwracało

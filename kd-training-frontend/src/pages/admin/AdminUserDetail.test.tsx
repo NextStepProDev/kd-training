@@ -11,6 +11,8 @@ const tMap: Record<string, string> = {
   'users.detail.athleteDisable': 'Wyłącz kalendarz 1:1',
   'users.detail.athleteDisableTitle': 'Wyłączyć kalendarz 1:1?',
   'users.detail.exportAction': 'Pobierz dane',
+  'users.detail.blockAction': 'Zablokuj konto',
+  'users.detail.unblockAction': 'Odblokuj konto',
 }
 
 vi.mock('react-i18next', () => ({
@@ -22,6 +24,8 @@ vi.mock('../../api/admin', () => ({
     getUser: vi.fn(),
     setAthlete: vi.fn(),
     exportUserData: vi.fn(),
+    blockUser: vi.fn(),
+    unblockUser: vi.fn(),
   },
 }))
 
@@ -32,7 +36,7 @@ vi.mock('../../context/ToastContext', () => ({
 const baseUser: AdminUserDetailType = {
   id: 'u1', email: 'jan@test.com', firstName: 'Jan', lastName: 'Kowalski', phone: '123456789',
   role: 'USER', isAdmin: false, superAdmin: false, emailVerified: true,
-  marketingConsent: false, isAthlete: false, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false, avatarUrl: null,
+  marketingConsent: false, isAthlete: false, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false, avatarUrl: null, blockedAt: null,
   createdAt: '2026-01-01T00:00:00Z',
 }
 
@@ -60,7 +64,7 @@ describe('AdminUserDetail', () => {
   it('enables the 1-on-1 calendar without a confirmation step', async () => {
     const user = userEvent.setup()
     const adminApi = await renderDetail({ isAthlete: false })
-    vi.mocked(adminApi.setAthlete).mockResolvedValue({ ...baseUser, isAthlete: true })
+    vi.mocked(adminApi.setAthlete).mockResolvedValue({ ...baseUser, isAthlete: true, blocked: false })
 
     await user.click(await screen.findByRole('button', { name: 'Włącz kalendarz 1:1' }))
 
@@ -71,7 +75,7 @@ describe('AdminUserDetail', () => {
   it('asks for confirmation before hiding the 1-on-1 calendar', async () => {
     const user = userEvent.setup()
     const adminApi = await renderDetail({ isAthlete: true })
-    vi.mocked(adminApi.setAthlete).mockResolvedValue({ ...baseUser, isAthlete: false })
+    vi.mocked(adminApi.setAthlete).mockResolvedValue({ ...baseUser, isAthlete: false, blocked: false })
 
     await user.click(await screen.findByRole('button', { name: 'Wyłącz kalendarz 1:1' }))
 
@@ -101,5 +105,33 @@ describe('AdminUserDetail', () => {
     await waitFor(() => expect(click).toHaveBeenCalledTimes(1))
     expect(api.exportUserData).toHaveBeenCalledWith('u1')
     click.mockRestore()
+  })
+
+  it('blocks the account only after the confirmation', async () => {
+    const user = userEvent.setup()
+    const api = await renderDetail({})
+
+    await user.click(await screen.findByRole('button', { name: 'Zablokuj konto' }))
+    expect(api.blockUser).not.toHaveBeenCalled()
+    const buttons = screen.getAllByRole('button', { name: 'Zablokuj konto' })
+    await user.click(buttons[buttons.length - 1])
+
+    await waitFor(() => expect(api.blockUser).toHaveBeenCalledWith('u1'))
+  })
+
+  it('unblocks a blocked account straight away', async () => {
+    // Giving access back destroys nothing, so it needs no confirmation.
+    const user = userEvent.setup()
+    const api = await renderDetail({ blockedAt: '2026-11-08T10:00:00Z' })
+
+    await user.click(await screen.findByRole('button', { name: 'Odblokuj konto' }))
+
+    await waitFor(() => expect(api.unblockUser).toHaveBeenCalledWith('u1'))
+  })
+
+  it('offers no block for an admin', async () => {
+    await renderDetail({ role: 'ADMIN', isAdmin: true })
+    await screen.findByText('Jan Kowalski')
+    expect(screen.queryByRole('button', { name: 'Zablokuj konto' })).not.toBeInTheDocument()
   })
 })

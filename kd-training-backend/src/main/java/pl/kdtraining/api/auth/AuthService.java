@@ -41,14 +41,13 @@ public class AuthService {
     // A format-valid BCrypt hash (cost 10) used solely for a dummy comparison
     // when the account does not exist — it evens out the response time and blocks user enumeration.
     private static final String DUMMY_PASSWORD_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
-    private static final Duration EMAIL_VERIFICATION_EXPIRATION = Duration.ofMinutes(15);
     private static final Duration PASSWORD_RESET_EXPIRATION = Duration.ofHours(1);
     private static final Duration RESEND_COOLDOWN = Duration.ofMinutes(1);
     // Ceiling on unsolicited mail to a single address, on top of the one-minute cooldown above and the
-    // per-IP limit on /api/auth/. Neither of those caps what matters here: both "forgot password" and
-    // "resend verification" mail a stranger on request, so anyone can point them at a victim's inbox and,
-    // rotating IPs, keep it up for an hour a message. That also burns the Gmail relay's daily allowance
-    // (500), and once it is gone nobody gets a verification or reset mail until the counter rolls over.
+    // per-IP limit on /api/auth/. Neither of those caps what matters here: "forgot password" mails a
+    // stranger on request, so anyone can point it at a victim's inbox and, rotating IPs, keep it up for
+    // an hour a message. That also burns the Gmail relay's daily allowance (500), and once it is gone
+    // nobody gets an invitation or reset mail until the counter rolls over.
     // Three an hour is more than a person who lost a message to a spam folder will ever need.
     private static final Duration MAIL_QUOTA_WINDOW = Duration.ofHours(1);
     private static final int MAIL_QUOTA_PER_ADDRESS = 3;
@@ -186,8 +185,8 @@ public class AuthService {
         //
         // Reporting the lockout first made this endpoint the one place in the application that
         // answers "does this address have an account". Every other anti-enumeration path is
-        // deliberate and documented — forgot-password, resend-verification and the marketing
-        // unsubscribe all reply identically whether or not the account exists, and claimMailQuota
+        // deliberate and documented — forgot-password and the marketing
+        // unsubscribe both reply identically whether or not the account exists, and claimMailQuota
         // stays silent for the same reason. Here five wrong guesses were enough: an existing account
         // then answered "locked for N minutes" while an unknown address kept answering "invalid".
         //
@@ -221,6 +220,9 @@ public class AuthService {
             throw new IllegalArgumentException(msg.get("auth.login.invalid"));
         }
 
+        // Every way into an account marks the mailbox proven (invitation link, Google), so an unverified
+        // account can only come from a hand-made row. It stays shut rather than slipping through; there
+        // is no self-service way out any more, hence the message points at the coach.
         if (!user.isEmailVerified()) {
             throw new IllegalStateException(msg.get("auth.email.not.verified"));
         }
@@ -239,44 +241,6 @@ public class AuthService {
 
         log.info("User logged in: {}", user.getId());
         return generateTokens(user);
-    }
-
-    @Transactional
-    public MessageResponse verifyEmail(String token) {
-        String tokenHash = jwtService.hashToken(token);
-
-        AuthToken authToken = authTokenRepository.findValidToken(tokenHash, TokenType.EMAIL_VERIFICATION, Instant.now())
-            .orElseThrow(() -> new IllegalArgumentException(msg.get("auth.verify.invalid")));
-
-        User user = authToken.getUser();
-        user.markEmailVerified();
-        authToken.markAsUsed();
-
-        userRepository.save(user);
-        authTokenRepository.save(authToken);
-
-        authMailService.sendWelcomeEmail(user);
-        authMailService.sendNewUserAdminNotification(user);
-
-        log.info("Email verified for user {}", user.getId());
-        return new MessageResponse(msg.get("auth.verify.success"));
-    }
-
-    @Transactional
-    public MessageResponse resendVerification(ResendVerificationRequest request) {
-        User user = userRepository.findByEmailIgnoreCase(request.email()).orElse(null);
-
-        // Always the same message — we do not reveal whether the account exists, is already verified,
-        // or whether a cooldown is in progress (anti-enumeration). We send the email only when actually needed.
-        boolean shouldSend = user != null
-            && !user.isEmailVerified()
-            && !authTokenRepository.hasRecentUnusedToken(user.getId(), TokenType.EMAIL_VERIFICATION, Instant.now().minus(RESEND_COOLDOWN));
-
-        if (shouldSend && claimMailQuota(request.email())) {
-            sendVerificationEmail(user);
-        }
-
-        return new MessageResponse(msg.get("auth.resend.success"));
     }
 
     @Transactional
@@ -431,17 +395,6 @@ public class AuthService {
             refreshToken,
             jwtService.getAccessTokenExpirationSeconds()
         );
-    }
-
-    private void sendVerificationEmail(User user) {
-        String token = jwtService.generateSecureToken();
-        String tokenHash = jwtService.hashToken(token);
-        Instant expiration = Instant.now().plus(EMAIL_VERIFICATION_EXPIRATION);
-
-        AuthToken authToken = new AuthToken(user, tokenHash, TokenType.EMAIL_VERIFICATION, expiration);
-        authTokenRepository.save(authToken);
-
-        authMailService.sendVerificationEmail(user, token);
     }
 
     private void sendPasswordResetEmail(User user) {

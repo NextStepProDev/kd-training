@@ -37,7 +37,7 @@ One application with three roles:
 
 ## Security and privacy
 
-- **JWT** authentication (short-lived access token plus refresh), email verification, password reset, account lockout after repeated failed logins, breached-password check.
+- **JWT** authentication (short-lived access token plus refresh), registration by invitation only, password reset, account lockout after repeated failed logins, breached-password check.
 - **Rate limiting** per IP address in separate budgets (authentication, uploads, account, client plan, admin, public).
 - The client plan holds **health data** and sits behind its own explicit consent (GDPR art. 9); until it is given, the whole plan stays closed.
 - The plan area is **invisible to anyone without it** — the server answers as if the feature did not exist.

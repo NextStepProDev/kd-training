@@ -40,20 +40,6 @@ class AuthMailServiceTest {
     }
 
     @Test
-    void shouldSendVerificationEmail() {
-        when(msg.getForLang(eq("email.verification.subject"), eq("pl"))).thenReturn("Weryfikacja");
-        when(msg.getForLang(eq("email.verification.greeting"), eq("pl"), eq("Jan"))).thenReturn("Cześć Jan!");
-        when(msg.getForLang(eq("email.verification.body"), eq("pl"))).thenReturn("Zweryfikuj email");
-        when(msg.getForLang(eq("email.verification.button"), eq("pl"))).thenReturn("Zweryfikuj");
-        when(msg.getForLang(eq("email.verification.expiry"), eq("pl"))).thenReturn("15 minut");
-        when(msg.getForLang(eq("email.verification.ignore"), eq("pl"))).thenReturn("Ignoruj");
-
-        service.sendVerificationEmail(user, "test-token-123");
-
-        verify(mailDispatcher).sendHtml(eq("jan@test.com"), anyString(), anyString());
-    }
-
-    @Test
     void shouldSendWelcomeEmail() {
         when(msg.getForLang(eq("email.welcome.subject"), eq("pl"))).thenReturn("Witamy!");
         when(msg.getForLang(eq("email.welcome.greeting"), eq("pl"), eq("Jan"))).thenReturn("Cześć Jan!");

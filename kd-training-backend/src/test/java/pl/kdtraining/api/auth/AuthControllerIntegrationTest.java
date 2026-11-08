@@ -196,53 +196,15 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldVerifyEmail() throws Exception {
-        User user = new User("verify@test.com", "Jan", "Kowalski", null);
-        user.setPasswordHash("hash");
-        userRepository.save(user);
-
-        String rawToken = jwtService.generateSecureToken();
-        String tokenHash = jwtService.hashToken(rawToken);
-        AuthToken authToken = new AuthToken(user, tokenHash, TokenType.EMAIL_VERIFICATION,
-            Instant.now().plusSeconds(900));
-        authTokenRepository.save(authToken);
-
+    void shouldNoLongerServeTheVerificationEndpoints() throws Exception {
+        // Accounts come from invitations (and Google) and are created verified; the old confirm-your-
+        // address flow is gone, and a stale link from an old mail must not find a live endpoint.
         mockMvc.perform(post("/api/auth/verify-email")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"token\":\"" + rawToken + "\"}"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").exists());
-
-        User verified = userRepository.findByEmail("verify@test.com").orElseThrow();
-        assertTrue(verified.isEmailVerified());
-    }
-
-    @Test
-    void shouldRejectInvalidVerificationToken() throws Exception {
-        mockMvc.perform(post("/api/auth/verify-email")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"token\":\"invalid-token\"}"))
-            .andExpect(status().isBadRequest());
-    }
-
-    /**
-     * The token travels in the body only. As {@code ?token=} on a POST it was written into every
-     * proxy access log on the way in (nginx, Cloudflare), so the query string must no longer work.
-     */
-    @Test
-    void shouldNotAcceptTheVerificationTokenInTheQueryString() throws Exception {
-        User user = new User("verify-query@test.com", "Jan", "Kowalski", null);
-        user.setPasswordHash("hash");
-        userRepository.save(user);
-        String rawToken = jwtService.generateSecureToken();
-        authTokenRepository.save(new AuthToken(user, jwtService.hashToken(rawToken),
-            TokenType.EMAIL_VERIFICATION, Instant.now().plusSeconds(900)));
-
-        mockMvc.perform(post("/api/auth/verify-email")
-                .param("token", rawToken))
-            .andExpect(status().isBadRequest());
-
-        assertFalse(userRepository.findByEmail("verify-query@test.com").orElseThrow().isEmailVerified());
+                .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"x\"}"))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/auth/resend-verification")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"a@test.com\"}"))
+            .andExpect(status().isNotFound());
     }
 
     @Test

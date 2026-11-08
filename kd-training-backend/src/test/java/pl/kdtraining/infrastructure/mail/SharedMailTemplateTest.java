@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import pl.kdtraining.config.AdminEmailConfig;
 import pl.kdtraining.config.AppConfig;
-import pl.kdtraining.domain.user.User;
 import pl.kdtraining.infrastructure.i18n.MessageService;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -73,10 +72,8 @@ class SharedMailTemplateTest {
     @Test
     void accountMailUsesTheSharedShell() {
         var service = new AuthMailService(sender(), appConfig(), adminEmailConfig, msg);
-        User user = new User("jan@test.com", "Jan", "Kowalski", "+48123456789");
-        user.setPreferredLanguage("pl");
 
-        service.sendVerificationEmail(user, "tok");
+        service.sendInvitationEmail("jan@test.com", "tok");
 
         assertBranded(sent());
     }

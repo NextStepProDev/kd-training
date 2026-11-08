@@ -5,7 +5,7 @@
 ## API Endpoints
 
 ### Auth `/api/auth`
-`POST /invitation` (`{token}` → adres, na który poszło zaproszenie; 400 dla nieważnego linku) · `POST /register` (**tylko z zaproszeniem**: `invitationToken` zamiast `email`, konto od razu zweryfikowane) · `POST /login` · `POST /logout` · `POST /verify-email` (token w treści) · `POST /resend-verification` · `POST /forgot-password` · `POST /reset-password` · `POST /refresh`
+`POST /invitation` (`{token}` → adres, na który poszło zaproszenie; 400 dla nieważnego linku) · `POST /register` (**tylko z zaproszeniem**: `invitationToken` zamiast `email`, konto od razu zweryfikowane) · `POST /login` · `POST /logout` · `POST /forgot-password` · `POST /reset-password` · `POST /refresh`
 
 ### User `/api/user` (auth required)
 `GET /me` (zwraca m.in. `privacyAccepted`, `marketingConsent`) · `PUT /me` · `PUT /me/password` · `DELETE /me` (usuwa konto z planem 1:1, zdjęciami z dysku i avatarem; trener dostaje maila „podopieczny usunął konto”) · `PUT /me/marketing` (toggle zgody marketingowej `{enabled}`) · `POST /me/consents` (domknięcie zgód po Google: `{acceptedPrivacy, acceptedMarketing}` — polityka obowiązkowa gdy jeszcze nieudzielona) · `POST /me/avatar` (multipart, kadrowanie po stronie frontu) · `DELETE /me/avatar` · `POST /me/logout-all` (wylogowanie ze wszystkich urządzeń: kasuje własne refresh tokeny + czyści cache filtra JWT; **nie unieważnia natychmiast access tokenów** — sesje gasną do 15 min)
@@ -61,8 +61,8 @@ Podstron z podglądem dla botów dziś nie ma (w Fire były: kadra, rodzaje, ter
 > **Super-admin** = e-mail z `ADMIN_EMAIL` (`AdminEmailConfig.isAdminEmail`). `GET /api/user/me` zwraca flagę `superAdmin` (front pokazuje przyciski nadania i odebrania uprawnień admina tylko jemu). Maile admin→user: `AdminUserMailService` (marka tekstem, podpis „Pozdrawiam, Mocny Grzbiet", temat bez HTML-escape).
 
 > ⚠️ **Wysyłka do wielu odbiorców zawsze jako JEDNO zadanie na `mailCampaignExecutor`, nigdy jedno zadanie na osobę.**
-> `mailExecutor` (2–4 wątki, kolejka 100, domyślna `AbortPolicy`) wozi maile **transakcyjne**: weryfikację
-> konta, reset hasła, powiadomienia. Rozrzucenie kampanii po tej puli robi dwie szkody naraz —
+> `mailExecutor` (2–4 wątki, kolejka 100, domyślna `AbortPolicy`) wozi maile **transakcyjne**: zaproszenia,
+> reset hasła, powiadomienia. Rozrzucenie kampanii po tej puli robi dwie szkody naraz —
 > wysyłka do 60 osób ustawia reset hasła za sześćdziesięcioma wiadomościami z ponowieniami SMTP, a powyżej
 > ~104 odbiorców pula **rzuca `TaskRejectedException` w wołającego**: 500 u admina, część ludzi już
 > powiadomiona, licznik „wysłano do N” nigdy nie wraca. Ścieżka masowa to `AdminUserMailService.sendCampaign`

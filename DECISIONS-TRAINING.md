@@ -102,6 +102,21 @@ seria **do wybranej daty** (nie „do odwołania”) i **usuwanie „ten i nast�
   trening w kalendarzu. Świadomie bez wyjątku dla serii: predykat licznika żyje w kilku miejscach
   i wyjątek musiałby trafić do wszystkich naraz.
 
+### V5 (tutaj) — dni wolne trenera
+
+Odpowiedź klienta (07.11.2026) na „urlopy zaznaczasz w grafiku, a podopieczni widzą, że trening się nie
+odbędzie?”: „to byłoby ok”.
+- **Jeden wiersz na przerwę** (`start_date`–`end_date`, oba włącznie), wspólny dla wszystkich: trener jest
+  jeden, więc dzień wolny nie należy do nikogo. Bez klucza do `users`, poza eksportem RODO — notatka to
+  ogłoszenie dla wszystkich, nie dane osoby (formularz mówi to wprost).
+- Kalendarz dostaje dni wolne w tej samej odpowiedzi co treningi (`daysOff`), więc nie ma drugiego zapytania
+  ani drugiego klucza cache.
+- **Dzień wolny niczego nie kasuje ani nie ukrywa.** Trening zaplanowany wcześniej zostaje widoczny pod
+  oznaczeniem „Trener ma wolne”; o każdym decyduje trener (usunięcie idzie zwykłą ścieżką, z banerem).
+  Hurtowe kasowanie zabrałoby też komentarze pod treningami.
+- **Najwyżej 92 dni naraz**: literówka w roku nie może zaciemnić kalendarza wszystkim podopiecznym.
+- Nowy dzień wolny **nie zapala licznika nowości** — to oznaczenie w kalendarzu, nie wiadomość.
+
 ### V37 — zadanie jako osobny wiersz
 
 `personal_trainings` + `kind` TRAINING/TASK, `target_calories`.

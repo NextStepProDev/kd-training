@@ -3,11 +3,12 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { TrainingTile } from './TrainingTile'
 import { formatLongDate } from '../../utils/calendarRange'
-import type { PersonalTraining } from '../../types'
+import type { DayOff, PersonalTraining } from '../../types'
 
 interface DaySheetProps {
   date: string
   trainings: PersonalTraining[]
+  dayOff?: DayOff
   /** Coach only: ids that already carry a private note. */
   notedTrainingIds?: Set<string>
   pasteArmed: boolean
@@ -30,6 +31,7 @@ interface DaySheetProps {
     task: string
     calories: string
     empty: string
+    dayOff: string
   }
 }
 
@@ -41,13 +43,19 @@ interface DaySheetProps {
  * a second rendering of a training is a second thing to keep in step.
  */
 export function DaySheet({
-  date, trainings, notedTrainingIds, pasteArmed, onClose, onOpen, onAdd, onPaste, onCopy, onCut,
+  date, trainings, dayOff, notedTrainingIds, pasteArmed, onClose, onOpen, onAdd, onPaste, onCopy, onCut,
   canReshape = () => true, labels,
 }: DaySheetProps) {
   return (
     <Modal isOpen onClose={onClose} title={formatLongDate(date)}>
       <div className="space-y-3">
-        {trainings.length === 0 && (
+        {dayOff && (
+          <p className="rounded-xl border border-white/15 px-3 py-2 text-sm text-surface-200">
+            <span className="font-semibold">{labels.dayOff}</span>
+            {dayOff.note && <span className="text-surface-400"> · {dayOff.note}</span>}
+          </p>
+        )}
+        {trainings.length === 0 && !dayOff && (
           <p className="text-sm text-surface-500">{labels.empty}</p>
         )}
 

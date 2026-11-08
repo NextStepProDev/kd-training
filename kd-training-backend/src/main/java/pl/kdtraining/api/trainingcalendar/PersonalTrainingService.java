@@ -58,6 +58,7 @@ public class PersonalTrainingService {
     private final UserRepository userRepository;
     private final MessageService msg;
     private final CoachReplyNotifier replyNotifier;
+    private final CoachDayOffService daysOff;
 
     public PersonalTrainingService(PersonalTrainingRepository repository,
                                    TrainingCommentRepository commentRepository,
@@ -68,7 +69,9 @@ public class PersonalTrainingService {
                                    TrainingPhotoService photos,
                                    UserRepository userRepository,
                                    MessageService msg,
-                                   CoachReplyNotifier replyNotifier) {
+                                   CoachReplyNotifier replyNotifier,
+                                   CoachDayOffService daysOff) {
+        this.daysOff = daysOff;
         this.repository = repository;
         this.commentRepository = commentRepository;
         this.deletionRepository = deletionRepository;
@@ -110,7 +113,7 @@ public class PersonalTrainingService {
                         d.getTitle(), d.getDeletedAt()))
                 .toList();
 
-        return new CalendarRangeResponse(from, to, items, notices);
+        return new CalendarRangeResponse(from, to, items, notices, daysOff.overlapping(from, to));
     }
 
     @Transactional

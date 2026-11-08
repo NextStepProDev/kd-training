@@ -1,13 +1,15 @@
 import clsx from 'clsx'
 import { Plus } from 'lucide-react'
 import { dayOfMonth, isOutsideMonth, isWeekend, todayIso, weekdayShort } from '../../utils/calendarRange'
-import type { PersonalTraining } from '../../types'
+import type { DayOff, PersonalTraining } from '../../types'
 import { TrainingTile } from './TrainingTile'
 
 interface DayColumnProps {
   date: string
   anchor: string
   trainings: PersonalTraining[]
+  /** The coach's day off covering this date, if any. */
+  dayOff?: DayOff
   /** Coach only: ids that already carry a private note. */
   notedTrainingIds?: Set<string>
   compact?: boolean
@@ -26,6 +28,7 @@ interface DayColumnProps {
     unread: string; comments: string; task: string; calories: string
     /** Shown on an empty Sat/Sun. Never on a day that carries an entry — see the render below. */
     weekendFree: string
+    dayOff: string
     note?: string
   }
 }
@@ -39,7 +42,7 @@ interface DayColumnProps {
  * short list, and its height follows its content.
  */
 export function DayColumn({
-  date, anchor, trainings, notedTrainingIds, compact = false, showWeekday = true, cutId, pasteArmed,
+  date, anchor, trainings, dayOff, notedTrainingIds, compact = false, showWeekday = true, cutId, pasteArmed,
   onOpen, onAdd, onPaste, onCopy, onCut, canReshape = () => true, labels,
 }: DayColumnProps) {
   const isToday = date === todayIso()
@@ -75,13 +78,23 @@ export function DayColumn({
             {dayOfMonth(date)}
           </span>
         </span>
-        {isWeekend(date) && !compact && trainings.length === 0 && (
+        {dayOff ? (
+          // Says the coach is off, which the client cannot infer from an empty day. It does not hide
+          // the trainings below: those were planned before the day off and the coach decides on each.
+          <span className="rounded-full border border-white/25 px-1.5 text-[10px] uppercase tracking-wider text-surface-200">
+            {labels.dayOff}
+          </span>
+        ) : isWeekend(date) && !compact && trainings.length === 0 && (
           // Only an ACTUALLY empty weekend day is "free". The flag used to hang on isWeekend alone,
           // so a Saturday session sat under a label saying the day was off, and the label
           // contradicted the card right below it.
           <span className="text-[10px] uppercase tracking-wider text-surface-500">{labels.weekendFree}</span>
         )}
       </div>
+
+      {dayOff?.note && !compact && (
+        <p className="px-0.5 text-xs text-surface-400">{dayOff.note}</p>
+      )}
 
       <div className={clsx('flex flex-col', compact ? 'gap-1' : 'gap-2')}>
         {trainings.map(training => (

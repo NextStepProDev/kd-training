@@ -19,7 +19,7 @@ import {
   type CalendarView,
 } from '../../utils/calendarRange'
 import { keepWithinEntity } from '../../utils/queryEntity'
-import type { CreateTrainingBody, PersonalTraining } from '../../types'
+import type { CreateTrainingBody, DayOff, PersonalTraining } from '../../types'
 import { notesApi } from '../../api/notes'
 import { canReshapeTraining, type TrainingCalendarAdapter } from './adapter'
 import { SHORT_STALE_MS } from '../../utils/queryFreshness'
@@ -96,6 +96,18 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
     }
     return map
   }, [rangeQuery.data])
+
+  // ISO dates compare as strings, so a range check needs no date maths. Days off are few (a handful a
+  // year), so a scan per shown day is cheaper than building intervals.
+  const dayOffByDay = useMemo(() => {
+    const map = new Map<string, DayOff>()
+    const daysOff = rangeQuery.data?.daysOff ?? []
+    for (const date of days) {
+      const found = daysOff.find(d => d.startDate <= date && date <= d.endDate)
+      if (found) map.set(date, found)
+    }
+    return map
+  }, [rangeQuery.data, days])
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: rangeKey })
@@ -260,10 +272,12 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
               days={days}
               anchor={anchor}
               byDay={byDay}
+              dayOffByDay={dayOffByDay}
               pasteArmed={clipboard != null}
               onSelectDay={setOpenDay}
               labels={{
                 openDay: t('day.open'),
+                dayOff: t('dayOff.label'),
                 unread: t('unread.dot'),
                 pasteHere: t('clipboard.pasteHere'),
               }}
@@ -287,6 +301,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
                 date={date}
                 anchor={anchor}
                 trainings={byDay.get(date) ?? []}
+                dayOff={dayOffByDay.get(date)}
                 notedTrainingIds={notedTrainingIds}
                 compact={view === 'month'}
                 showWeekday={view === 'week'}
@@ -309,6 +324,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
                   task: t('form.kind.TASK'),
                   calories: t('form.calories'),
                   weekendFree: t('day.weekendFree'),
+                  dayOff: t('dayOff.label'),
                 }}
               />
             ))}
@@ -329,6 +345,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
         <DaySheet
           date={openDay}
           trainings={byDay.get(openDay) ?? []}
+          dayOff={dayOffByDay.get(openDay)}
           notedTrainingIds={notedTrainingIds}
           pasteArmed={clipboard != null}
           onClose={() => setOpenDay(null)}
@@ -349,6 +366,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
             task: t('form.kind.TASK'),
             calories: t('form.calories'),
             empty: t('day.empty'),
+            dayOff: t('dayOff.label'),
           }}
         />
       )}

@@ -268,6 +268,9 @@ export function AdminUsers() {
                         >
                           {u.firstName} {u.lastName}
                         </button>
+                        {u.blocked && (
+                          <span className="ml-2 rounded-full border border-white/25 px-2 py-0.5 text-[11px] text-surface-200">{t('users.blockedBadge')}</span>
+                        )}
                         {!u.emailVerified && (
                           <span className="ml-2 rounded-full border border-dashed border-white/25 px-2 py-0.5 text-[11px] text-surface-300">{t('users.unverified')}</span>
                         )}

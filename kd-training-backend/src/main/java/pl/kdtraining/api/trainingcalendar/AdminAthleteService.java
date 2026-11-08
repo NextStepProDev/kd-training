@@ -31,7 +31,7 @@ public class AdminAthleteService {
      */
     @Transactional(readOnly = true)
     public List<AthleteSummary> list(UUID adminId) {
-        List<User> athletes = userRepository.findByAthleteTrueOrderByFirstNameAscLastNameAsc();
+        List<User> athletes = userRepository.findByAthleteTrueAndBlockedAtIsNullOrderByFirstNameAscLastNameAsc();
         if (athletes.isEmpty()) {
             return List.of();
         }

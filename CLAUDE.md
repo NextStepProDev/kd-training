@@ -50,7 +50,8 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Każdy endpoint z `MultipartFile` musi trafić do kubełka `upload` w `RateLimitFilter.RULES` — `RateLimitCoverageTest` wywala build, gdy któryś ucieknie.
 - Nowy kontroler = własna reguła w `RULES` albo świadomy wpis w allowliście `INTENTIONALLY_GENERIC`.
 - **Sesję kończy wyłącznie 401/403 od serwera.** 429, timeout ani błąd sieci — nigdy. Nierozpoznany błąd znaczy „nie wiem", a nie „wyloguj".
-- Hasło sprawdzane **przed** zgłoszeniem blokady konta (anty-enumeracja). Nie odwracać kolejności.
+- Hasło sprawdzane **przed** zgłoszeniem blokady konta (anty-enumeracja). Nie odwracać kolejności. Dotyczy obu blokad: czasowej po nieudanych logowaniach i trenerskiej (`blocked_at`).
+- **Zablokowane konto (`blocked_at`) nie ma żadnej drogi do środka**: logowanie, odświeżenie sesji, Google, link do resetu hasła (nie jest wysyłany, a otwarte linki giną przy blokadzie) i filtr JWT (sesja pada na następnym żądaniu). Nowa ścieżka wejścia = sprawdzenie `isBlocked()`.
 - **Konto powstaje wyłącznie z zaproszenia** (`invitations`, V2). Każda nowa ścieżka zakładania konta (dziś: link z maila, Google) musi zużyć zaproszenie na ten adres — inaczej staje się obejściem. Pierwszy admin dostaje zaproszenie przy starcie produkcji (`AdminInvitationBootstrap`).
 - Google OAuth jest **wyłączone** flagą `GOOGLE_LOGIN_ENABLED`. Kolejność włączania: klucze → profil `oauth2` → flaga. Dopóki flaga stoi na `false`, markery „w przygotowaniu" w polityce prywatności **muszą** zostać.
 
@@ -130,7 +131,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V5 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera; jeszcze nigdzie niewdrożone). Kolejna migracja: V6.**
+**Obecny stan: V5 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta; jeszcze nigdzie niewdrożone). Kolejna migracja: V7.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).
@@ -146,7 +147,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/api/auth` | brak | rejestracja (tylko z zaproszenia), odczyt zaproszenia, logowanie, reset hasła, refresh |
 | `/api/user` | zalogowany | profil, zgody (w tym art. 9), avatar, wylogowanie wszędzie, usunięcie konta |
 | `/api/user/my-training` | podopieczny (`is_athlete` + zgoda art. 9) | kalendarz 1:1, cele, materiały z pytaniami, statystyki, komentarze, zdjęcia |
-| `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, dni wolne, cele, materiały, biblioteka filmów, szablony, notatki |
+| `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, blokada, eksport RODO, usunięcie), podopieczni, plan 1:1, dni wolne, cele, materiały, biblioteka filmów, szablony, notatki |
 | `/api/public` | brak | wypis z marketingu |
 | `/api/files` | brak | streaming plików z białej listy folderów (dziś tylko `avatars`) |
 | `/og/` · `/sitemap.xml` | brak | Open Graph strony głównej, mapa strony (`/`, `/polityka-prywatnosci`, `/regulamin`) |

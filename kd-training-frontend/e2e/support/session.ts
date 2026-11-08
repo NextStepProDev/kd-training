@@ -59,6 +59,8 @@ export const USERS = Array.from({ length: 6 }, (_, i) => ({
   emailVerified: i !== 2,
   marketingConsent: i % 2 === 0,
   isAthlete: false,
+  // One blocked row, so the a11y check sees the badge.
+  blocked: i === 3,
   createdAt: '2026-11-01T10:00:00Z',
 }))
 

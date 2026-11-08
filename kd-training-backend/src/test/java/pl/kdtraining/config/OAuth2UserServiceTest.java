@@ -105,6 +105,18 @@ class OAuth2UserServiceTest {
     }
 
     @Test
+    void shouldRefuseGoogleLoginToABlockedAccount() {
+        // Google vouches for the address, not for the coach's decision to end the cooperation.
+        User existing = new User("anna@gmail.com", "Anna", "Nowak", null);
+        existing.setRole(UserRole.USER);
+        existing.block();
+        when(userRepository.findByOauthProviderAndOauthId("google", "sub-1")).thenReturn(Optional.of(existing));
+
+        assertThrows(OAuth2AuthenticationException.class,
+            () -> service.processOAuth2User("google", googleUser("anna@gmail.com", "Anna", "Nowak", "sub-1")));
+    }
+
+    @Test
     void shouldReuseExistingOauthUserAndNotResendWelcomeMail() {
         User existing = new User("anna@gmail.com", "Anna", "Nowak", null);
         existing.setRole(UserRole.USER);

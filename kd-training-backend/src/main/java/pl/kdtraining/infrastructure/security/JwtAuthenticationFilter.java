@@ -79,8 +79,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UUID userId = JwtService.userIdOf(claims);
             User user = userCache.get(userId, id -> userRepository.findById(id).orElse(null));
 
-            if (user == null) {
-                log.debug("User not found for JWT token");
+            // A blocked account loses its session at once: the block evicts this cache, so the next
+            // request reads the flag instead of riding out the access token's 15 minutes.
+            if (user == null || user.isBlocked()) {
+                log.debug("User not found or blocked for JWT token");
                 filterChain.doFilter(request, response);
                 return;
             }

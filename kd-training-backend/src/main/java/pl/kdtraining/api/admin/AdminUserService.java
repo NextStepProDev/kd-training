@@ -122,7 +122,7 @@ public class AdminUserService {
                 user.hasMarketingConsent(),
                 user.isAthlete(),
                 user.getPreferredLanguage(), user.getPasswordHash() != null,
-                user.getOauthProvider() != null, avatarUrl, user.getCreatedAt());
+                user.getOauthProvider() != null, avatarUrl, user.getBlockedAt(), user.getCreatedAt());
     }
 
     @Transactional(readOnly = true)
@@ -142,6 +142,9 @@ public class AdminUserService {
         List<User> recipients = base.stream()
                 // Hidden accounts (technical/developer) are never recipients of a bulk send.
                 .filter(u -> !adminEmailConfig.isHiddenEmail(u.getEmail()))
+                // The cooperation is over: an announcement to "everyone" is not for them. Picked by
+                // hand (SELECTED) they still get it — that is the coach's own decision.
+                .filter(u -> !u.isBlocked() || "SELECTED".equals(request.audience()))
                 .toList();
 
         if (recipients.isEmpty()) {
@@ -206,6 +209,40 @@ public class AdminUserService {
         jwtAuthenticationFilter.evictUser(target.getId());
     }
 
+    /**
+     * End of cooperation without deleting anything: the person cannot log in, refresh a session or reset
+     * the password, and every open session dies on its next request (the JWT filter reads the flag
+     * after the evict). Data stays until somebody deletes the account. An admin cannot be blocked —
+     * demote first — so the panel can never lock out the last person able to undo it.
+     */
+    @Transactional
+    public AdminUserResponse block(UUID adminId, UUID targetId) {
+        if (targetId.equals(adminId)) {
+            throw new IllegalStateException(msg.get("error.user.cannot.block.self"));
+        }
+        User target = userRepository.findById(targetId)
+                .orElseThrow(() -> new NotFoundException(msg.get("error.user.not.found")));
+        if (target.isAdmin()) {
+            throw new IllegalStateException(msg.get("error.user.cannot.block.admin"));
+        }
+        target.block();
+        userRepository.save(target);
+        // Every token: sessions, and also an open password-reset link that would be a way back in.
+        authTokenRepository.deleteAllByUserId(targetId);
+        jwtAuthenticationFilter.evictUser(targetId);
+        return toResponse(target);
+    }
+
+    @Transactional
+    public AdminUserResponse unblock(UUID targetId) {
+        User target = userRepository.findById(targetId)
+                .orElseThrow(() -> new NotFoundException(msg.get("error.user.not.found")));
+        target.unblock();
+        userRepository.save(target);
+        jwtAuthenticationFilter.evictUser(targetId);
+        return toResponse(target);
+    }
+
     @Transactional
     public AdminUserResponse promote(UUID adminId, UUID targetId) {
         User admin = userRepository.findById(adminId)
@@ -260,6 +297,7 @@ public class AdminUserService {
                 user.isEmailVerified(),
                 user.hasMarketingConsent(),
                 user.isAthlete(),
+                user.isBlocked(),
                 user.getCreatedAt()
         );
     }

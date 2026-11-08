@@ -46,6 +46,11 @@ export const adminApi = {
   /** Everything held about the person as a ZIP (GDPR art. 15/20) — the answer to a data request. */
   exportUserData: (id: string) =>
     fetchApi<Blob>(`/admin/users/${id}/export`, { responseType: 'blob' }),
+  /** End of cooperation: the person cannot log in any more, the data stays. */
+  blockUser: (id: string) =>
+    fetchApi<AdminUser>(`/admin/users/${id}/block`, { method: 'POST' }),
+  unblockUser: (id: string) =>
+    fetchApi<AdminUser>(`/admin/users/${id}/block`, { method: 'DELETE' }),
   forceLogout: (id: string) =>
     fetchApi<void>(`/admin/users/${id}/logout-all`, { method: 'POST' }),
   promoteUser: (id: string) =>

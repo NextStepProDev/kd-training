@@ -55,12 +55,12 @@ vi.mock('../../context/AuthContext', () => ({
 const regular: AdminUser = {
   id: 'u1', email: 'jan@test.com', firstName: 'Jan', lastName: 'Kowalski', phone: '123456789',
   role: 'USER', isAdmin: false, superAdmin: false, emailVerified: true,
-  marketingConsent: true, isAthlete: false, createdAt: '2026-01-01T00:00:00Z',
+  marketingConsent: true, isAthlete: false, blocked: false, createdAt: '2026-01-01T00:00:00Z',
 }
 const plainAdmin: AdminUser = {
   id: 'a1', email: 'admin@test.com', firstName: 'Adam', lastName: 'Adminowski', phone: null,
   role: 'ADMIN', isAdmin: true, superAdmin: false, emailVerified: true,
-  marketingConsent: false, isAthlete: false, createdAt: '2026-02-01T00:00:00Z',
+  marketingConsent: false, isAthlete: false, blocked: false, createdAt: '2026-02-01T00:00:00Z',
 }
 
 async function renderPage(users: AdminUser[], meta?: { totalElements?: number; totalPages?: number }) {
@@ -148,7 +148,7 @@ describe('AdminUsers', () => {
     const adminApi = await renderPage([regular])
     vi.mocked(adminApi.getUser).mockResolvedValue({
       ...regular, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false,
-      avatarUrl: null,
+      avatarUrl: null, blockedAt: null,
     })
     await screen.findByText('Jan Kowalski')
 

@@ -1,0 +1,36 @@
+package pl.mocnygrzbiet.api.auth;
+
+import jakarta.validation.constraints.*;
+import org.jspecify.annotations.Nullable;
+
+public final class AuthDtos {
+    private AuthDtos() {}
+
+    // No e-mail field: the address is the one the invitation was sent to, so the request cannot pick it.
+    public record RegisterRequest(
+        @NotBlank(message = "{validation.token.required}") String invitationToken,
+        @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String password,
+        @NotBlank(message = "{validation.firstname.required}") @Size(min = 3, max = 36, message = "{validation.firstname.size}") String firstName,
+        @NotBlank(message = "{validation.lastname.required}") @Size(min = 3, max = 36, message = "{validation.lastname.size}") String lastName,
+        @Nullable @Pattern(regexp = "^(\\d{9}|\\+\\d{1,4}\\d{9})$", message = "{validation.phone.format}") String phone,
+        @Nullable String preferredLanguage,
+        @AssertTrue(message = "{validation.privacy.required}") boolean acceptedPrivacy,
+        @AssertTrue(message = "{validation.terms.required}") boolean acceptedTerms,
+        @Nullable Boolean acceptedMarketing
+    ) {}
+
+    public record LoginRequest(
+        @NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email,
+        @NotBlank(message = "{validation.password.required}") String password
+    ) {}
+
+    public record AuthTokensResponse(String accessToken, String refreshToken, long expiresIn) {}
+    public record RefreshTokenRequest(@NotBlank(message = "{validation.refresh.token.required}") String refreshToken) {}
+    public record ForgotPasswordRequest(@NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email) {}
+    // A one-time token from an e-mailed link, in the BODY: as ?token= on a POST it landed in every
+    // proxy access log (nginx, Cloudflare). The reset-password request always carried it here.
+    public record TokenRequest(@NotBlank(message = "{validation.token.required}") String token) {}
+    public record ResetPasswordRequest(@NotBlank(message = "{validation.token.required}") String token, @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String newPassword) {}
+    public record MessageResponse(String message) {}
+    public record InvitationDetailsResponse(String email) {}
+}

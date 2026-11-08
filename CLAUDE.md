@@ -1,8 +1,8 @@
-# Mocny Grzbiet (kd-training)
+# Mocny Grzbiet (mocny-grzbiet)
 
 Strona i aplikacja trenera personalnego **Kacpra Dąbrowskiego**, marka **„Mocny Grzbiet”** (od 07.11.2026,
-odpowiedzi klienta; wcześniej robocze „KD Training”). Nazwy techniczne zostają: repo, pakiet `pl.kdtraining`,
-katalogi `kd-training-*`, kontenery i wolumeny. Produkt: wizytówka + strefa podopiecznego
+odpowiedzi klienta; wcześniej robocze „KD Training”). Od 08.11.2026 marka jest też w nazwach technicznych:
+repo `mocny-grzbiet`, pakiet `pl.mocnygrzbiet`, katalogi `mocny-grzbiet-*`, kontenery `mg-*`, wolumeny `mg_*`. Produkt: wizytówka + strefa podopiecznego
 (plan 1:1, wiadomości, zdjęcia, filmy, cele) + panel trenera. Java/Spring Boot backend + React
 frontend, Tailwind 4, czerń i biel. Wyłącznie język polski. Najpierw telefon (brief klienta).
 
@@ -12,10 +12,10 @@ grupowe z rozliczeniami, waga). Szczegóły i lista do zrobienia: sekcja „Fork
 Komentarze w kodzie i w dokumentach mówiące „sibling app” / „bliźniaczy projekt” albo podające
 pomiary z produkcji odnoszą się do Fire Academy i NSP — to wiedza odziedziczona, nie zmierzona tutaj.
 
-**Domena:** jeszcze nieustalona — w repo zaślepka `kdtraining.example` (nginx, `.env.example`,
-`robots.txt`, `prerender.mjs`, `AppConfig`). Deploy czyta domenę ze zmiennej repozytorium `SITE_URL`.
+**Domena:** `mocnygrzbiet.pl` — zaproponowana klientowi 07.11.2026, **jeszcze niekupiona i niepotwierdzona**;
+wpisana w nginx, `.env.example`, `robots.txt`, `prerender.mjs`, `AppConfig`. Deploy czyta domenę ze zmiennej repozytorium `SITE_URL`.
 **Firma / administrator danych:** do uzupełnienia (polityka prywatności, eksport RODO).
-**Mail kontaktowy:** zaślepka `kontakt@kdtraining.example` — `kd-training-frontend/src/config/site.ts`
+**Mail kontaktowy:** zaślepka `kontakt@mocnygrzbiet.pl` (skrzynka nie istnieje) — `mocny-grzbiet-frontend/src/config/site.ts`
 (+ `withdrawNote` w `locales/pl/calendar.json`, `email.*` w `messages.properties`).
 **Wersja:** odczytywana z pliku `VERSION` via `@version@` placeholder w `application.yml`
 
@@ -91,7 +91,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Obraz **pakuje** artefakt, który przeszedł testy (`app.jar` / `dist/` jadą z joba testowego artefaktem workflow). **`Dockerfile`, który kompiluje aplikację, to regres** — testowana i wdrażana byłaby inna kompilacja. Ręczny `docker build` wymaga wcześniej `./gradlew clean bootJar && cp build/libs/*.jar app.jar` (front: `npm run build`).
 - `COPY app.jar` stoi **nad** blokiem `addgroup … && chown -R app:app /app` — to ten `chown` czyni jara własnością usera kontenera. Przestawienie zostawia go rootowego i nic nie krzyczy.
 - Podmiana `@version@` w `application.yml` wymaga `inputs.property('appVersion', …)` w `processResources`. Bez tego po samym bumpie `VERSION` zadanie zostaje UP-TO-DATE: jar dostaje nową nazwę, ale w środku niesie **poprzedni** numer (odtworzone: `…-0.5.23.jar` z `version: '0.5.22'`), a `app.version` karmi Swagger i log startowy.
-- Wersja Node'a dla frontu żyje **tylko** w `kd-training-frontend/.nvmrc`. Obraz nie zawiera już Node'a — nie dokładać drugiego miejsca.
+- Wersja Node'a dla frontu żyje **tylko** w `mocny-grzbiet-frontend/.nvmrc`. Obraz nie zawiera już Node'a — nie dokładać drugiego miejsca.
 
 **Proces**
 - **Migracje SQL są niezmienne** — nawet poprawka komentarza w zaaplikowanym pliku zmienia checksum Flyway i wywala deploy. Wyjątek jeden i tylko teraz: `V1` nie była jeszcze nigdzie wdrożona, więc **do pierwszego deployu na produkcję** wolno ją poprawiać (każda poprawka = reset lokalnej bazy). Od pierwszego deployu — nowa migracja.
@@ -106,7 +106,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 
 ## Stack
 
-Dokładne wersje: `kd-training-backend/build.gradle` i `kd-training-frontend/package.json` — nie
+Dokładne wersje: `mocny-grzbiet-backend/build.gradle` i `mocny-grzbiet-frontend/package.json` — nie
 powielać ich tutaj, Dependabot rusza je co tydzień.
 
 - **Backend:** Java 25 · Spring Boot 4.1 · Spring Security 7 + JWT (jjwt) · Spring Data JPA ·
@@ -119,9 +119,9 @@ powielać ich tutaj, Dependabot rusza je co tydzień.
 
 ### Struktura repozytorium
 ```
-kd-training-backend/
-kd-training-frontend/     # nginx.conf + scripts/prerender.mjs
-kd-training-hub/          # Docker Compose (dev/prod), .env, setup-swap.sh, seo-smoke.sh, backup, RESTORE.md
+mocny-grzbiet-backend/
+mocny-grzbiet-frontend/     # nginx.conf + scripts/prerender.mjs
+mocny-grzbiet-hub/          # Docker Compose (dev/prod), .env, setup-swap.sh, seo-smoke.sh, backup, RESTORE.md
 docs/                     # ⚠️ w .gitignore — notatki lokalne
 .github/workflows/        # CI/CD
 CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAINING.md · INFRA.md · VERSION
@@ -199,14 +199,14 @@ metadanych EXIF/GPS**; `src/config/site.test.ts` pilnuje, że pliki z `HOME_PHOT
 
 ```bash
 # 1. Baza danych + MailHog
-cd kd-training-hub && docker compose -f docker-compose.dev.yml up -d
+cd mocny-grzbiet-hub && docker compose -f docker-compose.dev.yml up -d
 
-# 2. Backend (IntelliJ: Run KdTrainingApplication z profilem dev)
+# 2. Backend (IntelliJ: Run MocnyGrzbietApplication z profilem dev)
 #    lub z terminala:
-cd kd-training-backend && ./gradlew bootRun
+cd mocny-grzbiet-backend && ./gradlew bootRun
 
 # 3. Frontend
-cd kd-training-frontend && npm run dev
+cd mocny-grzbiet-frontend && npm run dev
 ```
 
 Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (zaproszenia, reset hasła) — profil `dev` kieruje SMTP na `localhost:1027` bez logowania i TLS (do 01.11.2026 tego nie robił i maile szły na domyślny `smtp.gmail.com`; pilnuje `DevProfileMailConfigTest`).
@@ -264,7 +264,7 @@ poza tym trybem to startowy (fork z Fire) — PR potrzebuje gałęzi bazowej, a 
 - **Commit, push i PR robi Mateusz.** Claude podaje w czacie — **dopiero po audycie** — gotowe
   teksty po angielsku: nazwa gałęzi, commit (temat, pusta linia, opis), tytuł PR, opis PR. Bez
   stopek o autorstwie, bez plików pomocniczych i bez poleceń `git commit` do wklejenia.
-- **`VERSION`:** podbijany w PR-ze, który rusza `kd-training-backend/**`, `kd-training-frontend/**`
+- **`VERSION`:** podbijany w PR-ze, który rusza `mocny-grzbiet-backend/**`, `mocny-grzbiet-frontend/**`
   albo workflow CI — oba workflowy CI mają go w filtrze `paths` i oba etykietują nim obraz. Bez
   podbicia nowy obraz dostaje tag, który już wskazuje poprzedni build, i wersja przestaje cokolwiek
   identyfikować. Bump uruchamia też CI drugiej strony, więc obie przechodzą testy. PR
@@ -306,15 +306,15 @@ API katalogu, maile zapisów, strona główna z intro i zdjęciami Fire, logo i 
 Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od nowa po odpowiedziach klienta.
 
 ### Czym się różni od Fire
-- Nazwy: pakiet `pl.kdtraining`, katalogi `kd-training-*`, kontenery `kd-*-prod`, wolumeny `kd_*`,
-  pliki backupu `kd-training-backup*`, remote kopii `kd-crypt:` (nie `gdrive-crypt:` — inny folder
+- Nazwy: pakiet `pl.mocnygrzbiet`, katalogi `mocny-grzbiet-*`, kontenery `mg-*-prod`, wolumeny `mg_*`,
+  pliki backupu `mocny-grzbiet-backup*`, remote kopii `mg-crypt:` (nie `gdrive-crypt:` — inny folder
   i inne hasła szyfrowania niż Fire, nawet gdyby oba projekty stały na jednym serwerze).
 - Porty dev (wyżej), paleta czarno-biała (`index.css`, skala `primary-*`), szablon maili czarno-biały.
 - `V1` zamiast 42 migracji; notatki trenera tylko przy treningu; cele bez rodzaju (bez celów wagowych).
 - Smoke test w Deploy czyta domenę ze zmiennej `SITE_URL`, nie z literału.
 
 ### Przed pierwszym wdrożeniem (otwarte)
-1. Domena → podmienić `kdtraining.example` (nginx `server_name` i przekierowania, `robots.txt`,
+1. Domena → jeśli Kacper wybierze inną niż `mocnygrzbiet.pl`, podmienić ją (nginx `server_name` i przekierowania, `robots.txt`,
    `prerender.mjs`, `.env.example`, `AppConfig`, `application*.yml`, JWT `issuer`,
    `Canonical` w `public/.well-known/security.txt`).
 2. Dane administratora → polityka prywatności (sekcja 1), `AdminUserDataExportService.readme()`,
@@ -326,15 +326,15 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
    `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
    `TermsPage.tsx` to szkic do podmiany po danych usługodawcy i weryfikacji prawnej.
-5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/kd-training`, a skoro
+5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/mocny-grzbiet`, a skoro
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse
    proxy przed nimi. Rozmiar maszyny decyduje o `mem_limit` (dziś 384m backend jak w Fire — patrz
    INFRA.md, pomiar soak).
-6. GitHub: repo `NextStepProDev/kd-training` jest (publiczne, tylko squash, Dependabot alerts
+6. GitHub: repo `NextStepProDev/mocny-grzbiet` jest (publiczne, tylko squash, Dependabot alerts
    i security updates, secret scanning, sekret `JWT_SECRET` dla CI). Brakuje: `DEPLOY_HOST`,
    `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`, zmiennej `SITE_URL`.
-7. Kopie: `rclone config` z remote'em `kd-crypt` (crypt na własnym folderze Drive),
-   `/etc/kd-training-backup.env` z `HEALTHCHECK_URL`, wpis w crontab (instrukcja na końcu skryptu).
+7. Kopie: `rclone config` z remote'em `mg-crypt` (crypt na własnym folderze Drive),
+   `/etc/mocny-grzbiet-backup.env` z `HEALTHCHECK_URL`, wpis w crontab (instrukcja na końcu skryptu).
 8. SMTP: konto pocztowe nadawcy (`MAIL_*` w `.env`), `ADMIN_EMAIL` = adres Kacpra.
 
 ### Poprawki z Fire w przyszłości

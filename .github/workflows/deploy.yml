@@ -48,23 +48,23 @@ jobs:
 
       - name: Encode docker-compose.prod.yml
         id: compose
-        run: echo "content=$(base64 -w 0 kd-training-hub/docker-compose.prod.yml)" >> "$GITHUB_OUTPUT"
+        run: echo "content=$(base64 -w 0 mocny-grzbiet-hub/docker-compose.prod.yml)" >> "$GITHUB_OUTPUT"
 
       - name: Encode nginx.conf
         id: nginx
-        run: echo "content=$(base64 -w 0 kd-training-frontend/nginx.conf)" >> "$GITHUB_OUTPUT"
+        run: echo "content=$(base64 -w 0 mocny-grzbiet-frontend/nginx.conf)" >> "$GITHUB_OUTPUT"
 
       - name: Encode setup-swap.sh
         id: swap
-        run: echo "content=$(base64 -w 0 kd-training-hub/setup-swap.sh)" >> "$GITHUB_OUTPUT"
+        run: echo "content=$(base64 -w 0 mocny-grzbiet-hub/setup-swap.sh)" >> "$GITHUB_OUTPUT"
 
       - name: Encode backup script
         id: backup
-        run: echo "content=$(base64 -w 0 kd-training-hub/kd-training-backup.sh)" >> "$GITHUB_OUTPUT"
+        run: echo "content=$(base64 -w 0 mocny-grzbiet-hub/mocny-grzbiet-backup.sh)" >> "$GITHUB_OUTPUT"
 
       - name: Encode backup logrotate config
         id: logrotate
-        run: echo "content=$(base64 -w 0 kd-training-hub/logrotate-kd-training-backup)" >> "$GITHUB_OUTPUT"
+        run: echo "content=$(base64 -w 0 mocny-grzbiet-hub/logrotate-mocny-grzbiet-backup)" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to production VM
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
@@ -88,11 +88,11 @@ jobs:
             # The backup script used to exist only on this box — the one file in the backup system
             # with no backup of its own. It ships from the repo now, like nginx.conf above. Cron
             # keeps running whatever is at this path, so updating the file is the whole deployment.
-            echo "$BACKUP_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/kd-training-backup.sh
-            sudo -n install -m 0755 ${{ secrets.DEPLOY_PATH }}/kd-training-backup.sh /usr/local/bin/kd-training-backup.sh \
+            echo "$BACKUP_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/mocny-grzbiet-backup.sh
+            sudo -n install -m 0755 ${{ secrets.DEPLOY_PATH }}/mocny-grzbiet-backup.sh /usr/local/bin/mocny-grzbiet-backup.sh \
               || echo "WARN: could not install the backup script (check passwordless sudo)"
-            echo "$LOGROTATE_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/logrotate-kd-training-backup
-            sudo -n install -m 0644 ${{ secrets.DEPLOY_PATH }}/logrotate-kd-training-backup /etc/logrotate.d/kd-training-backup \
+            echo "$LOGROTATE_B64" | base64 -d > ${{ secrets.DEPLOY_PATH }}/logrotate-mocny-grzbiet-backup
+            sudo -n install -m 0644 ${{ secrets.DEPLOY_PATH }}/logrotate-mocny-grzbiet-backup /etc/logrotate.d/mocny-grzbiet-backup \
               || echo "WARN: could not install log rotation for the backup log"
             cd ${{ secrets.DEPLOY_PATH }}
             export VERSION=${{ steps.version.outputs.version }}
@@ -115,7 +115,7 @@ jobs:
             # database and alpine runs the backup. `|| echo` throughout: cleanup must never fail
             # the deploy.
             IN_USE=$(docker ps -aq | xargs -r docker inspect --format '{{.Image}}' | sed 's/^sha256://' | cut -c1-12 | tr '\n' ' ')
-            for repo in kd-training-backend kd-training-frontend; do
+            for repo in mocny-grzbiet-backend mocny-grzbiet-frontend; do
               # Sorted by creation date here, not trusted from `docker images`: the containerd image
               # store promises no order, and an unsorted list could rank the newest image third and
               # delete it. <none> rows are dropped BEFORE the ranking, not after: an untagged image
@@ -157,7 +157,7 @@ jobs:
             # replaced it passed this check. Both containers must run the tag just deployed (the
             # version is pattern-checked in "Resolve deploy version", so it is safe to paste here).
             VERSION="${{ steps.version.outputs.version }}"
-            for c in kd-backend-prod kd-frontend-prod; do
+            for c in mg-backend-prod mg-frontend-prod; do
               IMAGE=$(docker inspect --format '{{.Config.Image}}' "$c" 2>/dev/null || echo "missing")
               if [ "${IMAGE##*:}" != "$VERSION" ]; then
                 echo "ERROR: $c runs '$IMAGE', expected tag '$VERSION'."
@@ -167,7 +167,7 @@ jobs:
             done
             echo "Waiting for backend to become healthy..."
             for i in $(seq 1 16); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' kd-backend-prod 2>/dev/null || echo "missing")
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' mg-backend-prod 2>/dev/null || echo "missing")
               echo "Attempt $i/16: backend health = $STATUS"
               if [ "$STATUS" = "healthy" ]; then
                 echo "Deployment verified successfully."
@@ -176,7 +176,7 @@ jobs:
               sleep 15
             done
             echo "ERROR: Backend did not become healthy within 4 minutes."
-            docker logs --tail 80 kd-backend-prod
+            docker logs --tail 80 mg-backend-prod
             exit 1
 
       - name: Smoke test public endpoints
@@ -225,4 +225,4 @@ jobs:
       - name: SEO smoke test (crawler routing + robots)
         env:
           BASE: ${{ vars.SITE_URL }}
-        run: bash kd-training-hub/seo-smoke.sh "$BASE"
+        run: bash mocny-grzbiet-hub/seo-smoke.sh "$BASE"

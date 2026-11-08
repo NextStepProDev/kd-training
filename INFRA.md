@@ -10,30 +10,30 @@
 > Academy** — małej maszyny, na której ten kod dotąd działał. Serwer Mocnego Grzbietu nie jest jeszcze
 > wybrany; po wyborze przeliczyć `mem_limit` i heap.
 
-- **Swap 2 GB — krytyczny przy ograniczonej pamięci (bez tego OOM).** Przy pierwszym deploy uruchomić raz: `sudo bash setup-swap.sh` (skrypt w `kd-training-hub/`, idempotentny: 2 GB `/swapfile`, swappiness 10, utrwalone w fstab + sysctl)
-- ⚠️ **Zapora originu — do zrobienia przed pierwszym wdrożeniem, w repo jej nie ma.** Strona ma stać za Cloudflare (certyfikat Origin w `certs/`), ale bez zapory serwer przyjmie 80/443 od każdego, kto zna jego adres — z pominięciem reguł Cloudflare. Gorzej: nginx bierze adres odwiedzającego z nagłówka `CF-Connecting-IP` (`map` w `kd-training-frontend/nginx.conf`), więc żądanie wprost na serwer podaje dowolny adres przy każdej próbie i obchodzi limit logowania. Dwie rzeczy:
+- **Swap 2 GB — krytyczny przy ograniczonej pamięci (bez tego OOM).** Przy pierwszym deploy uruchomić raz: `sudo bash setup-swap.sh` (skrypt w `mocny-grzbiet-hub/`, idempotentny: 2 GB `/swapfile`, swappiness 10, utrwalone w fstab + sysctl)
+- ⚠️ **Zapora originu — do zrobienia przed pierwszym wdrożeniem, w repo jej nie ma.** Strona ma stać za Cloudflare (certyfikat Origin w `certs/`), ale bez zapory serwer przyjmie 80/443 od każdego, kto zna jego adres — z pominięciem reguł Cloudflare. Gorzej: nginx bierze adres odwiedzającego z nagłówka `CF-Connecting-IP` (`map` w `mocny-grzbiet-frontend/nginx.conf`), więc żądanie wprost na serwer podaje dowolny adres przy każdej próbie i obchodzi limit logowania. Dwie rzeczy:
   1. Porty wystawione **tylko na IPv4** — w `docker-compose.prod.yml` `"0.0.0.0:80:80"` i `"0.0.0.0:443:443"`. Przy samym `"80:80"` Docker otwiera je też na IPv6, poza zaporą.
   2. Reguły w `DOCKER-USER` z dopasowaniem `--ctstate DNAT` (Docker publikuje porty przez NAT, więc `INPUT`/ufw tego ruchu nie widzi; sam port bez `DNAT` łapie też wyjścia aplikacji na 443). Wzór: abcwspinania `deploy/origin-firewall.sh`, `setup-origin-firewall.sh`, `origin-firewall.service` i krok w `deploy.yml`. Tam lista zakresów Cloudflare jest wycinana z `set_real_ip_from` w `nginx.conf` — tu takiej listy nie ma, więc trzeba ją dodać (<https://www.cloudflare.com/ips>).
 
   Sprawdzenie po wdrożeniu, z innej maszyny: `curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://<IP serwera>/` daje `000`, a strona przez domenę działa.
 > ⚠️ **Obraz backendu ma domyślny profil `prod`, nie `docker`.** Wcześniej `Dockerfile` ustawiał `SPRING_PROFILES_ACTIVE=docker` — profil, którego **żaden `application-docker.yml` nigdy nie definiował**. Na produkcji ratował to compose (`${SPRING_PROFILES_ACTIVE:-prod}`), ale każde uruchomienie obrazu bez compose (debug na serwerze, nowe środowisko) startowało po cichu **bez ustawień produkcyjnych**: pula 8 zamiast 5, brak `max-connections` broniącego pamięci, gadatliwe logi i CORS na `http://localhost:*`. Nic nie ostrzegało. Domyślna wartość ma być tą samą odpowiedzią co compose, nie pułapką.
 
-- **JVM tuning backendu (mem_limit 384m).** ENTRYPOINT w `kd-training-backend/Dockerfile`: `-XX:MaxRAMPercentage=55.0` (~211 MB heap; + non-heap ~120 MB mieści się w 384 MB z zapasem — przy 75% było ~288 MB heap → ~408 MB > limit = ryzyko OOM-kill i wypychania bezczynnego heapu do swapu), `-XX:MaxMetaspaceSize=128m`, `-XX:+ExitOnOutOfMemoryError`, `-XX:TieredStopAtLevel=1` (C1-only JIT — skraca start na 2 vCPU; wdrożone 2026-06-20, start 103→64 s). Kontener chodzi jako **non-root** (`USER app`). **Bez wymuszonego `-XX:+UseG1GC`** — poniżej 2 GB RAM JVM ergonomicznie wybiera lekszy SerialGC (mniej pamięci natywnej niż G1 na ciasnym boxie). `$JAVA_OPTS` zachowany jako passthrough; w `docker-compose.prod.yml` `JAVA_OPTS=""` (po upgradzie RAM można tam wstawić `-XX:+UseG1GC`).
+- **JVM tuning backendu (mem_limit 384m).** ENTRYPOINT w `mocny-grzbiet-backend/Dockerfile`: `-XX:MaxRAMPercentage=55.0` (~211 MB heap; + non-heap ~120 MB mieści się w 384 MB z zapasem — przy 75% było ~288 MB heap → ~408 MB > limit = ryzyko OOM-kill i wypychania bezczynnego heapu do swapu), `-XX:MaxMetaspaceSize=128m`, `-XX:+ExitOnOutOfMemoryError`, `-XX:TieredStopAtLevel=1` (C1-only JIT — skraca start na 2 vCPU; wdrożone 2026-06-20, start 103→64 s). Kontener chodzi jako **non-root** (`USER app`). **Bez wymuszonego `-XX:+UseG1GC`** — poniżej 2 GB RAM JVM ergonomicznie wybiera lekszy SerialGC (mniej pamięci natywnej niż G1 na ciasnym boxie). `$JAVA_OPTS` zachowany jako passthrough; w `docker-compose.prod.yml` `JAVA_OPTS=""` (po upgradzie RAM można tam wstawić `-XX:+UseG1GC`).
 - **Soak zapisów 2026-10-25 (Fire): wycieku nie ma, ale proces pod obciążeniem nie mieści się w 384 MB.** 3 h na klonie produkcji Fire, ~4 operacje/s po ścieżkach zapisu (trening: dodanie/edycja/usunięcie, zdjęcie w wątku, ukończenie z RPE, waga, zapis na wydarzenie i anulowanie, plan trenera, odczyty — część z tych ścieżek tu wycięto), 119 071 żądań, p95 48 ms, zero ERROR. Sterta przypięta blisko produkcji (`-Xmx200m` wobec ~211 MB z 55% × 384m, SerialGC): podłoga po pełnym GC **51,6–58,2 MB bez trendu**, metaspace 110,5→110,7 MB, klasy płasko. Cały proces stał na **~440 MB RSS (anon)** przez ostatnie 1,5 h, czyli stabilnie — tylko że ponad `mem_limit`. Pozycja „non-heap ~120 MB” wyżej jest zaniżona: sam metaspace to ~111 MB, a do tego code cache, stosy wątków i bufory natywne dekodowania zdjęć. Test szedł z limitem 2 GB, więc to pomiar bez presji. Na produkcji nadmiar idzie do swapu (compose nie ustawia `memswap_limit`, więc Docker pozwala na 2× `mem_limit`), a nie kończy się zabiciem — przy realnym, dużo mniejszym ruchu. **Po migracji na większą maszynę dać backendowi ≥ 512m.**
   > ⚠️ **Pamięci tego obrazu nie mierzy się na Macu z Apple Silicon.** Obraz jest tylko amd64, więc chodzi pod Rosettą, a ta pod obciążeniem dokłada ~150 MB pamięci natywnej co 5 minut (bloki po 128 MB poza stertą) i kontener ginie z OOM — przy 384m po 32 min, przy 768m po 4,5 min — co wygląda jak wyciek aplikacji, a nim nie jest. Pomiar: `docker cp` jara z obrazu i uruchomienie go na `eclipse-temurin:25-jre-alpine` (arm64) z tą samą linią `java …` z `Dockerfile`. Przy podniesionym limicie dopisać `-XX:+UseSerialGC`: przy 2 GB i ≥2 CPU JVM sam wybiera G1, inaczej niż produkcja.
 - **Mail health poza liveness probe.** `management.health.mail.enabled=false` w `application.yml` (domyślnie, niezależnie od env). Wolny SMTP (~10 s) przekraczał 5 s timeout docker healthchecka `/actuator/health` → fałszywe „unhealthy" → zbędny restart. Maile nie są liveness-critical. (W compose env `MANAGEMENT_HEALTH_MAIL_ENABLED=false` zostaje jako redundantny, jawny override.)
 
 ### Kopie zapasowe
 
-`kd-training-hub/kd-training-backup.sh` — cron roota 03:00, zrzut całej bazy + wolumen uploadów,
-wysyłka na `kd-crypt:` (**remote typu `crypt`**, więc rclone szyfruje przed wysłaniem — to jest
+`mocny-grzbiet-hub/mocny-grzbiet-backup.sh` — cron roota 03:00, zrzut całej bazy + wolumen uploadów,
+wysyłka na `mg-crypt:` (**remote typu `crypt`**, więc rclone szyfruje przed wysłaniem — to jest
 to, co obiecuje sekcja 7 polityki prywatności). Lokalnie 7 dni, na Dysku 40 — liczba z Fire, gdzie
-jeden Dysk (15 GB) dzieliło kilka projektów i 90 dni by go zapchało (09.10.2026). Remote `kd-crypt`
+jeden Dysk (15 GB) dzieliło kilka projektów i 90 dni by go zapchało (09.10.2026). Remote `mg-crypt`
 ma własny folder i własne hasła szyfrowania — nie współdzieli niczego z kopiami Fire.
 Archiwum uploadów powstaje **tylko gdy pliki się zmieniły** (odcisk: ścieżka, rozmiar, data
 modyfikacji), najrzadziej co 30 dni — każde jest pełne, a odtworzenie bierze najnowsze archiwum
 nie późniejsze niż zrzut (szczegóły w RESTORE.md).
-**Odtwarzanie: [`kd-training-hub/RESTORE.md`](kd-training-hub/RESTORE.md).** Skrypt jedzie na
+**Odtwarzanie: [`mocny-grzbiet-hub/RESTORE.md`](mocny-grzbiet-hub/RESTORE.md).** Skrypt jedzie na
 serwer przez `deploy.yml`, tą samą drogą co `nginx.conf` — wcześniej istniał **wyłącznie** na
 maszynie produkcyjnej, czyli był jedynym plikiem w systemie kopii bez własnej kopii.
 
@@ -56,7 +56,7 @@ do roota na maszynie w chmurze nie dociera nigdzie — kopie potrafią przestać
 zostać zauważone w sierpniu. Skrypt pinguje zewnętrzny monitor po **udanym** przebiegu i na `/fail`
 przy błędzie; brak sygnału zapala alarm po ich stronie. To wykrywa też przypadki, których żaden mail
 o błędzie nie zgłosi: wyłączonego crona, wyłączoną maszynę, skasowany skrypt. URL to sekret —
-`/etc/kd-training-backup.env` na serwerze (chmod 600), **nigdy w repo**; brak pliku = ping po cichu
+`/etc/mocny-grzbiet-backup.env` na serwerze (chmod 600), **nigdy w repo**; brak pliku = ping po cichu
 pomijany, więc skrypt działa i bez niego.
 
 ### CI/CD (GitHub Actions)
@@ -73,8 +73,8 @@ pomijany, więc skrypt działa i bez niego.
 > **Ręczny build obrazu na laptopie wymaga wcześniejszego zbudowania artefaktu** (compose dev nie
 > buduje obrazów, więc jedyną zautomatyzowaną ścieżką jest CI):
 > ```bash
-> cd kd-training-backend && ./gradlew clean bootJar && cp build/libs/*.jar app.jar && docker build -t kd-training-backend .
-> cd kd-training-frontend && nvm use && npm ci && npm run build && docker build -t kd-training-frontend .
+> cd mocny-grzbiet-backend && ./gradlew clean bootJar && cp build/libs/*.jar app.jar && docker build -t mocny-grzbiet-backend .
+> cd mocny-grzbiet-frontend && nvm use && npm ci && npm run build && docker build -t mocny-grzbiet-frontend .
 > ```
 > `clean` nie jest ozdobnikiem: `build/libs` trzyma po jarze na każdą kiedykolwiek zbudowaną wersję,
 > a `assemble` dokłada `-plain.jar` **bez `Main-Class`**, który sortuje się *przed* właściwym — czyli
@@ -87,7 +87,7 @@ pomijany, więc skrypt działa i bez niego.
 > Oba `.dockerignore` są **deny-by-default** (`*` + wyjątek na to, co obraz kopiuje) — lista wykluczeń
 > wymaga dopisywania każdego nowego katalogu, lista jednego wpuszczonego nie ma jak się zestarzeć.
 
-> ⚠️ **Wersja frontu: `kd-training-frontend/.nvmrc` jest jedynym źródłem prawdy** (dziś `26`),
+> ⚠️ **Wersja frontu: `mocny-grzbiet-frontend/.nvmrc` jest jedynym źródłem prawdy** (dziś `26`),
 > czytany przez `setup-node` (`node-version-file`). Po przeniesieniu builda do CI obraz nie zawiera
 > już Node'a, więc nie ma drugiego miejsca, które mogłoby się rozjechać. Zmiana wersji = zmierzyć
 > suite, nie założyć: przy vitest 5 / jsdom 30 node 26 przechodzi cały zestaw (w bliźniaczym repo na
@@ -115,7 +115,7 @@ pomijany, więc skrypt działa i bez niego.
   - Liczone po ID, nie po tagu, bo `main` i `0.2.0` mogą być tym samym obrazem.
   - **Sortowane jawnie po dacie utworzenia**: magazyn containerd nie obiecuje kolejności.
   - Wiersze `<none>` wypadają **przed** liczeniem, inaczej obraz bez tagu zająłby miejsce wersji do powrotu.
-  - Sprzątanie dotyczy tylko `kd-training-backend` i `kd-training-frontend`; `postgres` i `alpine` (backup) są poza zasięgiem. Sprzątanie nigdy nie wywala deployu.
+  - Sprzątanie dotyczy tylko `mocny-grzbiet-backend` i `mocny-grzbiet-frontend`; `postgres` i `alpine` (backup) są poza zasięgiem. Sprzątanie nigdy nie wywala deployu.
   - Odwrotnie `pull` i `up -d`: mają `|| exit 1`. Skrypt SSH nie ma `set -e` (`appleboy/ssh-action` v1.2.5 nie ma `script_stop`), więc krok zwraca wynik **ostatniej** komendy. Nieudany pull zostawiłby stare kontenery, a deploy świeciłby na zielono.
   - Z tego samego powodu „Verify deployment health” najpierw sprawdza, że oba kontenery chodzą na **wdrażanym tagu**. Stary backend też jest `healthy`.
 

@@ -4,7 +4,7 @@ version: 2
 # maintenance stays one review, while major bumps arrive on their own (they need a real look).
 updates:
   - package-ecosystem: npm
-    directory: /kd-training-frontend
+    directory: /mocny-grzbiet-frontend
     schedule:
       interval: weekly
       day: monday
@@ -20,7 +20,7 @@ updates:
           - patch
 
   - package-ecosystem: gradle
-    directory: /kd-training-backend
+    directory: /mocny-grzbiet-backend
     schedule:
       interval: weekly
       day: monday
@@ -51,8 +51,8 @@ updates:
   # Base images for both containers (Dockerfile FROM lines).
   - package-ecosystem: docker
     directories:
-      - /kd-training-backend
-      - /kd-training-frontend
+      - /mocny-grzbiet-backend
+      - /mocny-grzbiet-frontend
     schedule:
       interval: weekly
       day: monday
@@ -62,11 +62,11 @@ updates:
 
   # The compose files pin the Postgres image — the one holding every client record — and nothing
   # would be watching them otherwise. `docker` above covers the two Dockerfiles only: Dependabot treats Docker and
-  # Docker Compose as SEPARATE ecosystems, so adding /kd-training-hub to the entry above would have
+  # Docker Compose as SEPARATE ecosystems, so adding /mocny-grzbiet-hub to the entry above would have
   # looked like a fix and updated nothing. Note the database image is the one piece of this stack
   # that CI never scans, because Trivy only sees images this repo builds.
   - package-ecosystem: docker-compose
-    directory: /kd-training-hub
+    directory: /mocny-grzbiet-hub
     schedule:
       interval: weekly
       day: monday

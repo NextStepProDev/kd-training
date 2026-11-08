@@ -72,6 +72,10 @@ public final class TrainingCalendarDtos {
             List<AttachmentResponse> attachments,
             /** Set on the occurrences of a weekly series, so the client can offer "delete the following ones too". */
             @Nullable UUID seriesId,
+            /** Set when the session has other participants; each of them has a row of their own. */
+            @Nullable UUID groupId,
+            /** First names of the other participants, alphabetically; empty for a one-to-one. */
+            List<String> partners,
             long version,
             Instant createdAt,
             Instant updatedAt
@@ -171,7 +175,12 @@ public final class TrainingCalendarDtos {
             @Nullable @Min(500) @Max(10000) Integer targetCalories,
             @Nullable @Size(max = 3) List<@Valid AttachmentRequest> attachments,
             /** Coach only: repeat on the same weekday up to and including this date (at most half a year). */
-            @Nullable LocalDate repeatWeeklyUntil
+            @Nullable LocalDate repeatWeeklyUntil,
+            /**
+             * Coach only, trainings only: the other clients in this session. Each gets the same
+             * training in their own calendar. Five is a generous small group, not a class.
+             */
+            @Nullable @Size(max = 5) List<UUID> partnerIds
     ) {}
 
     /** No {@code kind}: an entry is a training or a task from birth, and stays what it was. */

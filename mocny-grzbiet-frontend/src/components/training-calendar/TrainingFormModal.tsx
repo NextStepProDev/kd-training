@@ -11,6 +11,7 @@ import { addDaysIso, formatLongDate } from '../../utils/calendarRange'
 import { DateInput } from '../ui/DateInput'
 import type { AttachmentKind, CreateTrainingBody, PersonalTraining, TrainingKind } from '../../types'
 import { inputClass, textareaClass } from '../../utils/fieldClass'
+import type { PartnerCandidate } from './adapter'
 
 /** Three materials fit on a card without turning it into a reading list. */
 const MAX_MATERIALS = 3
@@ -32,6 +33,11 @@ interface TrainingFormModalProps {
   canAttach: boolean
   /** Weekly series are the coach's planning tool; offered only when creating. */
   canRepeat?: boolean
+  /**
+   * The coach's other clients, for a group training. Absent for the client; offered only when
+   * creating a training — who takes part is decided once, like the kind.
+   */
+  partnerOptions?: PartnerCandidate[]
 }
 
 /**
@@ -40,7 +46,7 @@ interface TrainingFormModalProps {
  * of the cascading render an effect would cause.
  */
 export function TrainingFormModal({
-  training, date, onClose, onSubmit, onConflictRefresh, canAttach, canRepeat = false,
+  training, date, onClose, onSubmit, onConflictRefresh, canAttach, canRepeat = false, partnerOptions,
 }: TrainingFormModalProps) {
   const { t } = useTranslation('calendar')
 
@@ -61,6 +67,8 @@ export function TrainingFormModal({
   const [repeat, setRepeat] = useState(false)
   const [repeatUntil, setRepeatUntil] = useState(() => addDaysIso(date, 21))
   const offerRepeat = canRepeat && !training
+  const [partnerIds, setPartnerIds] = useState<string[]>([])
+  const offerPartners = !training && !isTask && (partnerOptions?.length ?? 0) > 0
   const [startTime, setStartTime] = useState(training?.startTime?.slice(0, 5) ?? '17:00')
   const [endTime, setEndTime] = useState(training?.endTime?.slice(0, 5) ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -109,6 +117,8 @@ export function TrainingFormModal({
         // suggest it could be changed.
         ...(training ? {} : { kind }),
         ...(offerRepeat && repeat ? { repeatWeeklyUntil: repeatUntil } : {}),
+        // A task switched to after picking people must not carry them: the server refuses a group task.
+        ...(offerPartners && partnerIds.length > 0 ? { partnerIds } : {}),
         date,
         title: title.trim(),
         description: description.trim() || null,
@@ -272,6 +282,36 @@ export function TrainingFormModal({
               </div>
             )}
           </div>
+        )}
+
+        {offerPartners && (
+          <fieldset className="space-y-2">
+            <legend className="text-sm text-surface-300">{t('group.pickLabel')}</legend>
+            <p className="text-xs text-surface-500">{t('group.pickHint')}</p>
+            <div className="max-h-40 space-y-1 overflow-y-auto">
+              {partnerOptions!.map(option => (
+                <label key={option.id} className="flex items-center gap-2 text-sm text-surface-200">
+                  <input
+                    type="checkbox"
+                    checked={partnerIds.includes(option.id)}
+                    onChange={e => setPartnerIds(ids => e.target.checked
+                      ? [...ids, option.id]
+                      : ids.filter(id => id !== option.id))}
+                    className="h-4 w-4 accent-primary-500"
+                  />
+                  {option.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
+        {/* Editing a group session changes it for everyone in it; saying so beats a surprise in
+            someone else's calendar. */}
+        {training && (training.partners?.length ?? 0) > 0 && (
+          <p className="rounded-lg border border-surface-800 bg-surface-800/50 px-3 py-2 text-xs text-surface-300">
+            {t('group.editHint', { names: training.partners!.join(', ') })}
+          </p>
         )}
 
         {/* Materials. Videos come from the shared library so a correction there fixes every

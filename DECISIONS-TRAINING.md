@@ -82,6 +82,26 @@ retencja). Zasięg jak przy celach: zdjęta flaga `is_athlete` = materiał poza 
   tekstem i zerowanie `training_consent_at` nie było potrzebne (patrz „Zgoda: poszerzenie zakresu”).
 - Kasowanie planu (`AdminTrainingPlanErasureService`) i eksport RODO zabierają materiały z pytaniami.
 
+### V8 (tutaj) — treningi wspólne
+
+Odpowiedź klienta (08.11.2026): część podopiecznych trenuje w parach i para ma widzieć swoje imiona;
+decyzja Mateusza (08.11.2026): model z wierszem na osobę, **bez limitu dwóch osób** (`group_id`, nie `pair_id`).
+- Trener zakłada trening raz i zaznacza pozostałych (`partnerIds`, najwyżej 5) → **każdy uczestnik dostaje
+  zwykły wiersz we własnym kalendarzu**, wiersze jednej sesji łączy `group_id`. Tylko trener, tylko trening
+  (zadanie to dieta jednej osoby). Partnerzy muszą być podopiecznymi, bez powtórzeń i bez właściciela kalendarza.
+- **Prywatność:** partner widzi **wyłącznie imię** (`partners` w odpowiedzi, z `findGroupMembers`). Wykonanie,
+  RPE, komentarze, zdjęcia, notatka trenera — zostają na wierszu danej osoby. Polityka prywatności to mówi (pkt 2).
+- **Co działa na całą sesję** (tylko trener): edycja (`update` — wersja sprawdzana na klikniętym wierszu, reszta
+  idzie za nim), usunięcie (domyślnie u wszystkich; `?onlyThis=true` = „ta osoba nie przyjdzie”), duplikat
+  (nowa sesja z nowym `group_id`), MOVE w tym samym kalendarzu.
+- **Co nie:** wklejenie COPY i kopia do innego kalendarza dają zwykły trening bez grupy (jak `series_id`);
+  cross-MOVE usuwa tylko wiersz źródłowy. Wiersza partnera **już odhaczonego** usunięcie sesji nie zabiera
+  (to jego zapis, ta sama reguła co „ten i następne”).
+- **Seria + grupa:** `group_id` na każdy termin (każde spotkanie to osobna sesja), `series_id` **na osobę** —
+  „ten i następne” idzie po kalendarzu jednej osoby, a z `onlyThis=false` zabiera też partnerów z każdego terminu.
+- Każdy wiersz przechodzi przez `TrainingChangeRecorder`, więc mail o zmianie dostaje każdy uczestnik.
+- Edycja i MOVE sprawdzają `requireCompletedStaysInPast` na **każdym** wierszu sesji: przeniesienie odbytej sesji w przyszłość, gdy ktoś już ją odhaczył, kończy się błędem całej operacji (nic się nie zmienia) — najpierw cofnięcie wykonania, jak przy pojedynczym treningu.
+
 ### V4 (tutaj) — treningi powtarzalne
 
 Odpowiedź klienta (07.11.2026): „powtarzalność jest mile widziana”; decyzje Mateusza (08.11.2026):

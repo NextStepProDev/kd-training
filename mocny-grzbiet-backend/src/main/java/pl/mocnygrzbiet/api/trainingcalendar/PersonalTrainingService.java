@@ -101,13 +101,15 @@ public class PersonalTrainingService {
         Set<UUID> withNewComments = unread.unreadTrainingIds(ids, viewerIsAdmin, seen);
         Map<UUID, Integer> commentCounts = commentCounts(ids);
         Map<UUID, List<AttachmentResponse>> materials = attachments.forTrainings(ids);
+        Map<UUID, List<String>> partners = partnerNames(trainings);
 
         LocalDateTime now = LocalDateTime.now();
         List<PersonalTrainingResponse> items = trainings.stream()
                 .map(t -> toResponse(t, now,
                         isUnread(t, viewerIsAdmin, seen) || withNewComments.contains(t.getId()),
                         commentCounts.getOrDefault(t.getId(), 0),
-                        materials.getOrDefault(t.getId(), List.of())))
+                        materials.getOrDefault(t.getId(), List.of()),
+                        partners.getOrDefault(t.getId(), List.of())))
                 .toList();
 
         // The coach hears about the client's deletions and vice versa.
@@ -126,18 +128,54 @@ public class PersonalTrainingService {
         validateTimes(request.startTime(), request.endTime());
 
         List<LocalDate> dates = occurrences(request, byAdmin);
-        // One id for the whole series; a one-off (a single date) gets none.
-        UUID seriesId = dates.size() > 1 ? UUID.randomUUID() : null;
-
-        PersonalTraining first = createOne(athlete, request, dates.getFirst(), byAdmin, seriesId);
-        for (LocalDate date : dates.subList(1, dates.size())) {
-            createOne(athlete, request, date, byAdmin, seriesId);
+        List<User> participants = new java.util.ArrayList<>(List.of(athlete));
+        participants.addAll(partners(athlete, request, byAdmin));
+        boolean group = participants.size() > 1;
+        // A series per person: "delete this and the following ones" walks one client's plan, and a
+        // series id shared across clients would let it reach into someone else's.
+        Map<UUID, UUID> seriesIds = new HashMap<>();
+        if (dates.size() > 1) {
+            participants.forEach(p -> seriesIds.put(p.getId(), UUID.randomUUID()));
         }
-        return single(first);
+
+        PersonalTraining first = null;
+        for (LocalDate date : dates) {
+            // A group per occurrence: each session is its own meeting, edited and cancelled on its own.
+            UUID groupId = group ? UUID.randomUUID() : null;
+            for (User participant : participants) {
+                PersonalTraining saved = createOne(participant, request, date, byAdmin,
+                        seriesIds.get(participant.getId()), groupId);
+                if (first == null) {
+                    first = saved;
+                }
+            }
+        }
+        return single(java.util.Objects.requireNonNull(first));
+    }
+
+    /**
+     * The other clients in a group training. Coach only and trainings only: a client's own entry is a
+     * note to self, and a calorie target is one person's diet, not a meeting.
+     */
+    private List<User> partners(User athlete, CreateTrainingRequest request, boolean byAdmin) {
+        List<UUID> ids = request.partnerIds();
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        if (!byAdmin) {
+            throw new IllegalArgumentException(msg.get("personaltraining.group.coach.only"));
+        }
+        if (request.kind() == TrainingKind.TASK) {
+            throw new IllegalArgumentException(msg.get("personaltraining.group.training.only"));
+        }
+        if (ids.contains(athlete.getId()) || Set.copyOf(ids).size() != ids.size()) {
+            throw new IllegalArgumentException(msg.get("personaltraining.group.partner.invalid"));
+        }
+        return ids.stream().map(access::requireAthlete).toList();
     }
 
     private PersonalTraining createOne(User athlete, CreateTrainingRequest request, LocalDate date,
-                                       boolean byAdmin, @Nullable UUID seriesId) {
+                                       boolean byAdmin, @Nullable UUID seriesId, @Nullable UUID groupId) {
         // Absent kind means TRAINING: it is what almost every entry is, and what older clients send.
         TrainingKind kind = request.kind() == null ? TrainingKind.TRAINING : request.kind();
         PersonalTraining training =
@@ -146,6 +184,9 @@ public class PersonalTrainingService {
                 request.title().trim(), Strings.trimToNull(request.description()), request.targetCalories(), byAdmin);
         if (seriesId != null) {
             training.joinSeries(seriesId);
+        }
+        if (groupId != null) {
+            training.joinGroup(groupId);
         }
         PersonalTraining saved = repository.saveAndFlush(training);
         attachments.applyToTraining(saved, materialsFrom(request.attachments(), byAdmin));
@@ -190,6 +231,16 @@ public class PersonalTrainingService {
         requireCurrentVersion(training, request.version());
         validateTimes(request.startTime(), request.endTime());
 
+        // The version guards the row the coach had open. The partners' rows follow it: the session is one
+        // meeting, and a description that differs between two people at the same session would be a bug.
+        PersonalTraining saved = applyEdit(training, request, viewerIsAdmin);
+        for (PersonalTraining partner : partnersOf(training, viewerIsAdmin)) {
+            applyEdit(partner, request, viewerIsAdmin);
+        }
+        return single(saved);
+    }
+
+    private PersonalTraining applyEdit(PersonalTraining training, UpdateTrainingRequest request, boolean viewerIsAdmin) {
         TrainingChangeDigest.Slot before = TrainingChangeRecorder.slotOf(training);
         Content contentBefore = Content.of(training);
         training.edit(request.date(), request.startTime(), request.endTime(),
@@ -203,7 +254,21 @@ public class PersonalTrainingService {
         if (!Content.of(saved).equals(contentBefore)) {
             changes.changed(saved, before, viewerIsAdmin);
         }
-        return single(saved);
+        return saved;
+    }
+
+    /**
+     * The other participants' rows of a group session. Only the coach reshapes a session for everyone;
+     * a client never reaches a group row to begin with (it is the coach's, so read-only to them).
+     */
+    private List<PersonalTraining> partnersOf(PersonalTraining training, boolean viewerIsAdmin) {
+        UUID groupId = training.getGroupId();
+        if (groupId == null || !viewerIsAdmin) {
+            return List.of();
+        }
+        return repository.findByGroupId(groupId).stream()
+                .filter(t -> !t.getId().equals(training.getId()))
+                .toList();
     }
 
     /**
@@ -213,27 +278,37 @@ public class PersonalTrainingService {
      *                  Nor is a later one the client already ticked off: its effort rating and comments
      *                  are their record, and "the following ones" means the plan ahead, not that record.
      *                  Only the entry actually clicked goes regardless — that one was chosen.
+     * @param onlyThis  a group session: take only this client off it ("Kasia cannot come"), and leave the
+     *                  others their training. Without it the session is cancelled for everyone. A partner
+     *                  who already ticked theirs off keeps it either way — that row is their record.
      */
     @Transactional
-    public void delete(UUID trainingId, boolean following, UUID viewerId, boolean viewerIsAdmin) {
+    public void delete(UUID trainingId, boolean following, boolean onlyThis, UUID viewerId, boolean viewerIsAdmin) {
         PersonalTraining training = access.requireTraining(trainingId, viewerId, viewerIsAdmin);
         requireOwnEntry(training, viewerIsAdmin);
         UUID seriesId = training.getSeriesId();
-        if (!following || seriesId == null) {
-            deleteAndAnnounce(training, viewerIsAdmin);
-            return;
-        }
-        for (PersonalTraining occurrence : repository.findSeriesFrom(seriesId, training.getDate())) {
+        List<PersonalTraining> occurrences = !following || seriesId == null
+                ? List.of(training)
+                : repository.findSeriesFrom(seriesId, training.getDate());
+        for (PersonalTraining occurrence : occurrences) {
             boolean chosen = occurrence.getId().equals(training.getId());
             if (!chosen && occurrence.getCompletedAt() != null) {
                 continue;
             }
             // The series id cannot cross to another client (copies never carry it), but the guard is
             // cheap and keeps "one person's plan" true by construction rather than by that argument.
-            if (occurrence.getAthlete().getId().equals(training.getAthlete().getId())) {
-                requireOwnEntry(occurrence, viewerIsAdmin);
-                deleteAndAnnounce(occurrence, viewerIsAdmin);
+            if (!occurrence.getAthlete().getId().equals(training.getAthlete().getId())) {
+                continue;
             }
+            requireOwnEntry(occurrence, viewerIsAdmin);
+            if (!onlyThis) {
+                for (PersonalTraining partner : partnersOf(occurrence, viewerIsAdmin)) {
+                    if (partner.getCompletedAt() == null) {
+                        deleteAndAnnounce(partner, viewerIsAdmin);
+                    }
+                }
+            }
+            deleteAndAnnounce(occurrence, viewerIsAdmin);
         }
     }
 
@@ -259,11 +334,27 @@ public class PersonalTrainingService {
         PersonalTraining source = access.requireTraining(trainingId, viewerId, viewerIsAdmin);
         requireOwnEntry(source, viewerIsAdmin);
         int offset = request.offsetDays() == null ? DEFAULT_DUPLICATE_OFFSET_DAYS : request.offsetDays();
-        PersonalTraining copy = repository.saveAndFlush(
-                copyOf(source, source.getAthlete(), source.getDate().plusDays(offset), viewerIsAdmin));
-        attachments.copyBetweenTrainings(source.getId(), copy);
-        changes.added(copy, viewerIsAdmin);
+        LocalDate date = source.getDate().plusDays(offset);
+        List<PersonalTraining> partners = partnersOf(source, viewerIsAdmin);
+        // "The same again next week" for a pair means the pair again: a new session, so a new group.
+        UUID groupId = partners.isEmpty() ? null : UUID.randomUUID();
+        PersonalTraining copy = duplicateOne(source, date, groupId, viewerIsAdmin);
+        for (PersonalTraining partner : partners) {
+            duplicateOne(partner, date, groupId, viewerIsAdmin);
+        }
         return single(copy);
+    }
+
+    private PersonalTraining duplicateOne(PersonalTraining source, LocalDate date, @Nullable UUID groupId,
+                                          boolean viewerIsAdmin) {
+        PersonalTraining copy = copyOf(source, source.getAthlete(), date, viewerIsAdmin);
+        if (groupId != null) {
+            copy.joinGroup(groupId);
+        }
+        PersonalTraining saved = repository.saveAndFlush(copy);
+        attachments.copyBetweenTrainings(source.getId(), saved);
+        changes.added(saved, viewerIsAdmin);
+        return saved;
     }
 
     /**
@@ -296,15 +387,24 @@ public class PersonalTrainingService {
             return single(saved);
         }
 
-        TrainingChangeDigest.Slot before = TrainingChangeRecorder.slotOf(source);
-        source.edit(request.targetDate(), source.getStartTime(), source.getEndTime(),
-                source.getTitle(), source.getDescription(), source.getTargetCalories(), viewerIsAdmin);
-        requireCompletedStaysInPast(source);
-        PersonalTraining moved = save(source);
+        // A session moved in one calendar moves for everyone in it — same rule as an edit.
+        PersonalTraining moved = moveTo(source, request.targetDate(), viewerIsAdmin);
+        for (PersonalTraining partner : partnersOf(source, viewerIsAdmin)) {
+            moveTo(partner, request.targetDate(), viewerIsAdmin);
+        }
+        return single(moved);
+    }
+
+    private PersonalTraining moveTo(PersonalTraining training, LocalDate date, boolean viewerIsAdmin) {
+        TrainingChangeDigest.Slot before = TrainingChangeRecorder.slotOf(training);
+        training.edit(date, training.getStartTime(), training.getEndTime(),
+                training.getTitle(), training.getDescription(), training.getTargetCalories(), viewerIsAdmin);
+        requireCompletedStaysInPast(training);
+        PersonalTraining moved = save(training);
         if (!moved.getDate().equals(before.date())) {
             changes.changed(moved, before, viewerIsAdmin);
         }
-        return single(moved);
+        return moved;
     }
 
     /**
@@ -447,7 +547,8 @@ public class PersonalTrainingService {
         return toResponse(training, LocalDateTime.now(), false,
                 (int) commentRepository.countByTrainingId(training.getId()),
                 attachments.forTrainings(List.of(training.getId()))
-                        .getOrDefault(training.getId(), List.of()));
+                        .getOrDefault(training.getId(), List.of()),
+                partnerNames(List.of(training)).getOrDefault(training.getId(), List.of()));
     }
 
     /**
@@ -553,15 +654,49 @@ public class PersonalTrainingService {
 
 
 
+    /**
+     * The other participants' first names per training, in one query for the page. A first name is all
+     * a partner is shown — the pair trains together and knows each other; the rest of a row is private.
+     */
+    private Map<UUID, List<String>> partnerNames(List<PersonalTraining> trainings) {
+        Set<UUID> groupIds = new java.util.HashSet<>();
+        for (PersonalTraining t : trainings) {
+            if (t.getGroupId() != null) {
+                groupIds.add(t.getGroupId());
+            }
+        }
+        if (groupIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, List<Object[]>> members = new HashMap<>();
+        for (Object[] row : repository.findGroupMembers(groupIds)) {
+            members.computeIfAbsent((UUID) row[0], k -> new java.util.ArrayList<>()).add(row);
+        }
+        Map<UUID, List<String>> names = new HashMap<>();
+        for (PersonalTraining t : trainings) {
+            UUID groupId = t.getGroupId();
+            if (groupId == null) {
+                continue;
+            }
+            UUID self = t.getAthlete().getId();
+            names.put(t.getId(), members.getOrDefault(groupId, List.of()).stream()
+                    .filter(row -> !self.equals(row[1]))
+                    .map(row -> (String) row[2])
+                    .sorted(java.text.Collator.getInstance(java.util.Locale.of("pl")))
+                    .toList());
+        }
+        return names;
+    }
+
     static PersonalTrainingResponse toResponse(PersonalTraining t, LocalDateTime now,
                                                boolean unread, int commentCount,
-                                               List<AttachmentResponse> materials) {
+                                               List<AttachmentResponse> materials, List<String> partners) {
         return new PersonalTrainingResponse(
                 t.getId(), t.getKind(), t.getDate(), t.getStartTime(), t.getEndTime(),
                 t.getTitle(), t.getDescription(), t.getTargetCalories(), t.status(now),
                 t.getCompletedAt(), t.getFeedback(), t.getRpe(),
                 t.isCreatedByAdmin(), t.isLastModifiedByAdmin(),
-                unread, commentCount, materials, t.getSeriesId(),
+                unread, commentCount, materials, t.getSeriesId(), t.getGroupId(), partners,
                 t.getVersion(), t.getCreatedAt(), t.getUpdatedAt());
     }
 

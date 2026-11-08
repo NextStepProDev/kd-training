@@ -70,6 +70,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 
 **Kalendarz 1:1 → [`DECISIONS-TRAINING.md`](DECISIONS-TRAINING.md)**
 - Zadanie i trening to **dwa wiersze** (`kind`), nigdy jedno pole na wspólnym wierszu.
+- Trening wspólny to **wiersz na osobę** z jednym `group_id`; partner widzi wyłącznie imię. Nowa akcja trenera na treningu musi zdecydować, czy idzie na całą sesję (`partnersOf`), czy na jeden wiersz.
 - Wpis trenera jest dla podopiecznego **tylko do odczytu**; klucz to `created_by_admin`, nigdy `last_modified_by_admin`.
 - Wklejenie trafia do `targetAthleteId` — kalendarza otwartego na ekranie, nie do właściciela źródła.
 - `attachments`: `null` = nie ruszaj · `[]` = wyczyść · lista = zamień. Zapis podopiecznego to pole **ignoruje**, nie odrzuca.
@@ -135,7 +136,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V7 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta, V7 kolejka maili o zmianach w planie; jeszcze nigdzie niewdrożone). Kolejna migracja: V8.**
+**Obecny stan: V8 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta, V7 kolejka maili o zmianach w planie, V8 treningi wspólne; jeszcze nigdzie niewdrożone). Kolejna migracja: V9.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).

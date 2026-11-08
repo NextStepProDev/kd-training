@@ -30,6 +30,7 @@ interface DaySheetProps {
     note?: string
     task: string
     calories: string
+    group: string
     empty: string
     dayOff: string
   }
@@ -74,6 +75,7 @@ export function DaySheet({
             commentsLabel={labels.comments}
             taskLabel={labels.task}
             caloriesLabel={labels.calories}
+            groupLabel={labels.group}
           />
         ))}
 

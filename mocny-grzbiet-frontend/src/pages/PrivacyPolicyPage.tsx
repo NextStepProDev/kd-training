@@ -148,6 +148,12 @@ export function PrivacyPolicyPage() {
               dla innych podopiecznych.
             </p>
             <p className="text-surface-500 text-sm mt-3 leading-relaxed">
+              Wyjątek jest jeden: przy <span className="text-surface-300 font-medium">treningu wspólnym</span>{' '}
+              (kilka osób na tych samych zajęciach) pozostali uczestnicy widzą przy tym treningu Twoje imię,
+              a Ty — ich. Nic więcej: wykonanie, ocena wysiłku, komentarze i zdjęcia każdej osoby pozostają
+              widoczne tylko dla niej i trenera.
+            </p>
+            <p className="text-surface-500 text-sm mt-3 leading-relaxed">
               Podanie tych danych jest <span className="text-surface-300 font-medium">całkowicie dobrowolne</span>,
               a odmowa nie wpływa na możliwość udziału w treningach. Zanim po raz pierwszy otworzysz plan
               treningowy, prosimy o osobną, wyraźną zgodę na przetwarzanie danych dotyczących zdrowia —

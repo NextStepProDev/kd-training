@@ -175,6 +175,15 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
     },
   })
 
+  // Fetched only while the form is open, and only where the adapter offers it (the coach). A list that
+  // fails to load leaves the form without the picker rather than without a form.
+  const partnerCandidates = useQuery({
+    queryKey: ['admin', 'training-partners', adapter.athleteId],
+    queryFn: () => adapter.partnerCandidates!(),
+    enabled: adapter.partnerCandidates != null && formDate != null && editing == null,
+    staleTime: SHORT_STALE_MS,
+  })
+
   const submitForm = async (body: CreateTrainingBody) => {
     if (editing) {
       await adapter.updateTraining(editing.id, { ...body, version: editing.version })
@@ -323,6 +332,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
                   note: t('notes.marker'),
                   task: t('form.kind.TASK'),
                   calories: t('form.calories'),
+                  group: t('group.label'),
                   weekendFree: t('day.weekendFree'),
                   dayOff: t('dayOff.label'),
                 }}
@@ -365,6 +375,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
             note: t('notes.marker'),
             task: t('form.kind.TASK'),
             calories: t('form.calories'),
+            group: t('group.label'),
             empty: t('day.empty'),
             dayOff: t('dayOff.label'),
           }}
@@ -381,6 +392,7 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
           onConflictRefresh={() => { refresh(); setFormDate(null); setEditing(null) }}
           canAttach={adapter.role === 'coach'}
           canRepeat={adapter.role === 'coach'}
+          partnerOptions={partnerCandidates.data}
         />
       )}
 
@@ -391,7 +403,10 @@ export function TrainingCalendar({ adapter }: { adapter: TrainingCalendarAdapter
           onClose={() => setSelected(null)}
           adapter={adapter}
           onEdit={tr => { setSelected(null); setEditing(tr); setFormDate(tr.date) }}
-          onDelete={async (tr, following) => { await adapter.deleteTraining(tr.id, following); refresh() }}
+          onDelete={async (tr, following, onlyThis) => {
+            await adapter.deleteTraining(tr.id, following, onlyThis)
+            refresh()
+          }}
           onDuplicate={async tr => { await adapter.duplicateTraining(tr.id); refresh() }}
           onComplete={adapter.completeTraining
             ? async (tr, rpe, feedback) => {

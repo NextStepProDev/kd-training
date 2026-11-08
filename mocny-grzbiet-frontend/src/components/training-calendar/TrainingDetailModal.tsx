@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
-import { CopyPlus, Pencil, Trash2 } from 'lucide-react'
+import { CopyPlus, Pencil, Trash2, Users } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
@@ -25,8 +25,11 @@ interface TrainingDetailModalProps {
   adapter: TrainingCalendarAdapter
   onClose: () => void
   onEdit: (training: PersonalTraining) => void
-  /** `following`: also the later occurrences of the entry's weekly series. */
-  onDelete: (training: PersonalTraining, following: boolean) => Promise<unknown>
+  /**
+   * `following`: also the later occurrences of the entry's weekly series. `onlyThis`: a group session
+   * loses only this client.
+   */
+  onDelete: (training: PersonalTraining, following: boolean, onlyThis: boolean) => Promise<unknown>
   onDuplicate: (training: PersonalTraining) => Promise<unknown>
   /**
    * Absent for the coach — ticking off is the client's act alone, so no form renders. `rpe` is null
@@ -50,6 +53,8 @@ export function TrainingDetailModal({
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteFollowing, setDeleteFollowing] = useState(false)
+  const [deleteOnlyThis, setDeleteOnlyThis] = useState(false)
+  const partners = training.partners ?? []
 
   const isTask = training.kind === 'TASK'
   // What the coach assigned is the client's to do and comment on, not to rewrite, repeat elsewhere
@@ -95,6 +100,13 @@ export function TrainingDetailModal({
               {training.createdByAdmin ? t('detail.fromCoach') : t('detail.fromAthlete')}
             </span>
           </div>
+
+          {partners.length > 0 && (
+            <p className="flex items-center gap-2 text-sm text-surface-200">
+              <Users aria-hidden="true" className="h-4 w-4 shrink-0 text-surface-400" />
+              {t('group.with', { names: partners.join(', ') })}
+            </p>
+          )}
 
           {training.targetCalories != null && (
             <p className="text-sm text-surface-200">
@@ -211,7 +223,7 @@ export function TrainingDetailModal({
       <ConfirmDialog
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        onConfirm={() => run(() => onDelete(training, deleteFollowing), 'footer', true)}
+        onConfirm={() => run(() => onDelete(training, deleteFollowing, deleteOnlyThis), 'footer', true)}
         title={t(isTask ? 'detail.deleteTaskTitle' : 'detail.deleteTitle')}
         message={t('detail.deleteMessage', { title: training.title })}
         confirmLabel={t('detail.delete')}
@@ -224,6 +236,15 @@ export function TrainingDetailModal({
             <input type="checkbox" checked={deleteFollowing}
               onChange={e => setDeleteFollowing(e.target.checked)} className="h-4 w-4 accent-primary-500" />
             {t('detail.deleteFollowing')}
+          </label>
+        )}
+        {/* Unticked, the session is cancelled for everyone — the common case when the coach cannot
+            make it. Ticked, only this person drops out and the others still train. */}
+        {partners.length > 0 && (
+          <label className="flex items-center gap-2 text-sm text-surface-300">
+            <input type="checkbox" checked={deleteOnlyThis}
+              onChange={e => setDeleteOnlyThis(e.target.checked)} className="h-4 w-4 accent-primary-500" />
+            {t('group.deleteOnlyThis', { names: partners.join(', ') })}
           </label>
         )}
       </ConfirmDialog>

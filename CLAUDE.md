@@ -12,11 +12,14 @@ grupowe z rozliczeniami, waga). Szczegóły i lista do zrobienia: sekcja „Fork
 Komentarze w kodzie i w dokumentach mówiące „sibling app” / „bliźniaczy projekt” albo podające
 pomiary z produkcji odnoszą się do Fire Academy i NSP — to wiedza odziedziczona, nie zmierzona tutaj.
 
-**Domena:** `mocnygrzbiet.pl` — zaproponowana klientowi 07.11.2026, **jeszcze niekupiona i niepotwierdzona**;
-wpisana w nginx, `.env.example`, `robots.txt`, `prerender.mjs`, `AppConfig`. Deploy czyta domenę ze zmiennej repozytorium `SITE_URL`.
-**Firma / administrator danych:** do uzupełnienia (polityka prywatności, eksport RODO).
-**Mail kontaktowy:** zaślepka `kontakt@mocnygrzbiet.pl` (skrzynka nie istnieje) — `mocny-grzbiet-frontend/src/config/site.ts`
-(+ `withdrawNote` w `locales/pl/calendar.json`, `email.*` w `messages.properties`).
+**Domena:** `mocnygrzbiet.pl` — kupiona przez Kacpra 08.11.2026 (SEOHOST, na osobę prywatną; DNS jeszcze tam,
+Cloudflare później); wpisana w nginx, `.env.example`, `robots.txt`, `prerender.mjs`, `AppConfig`. Deploy czyta domenę ze zmiennej repozytorium `SITE_URL`.
+**Firma / administrator danych:** Kacper Dąbrowski - Trener Personalny, ul. Jana Matejki 15, 47-220 Kędzierzyn-Koźle,
+NIP 7492112807 (08.11.2026). **Kontakt:** `mocny.grzbiet@gmail.com`, 730-348-440 — to też konto admina (`ADMIN_EMAIL`).
+Na froncie jedno źródło: `BUSINESS`, `CONTACT_EMAIL`, `CONTACT_PHONE` w `mocny-grzbiet-frontend/src/config/site.ts`
+(tłumaczenia dostają adres przez `{{email}}` — literał w `locales/` wywala `site.test.ts`); backend ma osobną kopię
+w `AdminUserDataExportService.readme()`.
+**Treści od Kacpra wchodzą dosłownie** (Mateusz, 08.11.2026) — to jego tekst i jego odpowiedzialność, nie redagujemy.
 **Wersja:** odczytywana z pliku `VERSION` via `@version@` placeholder w `application.yml`
 
 ---
@@ -159,14 +162,14 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Ścieżka | Komponent | Opis |
 |---------|-----------|------|
-| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening. „O mnie” to tekst Kacpra dosłownie, usługi zbudowane z niego; zdjęcia klienta w `public/images/`. Adres, telefon i prawdziwy mail jeszcze nie |
+| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening (mail, telefon, adres). „O mnie” to tekst Kacpra dosłownie, usługi zbudowane z niego; zdjęcia klienta w `public/images/` |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę. Rejestracja **tylko z linku w zaproszeniu** (`?token=`): bez niego sama informacja, adres konta z zaproszenia (pole tylko do odczytu) |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
 | `/moje-konto/plan-treningowy` | MyTrainingCalendarPage | strefa podopiecznego: zgoda art. 9 → cele, kalendarz, wiadomości, statystyki |
 | `/settings` | SettingsPage | avatar, dane, hasło, zgoda marketingowa, usunięcie konta |
-| `/polityka-prywatnosci` | PrivacyPolicyPage | polityka — **wersja robocza** (dane administratora do uzupełnienia) |
-| `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy i weryfikacja prawna do zrobienia); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
+| `/polityka-prywatnosci` | PrivacyPolicyPage | polityka prywatności z danymi administratora |
+| `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy są, zasady współpracy od Kacpra do wpisania); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
 | `/wypisz-sie` | MarketingUnsubscribePage | rezygnacja z marketingu z linku w mailu |
 | `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (zaproszenia, profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
 | `/reset-password` · `/forgot-password` · `/oauth-callback` | — | przepływy konta (osobnego potwierdzania maila nie ma: konto z zaproszenia albo z Google jest od razu zweryfikowane) |
@@ -314,18 +317,12 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 - Smoke test w Deploy czyta domenę ze zmiennej `SITE_URL`, nie z literału.
 
 ### Przed pierwszym wdrożeniem (otwarte)
-1. Domena → jeśli Kacper wybierze inną niż `mocnygrzbiet.pl`, podmienić ją (nginx `server_name` i przekierowania, `robots.txt`,
-   `prerender.mjs`, `.env.example`, `AppConfig`, `application*.yml`, JWT `issuer`,
-   `Canonical` w `public/.well-known/security.txt`).
-2. Dane administratora → polityka prywatności (sekcja 1), `AdminUserDataExportService.readme()`,
-   zgody marketingowe (`auth.json`, `settings.json`); adres kontaktowy → `config/site.ts`,
-   `calendar.json` (`withdrawNote`).
-3. Treść wizytówki: tekst, zdjęcia, logo i ikony są (07.11.2026). Brakuje: miasta do adresu (Matejki 15),
-   telefonu, maila kontaktowego, certyfikatu. Słowo „pacjent” w tekście Kacpra zostaje, dopóki nie potwierdzi
-   uprawnień (pytanie w mailu z 07.11.2026).
+1. Domena kupiona (`mocnygrzbiet.pl`); DNS przepinamy na Cloudflare razem z serwerem.
+2. Dane administratora i kontakt — wpisane (08.11.2026).
+3. Treść wizytówki: tekst, zdjęcia, logo, ikony i kontakt są. Brakuje skanów certyfikatów (Kacper przyśle).
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
    `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
-   `TermsPage.tsx` to szkic do podmiany po danych usługodawcy i weryfikacji prawnej.
+   `TermsPage.tsx` to szkic (dane usługodawcy już są) do podmiany po zasadach współpracy od Kacpra.
 5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/mocny-grzbiet`, a skoro
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse
    proxy przed nimi. Rozmiar maszyny decyduje o `mem_limit` (dziś 384m backend jak w Fire — patrz
@@ -335,7 +332,8 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
    `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`, zmiennej `SITE_URL`.
 7. Kopie: `rclone config` z remote'em `mg-crypt` (crypt na własnym folderze Drive),
    `/etc/mocny-grzbiet-backup.env` z `HEALTHCHECK_URL`, wpis w crontab (instrukcja na końcu skryptu).
-8. SMTP: konto pocztowe nadawcy (`MAIL_*` w `.env`), `ADMIN_EMAIL` = adres Kacpra.
+8. SMTP: Gmail `mocny.grzbiet@gmail.com` jako nadawca (`MAIL_*` w `.env`, hasło aplikacji po 2FA);
+   `ADMIN_EMAIL=mocny.grzbiet@gmail.com`.
 
 ### Poprawki z Fire w przyszłości
 Historia jest rozłączna, więc nic nie przyjdzie samo. Po audycie albo incydencie w Fire sprawdzić

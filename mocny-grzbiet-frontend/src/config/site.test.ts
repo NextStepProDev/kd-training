@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { HOME_PHOTOS } from './site'
+import { CONTACT_EMAIL, CONTACT_PHONE, HOME_PHOTOS } from './site'
 import common from '../locales/pl/common.json'
 
 /**
@@ -29,5 +29,38 @@ describe('HOME_PHOTOS', () => {
       expect(alts[i]?.trim(), path).toBeTruthy()
     })
     expect(new Set(alts).size, 'two photos share one description').toBe(alts.length)
+  })
+})
+
+describe('CONTACT_PHONE', () => {
+  it('shouldDialTheSameNumberItShows', () => {
+    // The two strings are typed separately; a fix to one alone would show one number and dial another.
+    const shown = CONTACT_PHONE.display.replace(/\D/g, '')
+    expect(CONTACT_PHONE.href).toBe(`tel:+48${shown}`)
+  })
+})
+
+describe('CONTACT_EMAIL', () => {
+  // Translations get the address through {{email}}. The guard looks for ANY address, not for the
+  // current one: after a change of mailbox a forgotten copy is the OLD address, which no longer
+  // equals CONTACT_EMAIL. The only address allowed is the example in the e-mail inputs.
+  const locales = import.meta.glob('/src/locales/pl/*.json', { eager: true, import: 'default' })
+  const EMAIL = /[\w.%+-]+@[\w-]+\.[\w.]+/g
+  const INPUT_PLACEHOLDER = 'twoj@email.com'
+
+  it('shouldSeeTheLocaleFiles', () => {
+    expect(Object.keys(locales).length).toBeGreaterThan(0)
+  })
+
+  it('shouldRecognizeARealAddress', () => {
+    // A pattern that matches nothing would let every translation through.
+    expect(CONTACT_EMAIL.match(EMAIL)).toEqual([CONTACT_EMAIL])
+  })
+
+  it('shouldNotHaveAnAddressTypedIntoTranslations', () => {
+    for (const [path, json] of Object.entries(locales)) {
+      const found = (JSON.stringify(json).match(EMAIL) ?? []).filter((a) => a !== INPUT_PLACEHOLDER)
+      expect(found, path).toEqual([])
+    }
   })
 })

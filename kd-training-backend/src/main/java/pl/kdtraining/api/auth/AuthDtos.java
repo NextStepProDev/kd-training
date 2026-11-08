@@ -31,7 +31,6 @@ public final class AuthDtos {
     // proxy access log (nginx, Cloudflare). The reset-password request always carried it here.
     public record TokenRequest(@NotBlank(message = "{validation.token.required}") String token) {}
     public record ResetPasswordRequest(@NotBlank(message = "{validation.token.required}") String token, @NotBlank(message = "{validation.password.required}") @Size(min = 10, max = 100, message = "{validation.password.size}") String newPassword) {}
-    public record ResendVerificationRequest(@NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email) {}
     public record MessageResponse(String message) {}
     public record InvitationDetailsResponse(String email) {}
 }

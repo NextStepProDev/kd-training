@@ -11,10 +11,8 @@ import { LoadingSpinner } from './components/ui/LoadingSpinner'
 
 const LoginPage = lazyWithReload(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })))
 const RegisterPage = lazyWithReload(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })))
-const VerifyEmailPage = lazyWithReload(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })))
 const ForgotPasswordPage = lazyWithReload(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })))
 const ResetPasswordPage = lazyWithReload(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
-const ResendVerificationPage = lazyWithReload(() => import('./pages/ResendVerificationPage').then(m => ({ default: m.ResendVerificationPage })))
 const OAuthCallbackPage = lazyWithReload(() => import('./pages/OAuthCallbackPage').then(m => ({ default: m.OAuthCallbackPage })))
 const SettingsPage = lazyWithReload(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const ProfileCompletionPage = lazyWithReload(() => import('./pages/ProfileCompletionPage').then(m => ({ default: m.ProfileCompletionPage })))
@@ -43,10 +41,8 @@ export default function App() {
             <Route path="polityka-prywatnosci" element={<PrivacyPolicyPage />} />
             <Route path="regulamin" element={<TermsPage />} />
             <Route path="wypisz-sie" element={<MarketingUnsubscribePage />} />
-            <Route path="verify-email" element={<VerifyEmailPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="resend-verification" element={<ResendVerificationPage />} />
             <Route path="oauth-callback" element={<OAuthCallbackPage />} />
             <Route path="logowanie" element={<LoginPage />} />
             <Route path="rejestracja" element={<RegisterPage />} />

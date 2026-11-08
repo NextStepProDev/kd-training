@@ -191,7 +191,7 @@ export function PrivacyPolicyPage() {
               basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy (założenie konta i dostęp do niego). Korzystanie z tej metody jest dobrowolne: konto można założyć również adresem e-mail i hasłem, a zakres danych jest wtedy taki sam."
             />
             <LegalBasis
-              purpose="Weryfikacja adresu e-mail i odzyskiwanie hasła"
+              purpose="Zaproszenie do założenia konta i odzyskiwanie hasła"
               basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy"
             />
             <LegalBasis
@@ -349,7 +349,7 @@ export function PrivacyPolicyPage() {
               odtworzeniu serwisu po awarii i nie są przeszukiwane w żadnym innym celu.
             </p>
             <p>
-              <span className="text-surface-200 font-medium">Tokeny bezpieczeństwa</span> (weryfikacja e-mail: 15 min,
+              <span className="text-surface-200 font-medium">Tokeny bezpieczeństwa</span> (zaproszenie: 7 dni,
               reset hasła: 1h, sesja: 7 dni) — usuwane automatycznie po wygaśnięciu przez wbudowany mechanizm czyszczenia.
             </p>
           </div>
@@ -379,7 +379,7 @@ export function PrivacyPolicyPage() {
             />
             <InfoItem
               title="Zewnętrzny serwer poczty e-mail (SMTP)"
-              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (weryfikacja konta, reset hasła, powiadomienia o koncie i o wiadomościach od trenera), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
+              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (zaproszenie do założenia konta, reset hasła, powiadomienia o koncie i o wiadomościach od trenera), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
             />
             <InfoItem
               title={notYet('Google LLC (logowanie przez konto Google)')}

@@ -36,18 +36,6 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @PostMapping("/verify-email")
-    @Operation(summary = "Verify email address", description = "Verifies the email using token from verification email")
-    public ResponseEntity<MessageResponse> verifyEmail(@Valid @RequestBody TokenRequest request) {
-        return ResponseEntity.ok(authService.verifyEmail(request.token()));
-    }
-
-    @PostMapping("/resend-verification")
-    @Operation(summary = "Resend verification email", description = "Sends another verification email if account exists")
-    public ResponseEntity<MessageResponse> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
-        return ResponseEntity.ok(authService.resendVerification(request));
-    }
-
     @PostMapping("/forgot-password")
     @Operation(summary = "Request password reset", description = "Sends password reset email if account exists")
     public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {

@@ -99,7 +99,6 @@ class AuthServiceTest {
         verify(invitationService).consume(invitation);
         verify(authMailService).sendWelcomeEmail(saved);
         verify(authMailService).sendNewUserAdminNotification(saved);
-        verify(authMailService, never()).sendVerificationEmail(any(User.class), anyString());
     }
 
     @Test
@@ -407,90 +406,6 @@ class AuthServiceTest {
 
     // --- Verify Email ---
 
-    @Test
-    void shouldVerifyEmailSuccessfully() {
-        AuthToken authToken = new AuthToken(existingUser, "hash", TokenType.EMAIL_VERIFICATION, Instant.now().plusSeconds(600));
-        existingUser.setEmailVerified(false);
-
-        when(jwtService.hashToken("raw-token")).thenReturn("hash");
-        when(authTokenRepository.findValidToken(eq("hash"), eq(TokenType.EMAIL_VERIFICATION), any())).thenReturn(Optional.of(authToken));
-        when(msg.get("auth.verify.success")).thenReturn("Zweryfikowano");
-
-        MessageResponse result = authService.verifyEmail("raw-token");
-
-        assertEquals("Zweryfikowano", result.message());
-        assertTrue(existingUser.isEmailVerified());
-        assertTrue(authToken.isUsed());
-        verify(authMailService).sendWelcomeEmail(existingUser);
-        verify(authMailService).sendNewUserAdminNotification(existingUser);
-    }
-
-    @Test
-    void shouldThrowWhenVerificationTokenInvalid() {
-        when(jwtService.hashToken("bad-token")).thenReturn("bad-hash");
-        when(authTokenRepository.findValidToken(eq("bad-hash"), eq(TokenType.EMAIL_VERIFICATION), any())).thenReturn(Optional.empty());
-        when(msg.get("auth.verify.invalid")).thenReturn("Token nieprawidłowy");
-
-        var ex = assertThrows(IllegalArgumentException.class, () -> authService.verifyEmail("bad-token"));
-        assertEquals("Token nieprawidłowy", ex.getMessage());
-    }
-
-    // --- Resend Verification ---
-
-    @Test
-    void shouldResendVerificationEmail() {
-        existingUser.setEmailVerified(false);
-        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(authTokenRepository.hasRecentUnusedToken(eq(existingUser.getId()), eq(TokenType.EMAIL_VERIFICATION), any())).thenReturn(false);
-        when(jwtService.generateSecureToken()).thenReturn("token");
-        when(jwtService.hashToken("token")).thenReturn("hash");
-        when(msg.get("auth.resend.success")).thenReturn("Wysłano");
-
-        MessageResponse result = authService.resendVerification(new ResendVerificationRequest("test@example.com"));
-
-        assertEquals("Wysłano", result.message());
-        verify(authMailService).sendVerificationEmail(existingUser, "token");
-    }
-
-    @Test
-    void shouldReturnSuccessForNonExistentEmailOnResend() {
-        when(userRepository.findByEmailIgnoreCase("none@example.com")).thenReturn(Optional.empty());
-        when(msg.get("auth.resend.success")).thenReturn("Wysłano");
-
-        MessageResponse result = authService.resendVerification(new ResendVerificationRequest("none@example.com"));
-
-        assertEquals("Wysłano", result.message());
-        verify(authMailService, never()).sendVerificationEmail(any(), any());
-    }
-
-    @Test
-    void shouldReturnGenericSuccessWhenAlreadyVerified() {
-        // Uniform message (anti-enumeration) — we do not reveal that the account is already verified,
-        // and we do not send a mail.
-        existingUser.setEmailVerified(true);
-        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(msg.get("auth.resend.success")).thenReturn("Wysłano");
-
-        MessageResponse result = authService.resendVerification(new ResendVerificationRequest("test@example.com"));
-
-        assertEquals("Wysłano", result.message());
-        verify(authMailService, never()).sendVerificationEmail(any(), any());
-    }
-
-    @Test
-    void shouldReturnGenericSuccessWhenResendCooldownActive() {
-        // The cooldown no longer throws — it returns the same success, just without sending a mail.
-        existingUser.setEmailVerified(false);
-        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(authTokenRepository.hasRecentUnusedToken(eq(existingUser.getId()), eq(TokenType.EMAIL_VERIFICATION), any())).thenReturn(true);
-        when(msg.get("auth.resend.success")).thenReturn("Wysłano");
-
-        MessageResponse result = authService.resendVerification(new ResendVerificationRequest("test@example.com"));
-
-        assertEquals("Wysłano", result.message());
-        verify(authMailService, never()).sendVerificationEmail(any(), any());
-    }
-
     // --- Forgot Password ---
 
     @Test
@@ -552,13 +467,11 @@ class AuthServiceTest {
      */
     @Test
     void shouldStopMailingAnAddressOnceItsHourlyQuotaIsSpent() {
-        existingUser.setEmailVerified(false);
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.of(existingUser));
         when(authTokenRepository.hasRecentUnusedToken(eq(existingUser.getId()), any(), any())).thenReturn(false);
         when(jwtService.generateSecureToken()).thenReturn("reset-token");
         when(jwtService.hashToken("reset-token")).thenReturn("reset-hash");
         when(msg.get("auth.forgot.success")).thenReturn("Wysłano reset");
-        when(msg.get("auth.resend.success")).thenReturn("Wysłano");
 
         // Given: three reset requests for the same address use up the allowance
         for (int i = 0; i < 3; i++) {
@@ -566,16 +479,13 @@ class AuthServiceTest {
         }
         verify(authMailService, times(3)).sendPasswordResetEmail(eq(existingUser), anyString());
 
-        // When: a fourth request arrives, and the flooder switches flow and capitalisation
-        MessageResponse fourth = authService.forgotPassword(new ForgotPasswordRequest("test@example.com"));
-        MessageResponse resend = authService.resendVerification(new ResendVerificationRequest("TEST@Example.com "));
+        // When: a fourth request arrives, with the capitalisation changed to look like a new address
+        MessageResponse fourth = authService.forgotPassword(new ForgotPasswordRequest("TEST@Example.com "));
 
         // Then: no further mail leaves — and the caller is told exactly what it was told the first time,
         // because a "you have had enough" answer would reveal that the account exists
         verify(authMailService, times(3)).sendPasswordResetEmail(any(), anyString());
-        verify(authMailService, never()).sendVerificationEmail(any(), anyString());
         assertEquals("Wysłano reset", fourth.message());
-        assertEquals("Wysłano", resend.message());
     }
 
     @Test

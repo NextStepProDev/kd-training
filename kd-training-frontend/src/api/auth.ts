@@ -88,15 +88,6 @@ export function loginUser(data: LoginRequest): Promise<AuthTokensResponse> {
   return authFetch('/login', data)
 }
 
-export function verifyEmail(token: string): Promise<MessageResponse> {
-  // In the body, never the URL: a query string lands in every proxy's access log.
-  return authFetch('/verify-email', { token })
-}
-
-export function resendVerification(email: string): Promise<MessageResponse> {
-  return authFetch('/resend-verification', { email })
-}
-
 export function forgotPassword(email: string): Promise<MessageResponse> {
   return authFetch('/forgot-password', { email })
 }

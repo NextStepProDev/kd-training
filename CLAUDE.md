@@ -143,7 +143,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Prefiks | Dostęp | Co tam jest |
 |---------|--------|-------------|
-| `/api/auth` | brak | rejestracja (tylko z zaproszenia), odczyt zaproszenia, logowanie, weryfikacja maila, reset hasła, refresh |
+| `/api/auth` | brak | rejestracja (tylko z zaproszenia), odczyt zaproszenia, logowanie, reset hasła, refresh |
 | `/api/user` | zalogowany | profil, zgody (w tym art. 9), avatar, wylogowanie wszędzie, usunięcie konta |
 | `/api/user/my-training` | podopieczny (`is_athlete` + zgoda art. 9) | kalendarz 1:1, cele, materiały z pytaniami, statystyki, komentarze, zdjęcia |
 | `/api/admin` | ROLE_ADMIN | zaproszenia, użytkownicy (lista, profil, role, eksport RODO, usunięcie), podopieczni, plan 1:1, cele, materiały, biblioteka filmów, szablony, notatki |
@@ -168,7 +168,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy i weryfikacja prawna do zrobienia); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
 | `/wypisz-sie` | MarketingUnsubscribePage | rezygnacja z marketingu z linku w mailu |
 | `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (zaproszenia, profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
-| `/verify-email` · `/reset-password` · `/forgot-password` · `/resend-verification` · `/oauth-callback` | — | przepływy konta |
+| `/reset-password` · `/forgot-password` · `/oauth-callback` | — | przepływy konta (osobnego potwierdzania maila nie ma: konto z zaproszenia albo z Google jest od razu zweryfikowane) |
 
 Nawigacja: Strona główna · (Moje konto — zalogowany) · (Panel admina — admin) · (Zaloguj się — gość).
 Marka (`Brand.tsx`): okrągłe logo klienta (`public/logo.svg`) + napis „Mocny Grzbiet” — napis w logo jest
@@ -208,7 +208,7 @@ cd kd-training-backend && ./gradlew bootRun
 cd kd-training-frontend && npm run dev
 ```
 
-Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (weryfikacja konta, reset hasła) — profil `dev` kieruje SMTP na `localhost:1027` bez logowania i TLS (do 01.11.2026 tego nie robił i maile szły na domyślny `smtp.gmail.com`; pilnuje `DevProfileMailConfigTest`).
+Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (zaproszenia, reset hasła) — profil `dev` kieruje SMTP na `localhost:1027` bez logowania i TLS (do 01.11.2026 tego nie robił i maile szły na domyślny `smtp.gmail.com`; pilnuje `DevProfileMailConfigTest`).
 
 Profil `dev` przy każdym starcie **czyści bazę i odtwarza ją z migracji** (`FlywayConfig`), a
 `DevDataSeeder` zakłada konta z hasłem `dev`: admini z `ADMIN_EMAIL` oraz `jan@dev.pl`, `anna@dev.pl`

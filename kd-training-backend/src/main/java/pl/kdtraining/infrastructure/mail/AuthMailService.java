@@ -24,33 +24,6 @@ public class AuthMailService {
         this.siteUrl = appConfig.getSiteUrl();
     }
 
-    @Async("mailExecutor")
-    public void sendVerificationEmail(User user, String token) {
-        String lang = user.getPreferredLanguage();
-        String verificationUrl = siteUrl + "/verify-email?token=" + token;
-        String subject = msg.getForLang("email.verification.subject", lang);
-        String safeFirstName = HtmlUtils.htmlEscape(user.getFirstName());
-
-        String content = """
-                        <h1 style="color: #ffffff; font-size: 20px;">%s</h1>
-                        <p style="font-size: 16px; line-height: 1.6;">%s</p>
-                        <div style="text-align: center; margin: 28px 0;">
-                            <a href="%s" style="display: inline-block; background-color: #ffffff; color: #141414; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">%s</a>
-                        </div>
-                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
-                        <p style="font-size: 14px; color: #b0b0b0;">%s</p>
-            """.formatted(
-                msg.getForLang("email.verification.greeting", lang, safeFirstName),
-                msg.getForLang("email.verification.body", lang),
-                verificationUrl,
-                msg.getForLang("email.verification.button", lang),
-                msg.getForLang("email.verification.expiry", lang),
-                msg.getForLang("email.verification.ignore", lang)
-        );
-
-        mail.send(user.getEmail(), subject, brandedTemplate(content));
-    }
-
     /**
      * The only way into an account: the link opens the registration form with this address filled in.
      * Sent to someone who has no account yet, so there is no first name to greet and no preferred

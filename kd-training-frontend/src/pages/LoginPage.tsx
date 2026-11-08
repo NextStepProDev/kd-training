@@ -97,11 +97,6 @@ export function LoginPage() {
               {t('login.forgotPassword')}
             </Link>
           </p>
-          <p className="text-surface-400">
-            <Link to="/resend-verification" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-              {t('login.resendVerification')}
-            </Link>
-          </p>
         </div>
       </div>
     </div>

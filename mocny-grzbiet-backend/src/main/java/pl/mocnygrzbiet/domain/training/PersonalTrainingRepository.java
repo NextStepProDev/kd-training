@@ -101,4 +101,17 @@ public interface PersonalTrainingRepository extends JpaRepository<PersonalTraini
         ORDER BY t.date
         """)
     List<PersonalTraining> findSeriesFrom(@Param("seriesId") UUID seriesId, @Param("from") LocalDate from);
+
+    /** Every participant's row of one session, this one included. */
+    List<PersonalTraining> findByGroupId(UUID groupId);
+
+    /**
+     * Who takes part in these sessions: {@code [groupId, athleteId, firstName]} per row. A first name
+     * and nothing else — that is all a partner is shown.
+     */
+    @Query("""
+        SELECT t.groupId, a.id, a.firstName FROM PersonalTraining t JOIN t.athlete a
+        WHERE t.groupId IN :groupIds
+        """)
+    List<Object[]> findGroupMembers(@Param("groupIds") java.util.Collection<UUID> groupIds);
 }

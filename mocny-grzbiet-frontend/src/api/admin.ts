@@ -86,8 +86,14 @@ export const adminApi = {
     fetchApi<DayOff>('/admin/personal-trainings/days-off', { method: 'POST', body: JSON.stringify(body) }),
   deleteDayOff: (id: string) =>
     fetchApi<void>(`/admin/personal-trainings/days-off/${id}`, { method: 'DELETE' }),
-  deletePersonalTraining: (id: string, following = false) =>
-    fetchApi<void>(`/admin/personal-trainings/${id}${following ? '?following=true' : ''}`, { method: 'DELETE' }),
+  /** `onlyThis`: a group session loses only this client; without it the session goes for everyone. */
+  deletePersonalTraining: (id: string, following = false, onlyThis = false) => {
+    const params = new URLSearchParams()
+    if (following) params.set('following', 'true')
+    if (onlyThis) params.set('onlyThis', 'true')
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return fetchApi<void>(`/admin/personal-trainings/${id}${query}`, { method: 'DELETE' })
+  },
   duplicatePersonalTraining: (id: string, offsetDays?: number) =>
     fetchApi<PersonalTraining>(`/admin/personal-trainings/${id}/duplicate`, {
       method: 'POST', body: JSON.stringify({ offsetDays }),

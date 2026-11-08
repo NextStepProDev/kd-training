@@ -70,7 +70,7 @@ public class MyTrainingController {
     @DeleteMapping("/trainings/{id}")
     public ResponseEntity<Void> delete(@CurrentUserId UUID userId, @PathVariable UUID id) {
         // No "following": a series is the coach's, and the client cannot delete the coach's entries.
-        service.delete(id, false, userId, false);
+        service.delete(id, false, false, userId, false);
         return ResponseEntity.noContent().build();
     }
 

@@ -120,7 +120,7 @@ describe('Weekly series — deleting', () => {
     const buttons = screen.getAllByRole('button', { name: 'detail.delete' })
     await user.click(buttons[buttons.length - 1])
 
-    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(training, true))
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(training, true, false))
   })
 
   it('shouldDeleteOnlyThisOneByDefault', async () => {
@@ -131,7 +131,7 @@ describe('Weekly series — deleting', () => {
     const buttons = screen.getAllByRole('button', { name: 'detail.delete' })
     await user.click(buttons[buttons.length - 1])
 
-    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(training, false))
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(training, false, false))
   })
 
   it('shouldNotOfferTheFollowingOnesForAOneOff', async () => {

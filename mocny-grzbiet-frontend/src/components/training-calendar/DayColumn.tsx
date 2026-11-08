@@ -25,7 +25,7 @@ interface DayColumnProps {
   canReshape?: (training: PersonalTraining) => boolean
   labels: {
     add: string; copy: string; cut: string; pasteHere: string
-    unread: string; comments: string; task: string; calories: string
+    unread: string; comments: string; task: string; calories: string; group: string
     /** Shown on an empty Sat/Sun. Never on a day that carries an entry — see the render below. */
     weekendFree: string
     dayOff: string
@@ -115,6 +115,7 @@ export function DayColumn({
             commentsLabel={labels.comments}
             taskLabel={labels.task}
             caloriesLabel={labels.calories}
+            groupLabel={labels.group}
           />
         ))}
       </div>

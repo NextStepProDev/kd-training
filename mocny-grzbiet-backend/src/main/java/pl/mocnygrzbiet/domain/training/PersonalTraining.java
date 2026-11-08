@@ -88,6 +88,14 @@ public class PersonalTraining {
     @Nullable
     private UUID seriesId;
 
+    /**
+     * Shared by the rows of one session with several clients, one row per person; null for a
+     * one-to-one. Never copied — see V8.
+     */
+    @Column(name = "group_id")
+    @Nullable
+    private UUID groupId;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -286,5 +294,13 @@ public class PersonalTraining {
 
     public void joinSeries(UUID seriesId) {
         this.seriesId = seriesId;
+    }
+
+    public @Nullable UUID getGroupId() {
+        return groupId;
+    }
+
+    public void joinGroup(UUID groupId) {
+        this.groupId = groupId;
     }
 }

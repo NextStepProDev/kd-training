@@ -116,6 +116,10 @@ export interface PersonalTraining {
   updatedAt: string
   /** Set on the occurrences of a weekly series. */
   seriesId?: string | null
+  /** Set when the session has other participants; each has a row of their own. */
+  groupId?: string | null
+  /** The other participants' first names, alphabetically. Empty or absent for a one-to-one. */
+  partners?: string[]
 }
 
 export interface DeletedTrainingNotice {
@@ -189,6 +193,8 @@ export interface CreateTrainingBody {
   attachments?: AttachmentInput[] | null
   /** Coach only, creating only: repeat weekly on the same weekday up to and including this date. */
   repeatWeeklyUntil?: string | null
+  /** Coach only, creating a training only: the other clients in the session. */
+  partnerIds?: string[]
 }
 
 /** No kind: an entry is a training or a task from birth, and the server will not change it. */

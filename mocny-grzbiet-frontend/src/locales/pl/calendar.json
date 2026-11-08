@@ -336,5 +336,13 @@
     "showAll": "Pokaż całość",
     "showLess": "Zwiń",
     "marker": "Jest notatka"
+  },
+  "group": {
+    "label": "Trening wspólny",
+    "pickLabel": "Trening wspólny z",
+    "pickHint": "Każda zaznaczona osoba dostanie ten trening w swoim kalendarzu i zobaczy imiona pozostałych. Komentarze, oceny wysiłku i zdjęcia zostają prywatne.",
+    "with": "Trening wspólny z: {{names}}",
+    "editHint": "To trening wspólny — zmiana obejmie też: {{names}}.",
+    "deleteOnlyThis": "Usuń tylko z tego kalendarza — trening zostaje u: {{names}}"
   }
 }

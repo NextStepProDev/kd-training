@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Check, ClipboardList, Copy, MessageSquare, NotebookPen, Scissors } from 'lucide-react'
+import { Check, ClipboardList, Copy, MessageSquare, NotebookPen, Scissors, Users } from 'lucide-react'
 import type { PersonalTraining } from '../../types'
 
 /**
@@ -54,12 +54,15 @@ interface TrainingTileProps {
   /** Names the clipboard icon on a task; the card itself says what it is by its dashed outline. */
   taskLabel: string
   caloriesLabel: string
+  /** Names the group icon where the partners' names do not fit (a month cell). */
+  groupLabel: string
 }
 
 export function TrainingTile({
   training, compact = false, cut = false, inert = false, onOpen, onCopy, onCut,
-  copyLabel, cutLabel, unreadLabel, commentsLabel, taskLabel, caloriesLabel, hasNote = false, noteLabel,
+  copyLabel, cutLabel, unreadLabel, commentsLabel, taskLabel, caloriesLabel, groupLabel, hasNote = false, noteLabel,
 }: TrainingTileProps) {
+  const partners = training.partners ?? []
   const showClipboard = (onCopy || onCut) && !inert
   const isTask = training.kind === 'TASK'
 
@@ -110,6 +113,11 @@ export function TrainingTile({
           {isTask && (
             <ClipboardList aria-label={taskLabel} className="h-3.5 w-3.5 shrink-0 text-surface-300" />
           )}
+          {/* In a month cell the names do not fit next to the title; the icon says "not alone" and
+              the card opens to say with whom. */}
+          {compact && partners.length > 0 && (
+            <Users aria-label={groupLabel} className="h-3.5 w-3.5 shrink-0 text-surface-300" />
+          )}
           {training.status === 'COMPLETED' && (
             <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white">
               <Check className="h-3 w-3 text-surface-950" strokeWidth={3} />
@@ -126,6 +134,12 @@ export function TrainingTile({
           <span className={clsx('block text-surface-400', compact ? 'text-[11px]' : 'text-xs')}>
             {training.startTime.slice(0, 5)}
             {training.endTime ? `–${training.endTime.slice(0, 5)}` : ''}
+          </span>
+        )}
+        {!compact && partners.length > 0 && (
+          <span className="mt-0.5 flex items-center gap-1 text-xs text-surface-300">
+            <Users aria-hidden="true" className="h-3 w-3 shrink-0" />
+            <span className="truncate">{partners.join(', ')}</span>
           </span>
         )}
         {!compact && (training.rpe != null || training.targetCalories != null || training.commentCount > 0) && (

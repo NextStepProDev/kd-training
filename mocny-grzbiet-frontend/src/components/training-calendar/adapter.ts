@@ -23,8 +23,16 @@ export interface TrainingCalendarAdapter {
   fetchRange: (from: string, to: string) => Promise<CalendarRange>
   createTraining: (body: CreateTrainingBody) => Promise<PersonalTraining>
   updateTraining: (id: string, body: UpdateTrainingBody) => Promise<PersonalTraining>
-  /** `following`: the later occurrences of a weekly series go too. Only the coach has series. */
-  deleteTraining: (id: string, following?: boolean) => Promise<void>
+  /**
+   * `following`: the later occurrences of a weekly series go too. `onlyThis`: a group session loses
+   * only this client, the others keep it. Only the coach has series and groups.
+   */
+  deleteTraining: (id: string, following?: boolean, onlyThis?: boolean) => Promise<void>
+  /**
+   * Who else may join a session in this calendar — the coach's other clients. Absent for the client:
+   * a group training is the coach's to plan.
+   */
+  partnerCandidates?: () => Promise<PartnerCandidate[]>
   duplicateTraining: (id: string, offsetDays?: number) => Promise<PersonalTraining>
   pasteTraining: (sourceId: string, targetDate: string, mode: PasteMode) => Promise<PersonalTraining>
   /**
@@ -62,6 +70,11 @@ export interface TrainingCalendarAdapter {
  * fail. Keyed on `createdByAdmin`, which is fixed at creation — never on `lastModifiedByAdmin`,
  * which flips every time either side ticks something off.
  */
+export interface PartnerCandidate {
+  id: string
+  name: string
+}
+
 export function canReshapeTraining(
   role: TrainingCalendarAdapter['role'],
   training: Pick<PersonalTraining, 'createdByAdmin'>,
@@ -79,7 +92,10 @@ export function coachAdapter(athleteId: string): TrainingCalendarAdapter {
     fetchRange: (from, to) => adminApi.getTrainingCalendar(athleteId, from, to),
     createTraining: (body) => adminApi.createPersonalTraining(athleteId, body),
     updateTraining: (id, body) => adminApi.updatePersonalTraining(id, body),
-    deleteTraining: (id, following) => adminApi.deletePersonalTraining(id, following),
+    deleteTraining: (id, following, onlyThis) => adminApi.deletePersonalTraining(id, following, onlyThis),
+    partnerCandidates: async () => (await adminApi.getAthletes())
+      .filter(a => a.id !== athleteId)
+      .map(a => ({ id: a.id, name: `${a.firstName} ${a.lastName}`.trim() })),
     duplicateTraining: (id, offsetDays) => adminApi.duplicatePersonalTraining(id, offsetDays),
     // The paste lands in the calendar being viewed, which is not necessarily the one the entry was
     // copied from: the clipboard survives a switch of client on purpose.

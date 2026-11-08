@@ -162,7 +162,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 
 | Ścieżka | Komponent | Opis |
 |---------|-----------|------|
-| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening (mail, telefon, adres). „O mnie” to tekst Kacpra dosłownie, usługi zbudowane z niego; zdjęcia klienta w `public/images/` |
+| `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening (mail, telefon, adres). „O mnie” to tekst Kacpra dosłownie (poza „pacjent” → „podopieczny”, na jego prośbę z 08.11.2026), usługi zbudowane z niego; zdjęcia klienta w `public/images/` |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę. Rejestracja **tylko z linku w zaproszeniu** (`?token=`): bez niego sama informacja, adres konta z zaproszenia (pole tylko do odczytu) |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
 | `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |

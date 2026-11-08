@@ -74,6 +74,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Wklejenie trafia do `targetAthleteId` — kalendarza otwartego na ekranie, nie do właściciela źródła.
 - `attachments`: `null` = nie ruszaj · `[]` = wyczyść · lista = zamień. Zapis podopiecznego to pole **ignoruje**, nie odrzuca.
 - Liczniki nieprzeczytanych mają **kilka źródeł** (treningi, komentarze, usunięcia, cele — lista w `TrainingUnreadService`) i dwie krawędzie (`updated_at` + `seen_through`); predykat żyje w sześciu miejscach i zmienia się we wszystkich naraz.
+- Nowa ścieżka, którą trener zapisuje trening, woła `TrainingChangeRecorder` (`added` / `changed` / `cancelled`) — inaczej podopieczny nie dostanie maila o zmianie, a nic nie krzyknie.
 - Klasa ze `@Scheduled` **nie może** deklarować `@Transactional` na innej metodzie — samowywołanie omija proxy i adnotacja milczy. Pilnuje `SchedulerTransactionArchTest`.
 - Poszerzenie zakresu danych zdrowotnych = **nowa zgoda** (wyzerowanie `training_consent_at`), nie dopisek do listy.
 
@@ -134,7 +135,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V5 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta; jeszcze nigdzie niewdrożone). Kolejna migracja: V7.**
+**Obecny stan: V7 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta, V7 kolejka maili o zmianach w planie; jeszcze nigdzie niewdrożone). Kolejna migracja: V8.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).

@@ -356,6 +356,14 @@ decyzja Mateusza z 01.11.2026 — wcześniej telefon startował na tygodniu.
 
 **Sygnał przetrenowania widzi tylko trener.** Pole `overtraining` **nie istnieje** w JSON podopiecznego (nie jest `false`). Strona mówiąca komuś „przetrenowujesz się" zamienia zaczątek rozmowy w wyrok.
 
+**Mail o zmianach w planie: jeden zbiorczy, po 5 minutach ciszy (V7, 08.11.2026).** Odpowiedź klienta: mail, gdy trener doda, zmieni albo odwoła trening; Mateusz wybrał wariant zbiorczy. `TrainingChangeRecorder` dopisuje zmianę do `training_change_notices` **w transakcji zapisu** (wycofany zapis nie zostawia śladu), a `TrainingChangeMailScheduler` co minutę wysyła klientom, u których od 5 minut nic się nie ruszyło (`TrainingChangeMailer.QUIET_PERIOD`).
+- **Jeden wiersz na trening, z PIERWSZĄ zmianą od ostatniego maila;** kolejne tylko przesuwają `last_change_at`. Stan końcowy czyta się z treningu przy wysyłce. Stąd: dodany i od razu usunięty → żadnego maila; dodany i przesunięty → „nowy” o nowej godzinie; zmieniony i usunięty → „odwołany” w terminie, który klient znał.
+- **Nowa ścieżka zapisu treningu przez trenera musi wołać `added` / `changed` / `cancelled`** — dziś: `create` (też seria), `update`, `deleteAndAnnounce`, `duplicate`, `paste` (COPY, MOVE, między podopiecznymi). Zapomniana ścieżka po prostu nikogo nie powiadamia.
+- Poza mailem, świadomie: wpisy podopiecznego, zadania (`TASK`), wszystko, co już minęło (`Slot.isUpcoming`: dziś bez godziny liczy się do końca dnia), sam zapis bez zmiany treści i zmiana samych załączników.
+- **Mail nie zawiera tytułu ani opisu** — tylko daty i godziny (jak mail o odpowiedzi trenera: plan bywa o urazie).
+- Kolejka w bazie, nie w pamięci jak `CoachReplyNotifier`: restart tam kosztuje jeden mail za dużo, tu zgubione odwołanie. Usunięcie planu czyści kolejkę (`forgetAthlete`), a zablokowane konto i zdjęta flaga podopiecznego dostają pustą wysyłkę (kolejka znika bez maila).
+- Wysyłka zakłada blokadę wierszy (`FOR UPDATE`) i jeszcze raz sprawdza ciszę; kasuje **tylko** przeczytane wiersze — zmiana dopisana w tej chwili idzie w następnym mailu.
+
 **Filmy „prywatne" na YouTube się nie osadzają** — osadzają się tylko „niepubliczne" (unlisted). Formularz dodawania pokazuje podgląd od razu po wklejeniu linku właśnie po to, żeby trener zobaczył pusty odtwarzacz od razu, a nie przez podopiecznego tydzień później.
 
 ---

@@ -26,7 +26,8 @@ class UserDataExportCoverageTest extends BaseIntegrationTest {
     /** Tables pointing at users that are ours, not theirs. */
     private static final Map<String, String> INTENTIONALLY_EXCLUDED = Map.of(
         "auth_tokens", "login, refresh and reset tokens — security plumbing, worthless to the person",
-        "training_calendar_reads", "\"seen up to\" timestamp behind the unread dots");
+        "training_calendar_reads", "\"seen up to\" timestamp behind the unread dots",
+        "training_change_notices", "mail queue: dates of trainings the client already sees in the plan, gone within minutes");
 
     @Autowired private JdbcTemplate jdbc;
 

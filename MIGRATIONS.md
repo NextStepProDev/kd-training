@@ -14,6 +14,7 @@
 | V4 | `personal_trainings.series_id`: serie co tydzień (każdy termin to zwykły wiersz; kopie nie dostają `series_id`) |
 | V5 | `coach_days_off`: dni wolne trenera (zakres dat włącznie + notatka widoczna dla wszystkich; bez klucza do `users`) |
 | V6 | `users.blocked_at`: blokada konta po końcu współpracy (null = aktywne; dane zostają) |
+| V7 | `training_change_notices`: kolejka maili o zmianach w planie (jeden wiersz na trening, pierwsza zmiana od ostatniego maila; bez FK do treningu, bo odwołanie przeżywa wiersz) |
 
 ## Jak powstała V1 (26.10.2026)
 

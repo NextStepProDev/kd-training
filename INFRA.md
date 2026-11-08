@@ -118,6 +118,13 @@ pomijany, więc skrypt działa i bez niego.
   - Sprzątanie dotyczy tylko `mocny-grzbiet-backend` i `mocny-grzbiet-frontend`; `postgres` i `alpine` (backup) są poza zasięgiem. Sprzątanie nigdy nie wywala deployu.
   - Odwrotnie `pull` i `up -d`: mają `|| exit 1`. Skrypt SSH nie ma `set -e` (`appleboy/ssh-action` v1.2.5 nie ma `script_stop`), więc krok zwraca wynik **ostatniej** komendy. Nieudany pull zostawiłby stare kontenery, a deploy świeciłby na zielono.
   - Z tego samego powodu „Verify deployment health” najpierw sprawdza, że oba kontenery chodzą na **wdrażanym tagu**. Stary backend też jest `healthy`.
+- **Dependabot — dwa świadome wyjątki we froncie** (08.11.2026):
+  - `overrides.minimatch` w `package.json` (dziś `^11.0.5`). Alert GHSA-g3hv-75wg-m249 obejmuje całą linię 10.x,
+    poprawka jest dopiero w 11.0.1, a `eslint` żąda `minimatch@^10.2.6` — aktualizacja bezpieczeństwa Dependabota
+    padała więc przy każdym przebiegu („would downgrade @eslint/js”). Sprawdzone: lint łapie błędy w `src/`
+    i dalej pomija `dist/`. **Do usunięcia**, gdy `npm view eslint dependencies.minimatch` pokaże `^11`.
+  - `ignore` dla majora `typescript` w `dependabot.yml`: `typescript-eslint` ma peer `typescript <6.1.0`, więc PR
+    z TS 7 nie przechodzi nawet `npm ci` (ERESOLVE). Zdjąć, gdy `npm view typescript-eslint peerDependencies` przyjmie 7.
 
 ### Zmienne środowiskowe (`.env`)
 `POSTGRES_DB/USER/PASSWORD`, `MAIL_HOST/PORT/USERNAME/PASSWORD`, `JWT_SECRET`, `GHCR_OWNER`, `VERSION`, `ADMIN_EMAIL`, `CORS_ORIGINS`, `APP_BASE_URL`, `SITE_URL`

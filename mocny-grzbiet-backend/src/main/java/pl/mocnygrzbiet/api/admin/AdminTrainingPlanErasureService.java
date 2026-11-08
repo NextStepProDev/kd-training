@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.mocnygrzbiet.api.NotFoundException;
 import pl.mocnygrzbiet.api.admin.note.AdminPrivateNoteService;
 import pl.mocnygrzbiet.api.trainingcalendar.TrainingPhotoService;
+import pl.mocnygrzbiet.api.trainingcalendar.TrainingChangeRecorder;
 import pl.mocnygrzbiet.domain.training.AthleteGoalRepository;
 import pl.mocnygrzbiet.domain.training.AthleteMaterialRepository;
 import pl.mocnygrzbiet.domain.training.PersonalTrainingRepository;
@@ -45,6 +46,7 @@ public class AdminTrainingPlanErasureService {
     private final TrainingDeletionRepository deletions;
     private final TrainingPhotoService photos;
     private final AdminPrivateNoteService notes;
+    private final TrainingChangeRecorder changes;
     private final MessageService msg;
 
     public AdminTrainingPlanErasureService(UserRepository userRepository,
@@ -55,6 +57,7 @@ public class AdminTrainingPlanErasureService {
                                            TrainingDeletionRepository deletions,
                                            TrainingPhotoService photos,
                                            AdminPrivateNoteService notes,
+                                           TrainingChangeRecorder changes,
                                            MessageService msg) {
         this.userRepository = userRepository;
         this.trainings = trainings;
@@ -64,6 +67,7 @@ public class AdminTrainingPlanErasureService {
         this.deletions = deletions;
         this.photos = photos;
         this.notes = notes;
+        this.changes = changes;
         this.msg = msg;
     }
 
@@ -90,6 +94,7 @@ public class AdminTrainingPlanErasureService {
         int erasedMaterials = materials.deleteAllForAthlete(userId);
         deletions.deleteAllForAthlete(userId);
         reads.deleteAllForAthlete(userId);
+        changes.forgetAthlete(userId);
 
         // The flag and the consent go together, and the consent must not survive the data it covered:
         // re-enabling the plan later has to start from a fresh, deliberate agreement.

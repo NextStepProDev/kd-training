@@ -12,6 +12,7 @@ import pl.mocnygrzbiet.domain.training.*;
 import pl.mocnygrzbiet.domain.user.User;
 import pl.mocnygrzbiet.domain.user.UserRepository;
 import pl.mocnygrzbiet.infrastructure.i18n.MessageService;
+import pl.mocnygrzbiet.infrastructure.mail.TrainingChangeDigest;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -59,6 +60,7 @@ public class PersonalTrainingService {
     private final MessageService msg;
     private final CoachReplyNotifier replyNotifier;
     private final CoachDayOffService daysOff;
+    private final TrainingChangeRecorder changes;
 
     public PersonalTrainingService(PersonalTrainingRepository repository,
                                    TrainingCommentRepository commentRepository,
@@ -70,8 +72,10 @@ public class PersonalTrainingService {
                                    UserRepository userRepository,
                                    MessageService msg,
                                    CoachReplyNotifier replyNotifier,
-                                   CoachDayOffService daysOff) {
+                                   CoachDayOffService daysOff,
+                                   TrainingChangeRecorder changes) {
         this.daysOff = daysOff;
+        this.changes = changes;
         this.repository = repository;
         this.commentRepository = commentRepository;
         this.deletionRepository = deletionRepository;
@@ -145,6 +149,7 @@ public class PersonalTrainingService {
         }
         PersonalTraining saved = repository.saveAndFlush(training);
         attachments.applyToTraining(saved, materialsFrom(request.attachments(), byAdmin));
+        changes.added(saved, byAdmin);
         return saved;
     }
 
@@ -185,6 +190,8 @@ public class PersonalTrainingService {
         requireCurrentVersion(training, request.version());
         validateTimes(request.startTime(), request.endTime());
 
+        TrainingChangeDigest.Slot before = TrainingChangeRecorder.slotOf(training);
+        Content contentBefore = Content.of(training);
         training.edit(request.date(), request.startTime(), request.endTime(),
                 request.title().trim(), Strings.trimToNull(request.description()),
                 request.targetCalories(), viewerIsAdmin);
@@ -192,6 +199,10 @@ public class PersonalTrainingService {
         PersonalTraining saved = save(training);
         // null here means "leave materials alone" — see AttachmentService for why that matters.
         attachments.applyToTraining(saved, materialsFrom(request.attachments(), viewerIsAdmin));
+        // A save with nothing changed (the form submitted as it was) is not news.
+        if (!Content.of(saved).equals(contentBefore)) {
+            changes.changed(saved, before, viewerIsAdmin);
+        }
         return single(saved);
     }
 
@@ -232,6 +243,9 @@ public class PersonalTrainingService {
         if (training.getDate().isAfter(LocalDate.now())) {
             deletionRepository.save(new TrainingDeletion(training, viewerIsAdmin));
         }
+        // The mail has its own, wider notion of "ahead": today's evening session cancelled at noon is
+        // exactly the one the client must hear about.
+        changes.cancelled(training, viewerIsAdmin);
         // Before the row goes: the comments cascade away in the database, so once delete() has run
         // nothing can find the photo files they pointed at. This class has no JPA cascade to hook.
         photos.purgeForTraining(training.getId());
@@ -248,6 +262,7 @@ public class PersonalTrainingService {
         PersonalTraining copy = repository.saveAndFlush(
                 copyOf(source, source.getAthlete(), source.getDate().plusDays(offset), viewerIsAdmin));
         attachments.copyBetweenTrainings(source.getId(), copy);
+        changes.added(copy, viewerIsAdmin);
         return single(copy);
     }
 
@@ -273,6 +288,7 @@ public class PersonalTrainingService {
             PersonalTraining copy = copyOf(source, target, request.targetDate(), viewerIsAdmin);
             PersonalTraining saved = repository.saveAndFlush(copy);
             attachments.copyBetweenTrainings(source.getId(), saved);
+            changes.added(saved, viewerIsAdmin);
             // A COPY leaves the original where it is, here as anywhere else; only a cut clears it.
             if (acrossAthletes && request.mode() == PasteMode.MOVE) {
                 deleteAndAnnounce(source, viewerIsAdmin);
@@ -280,10 +296,15 @@ public class PersonalTrainingService {
             return single(saved);
         }
 
+        TrainingChangeDigest.Slot before = TrainingChangeRecorder.slotOf(source);
         source.edit(request.targetDate(), source.getStartTime(), source.getEndTime(),
                 source.getTitle(), source.getDescription(), source.getTargetCalories(), viewerIsAdmin);
         requireCompletedStaysInPast(source);
-        return single(save(source));
+        PersonalTraining moved = save(source);
+        if (!moved.getDate().equals(before.date())) {
+            changes.changed(moved, before, viewerIsAdmin);
+        }
+        return single(moved);
     }
 
     /**
@@ -542,5 +563,13 @@ public class PersonalTrainingService {
                 t.isCreatedByAdmin(), t.isLastModifiedByAdmin(),
                 unread, commentCount, materials, t.getSeriesId(),
                 t.getVersion(), t.getCreatedAt(), t.getUpdatedAt());
+    }
+
+    /** What the client sees of an entry; a change to any of it is worth a mail. */
+    private record Content(LocalDate date, @Nullable LocalTime start, @Nullable LocalTime end,
+                           String title, @Nullable String description) {
+        static Content of(PersonalTraining t) {
+            return new Content(t.getDate(), t.getStartTime(), t.getEndTime(), t.getTitle(), t.getDescription());
+        }
     }
 }

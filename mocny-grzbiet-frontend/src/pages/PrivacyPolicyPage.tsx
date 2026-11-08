@@ -5,7 +5,7 @@ import { GOOGLE_LOGIN_ENABLED } from '../config/features'
 import { BUSINESS, CONTACT_EMAIL, CONTACT_PHONE } from '../config/site'
 import { PageHeader } from '../components/ui/PageHeader'
 
-const LAST_UPDATED = '8 listopada 2026'
+const LAST_UPDATED = '9 listopada 2026'
 
 /**
  * Google sign-in is described here in full while it is still switched off, so that the day it goes
@@ -392,7 +392,7 @@ export function PrivacyPolicyPage() {
             />
             <InfoItem
               title="Zewnętrzny serwer poczty e-mail (SMTP)"
-              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (zaproszenie do założenia konta, reset hasła, powiadomienia o koncie i o wiadomościach od trenera), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
+              description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (zaproszenie do założenia konta, reset hasła, powiadomienia o koncie, o wiadomościach od trenera i o zmianach w planie treningowym), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
             />
             <InfoItem
               title={notYet('Google LLC (logowanie przez konto Google)')}

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import { Seo } from '../components/seo/Seo'
 import { useAuth } from '../context/AuthContext'
-import { CONTACT_EMAIL, HOME_PHOTOS, HOME_WORK_SLOTS } from '../config/site'
+import { BUSINESS, CONTACT_EMAIL, CONTACT_PHONE, HOME_PHOTOS, HOME_WORK_SLOTS } from '../config/site'
 import { PhotoSlot } from '../components/ui/PhotoSlot'
 import { SectionTitle } from '../components/ui/SectionTitle'
 import { buttonClass } from '../components/ui/buttonClass'
@@ -151,10 +151,18 @@ export function HomePage() {
           <p className="kicker">{t('home.cta.kicker')}</p>
           <h2 className="mt-4 text-display text-[clamp(2.75rem,10vw,7rem)] text-white">{t('home.cta.title')}</h2>
           <p className="mx-auto mt-6 max-w-md text-lg text-surface-400">{t('home.cta.body')}</p>
-          <a href={`mailto:${CONTACT_EMAIL}`} className={`mt-10 ${buttonClass('primary', 'lg')}`}>
-            {CONTACT_EMAIL}
-            <ArrowUpRight className="h-5 w-5" />
-          </a>
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a href={`mailto:${CONTACT_EMAIL}`} className={buttonClass('primary', 'lg')}>
+              {CONTACT_EMAIL}
+              <ArrowUpRight className="h-5 w-5" />
+            </a>
+            <a href={CONTACT_PHONE.href} className={buttonClass('secondary', 'lg')}>
+              {CONTACT_PHONE.display}
+            </a>
+          </div>
+          <address className="mt-8 not-italic text-surface-400">
+            {BUSINESS.street}, {BUSINESS.city}
+          </address>
         </div>
       </section>
     </>

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowUpRight } from 'lucide-react'
-import { CONTACT_EMAIL } from '../../config/site'
+import { BUSINESS, CONTACT_EMAIL, CONTACT_PHONE } from '../../config/site'
 import { ShareButton } from '../ui/ShareButton'
 import { Brand } from './Brand'
 
@@ -31,6 +31,15 @@ export function Footer() {
               <span className="border-b border-white/20 group-hover:border-white transition-colors">{CONTACT_EMAIL}</span>
               <ArrowUpRight className="w-4 h-4 text-surface-500 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white" />
             </a>
+            <p className="mt-3">
+              <a href={CONTACT_PHONE.href} className="text-base text-surface-100 underline decoration-white/20 underline-offset-4 hover:text-white hover:decoration-white transition-colors">
+                {CONTACT_PHONE.display}
+              </a>
+            </p>
+            <address className="mt-3 not-italic text-sm text-surface-400 leading-relaxed">
+              {BUSINESS.street}<br />
+              {BUSINESS.city}
+            </address>
           </div>
         </div>
 

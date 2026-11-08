@@ -2,10 +2,10 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Seo } from '../components/seo/Seo'
 import { GOOGLE_LOGIN_ENABLED } from '../config/features'
-import { CONTACT_EMAIL } from '../config/site'
+import { BUSINESS, CONTACT_EMAIL, CONTACT_PHONE } from '../config/site'
 import { PageHeader } from '../components/ui/PageHeader'
 
-const LAST_UPDATED = '26 października 2026'
+const LAST_UPDATED = '8 listopada 2026'
 
 /**
  * Google sign-in is described here in full while it is still switched off, so that the day it goes
@@ -68,12 +68,19 @@ export function PrivacyPolicyPage() {
             Administratorem Twoich danych osobowych jest:
           </p>
           <div className="mt-4 bg-surface-800/50 rounded-xl p-4 space-y-1 text-surface-300 text-sm">
-            {/* Placeholder until the client sends the company details (name, address, NIP). */}
-            <p className="font-semibold text-surface-200">[Dane administratora — do uzupełnienia]</p>
+            <p className="font-semibold text-surface-200">{BUSINESS.name}</p>
+            <p>{BUSINESS.street}, {BUSINESS.city}</p>
+            <p>NIP: {BUSINESS.nip}</p>
             <p>
               E-mail:{' '}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors">
                 {CONTACT_EMAIL}
+              </a>
+            </p>
+            <p>
+              Telefon:{' '}
+              <a href={CONTACT_PHONE.href} className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white transition-colors">
+                {CONTACT_PHONE.display}
               </a>
             </p>
           </div>

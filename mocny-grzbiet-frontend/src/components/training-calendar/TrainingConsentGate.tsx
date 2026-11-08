@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { authApi } from '../../api/client'
+import { CONTACT_EMAIL } from '../../config/site'
 
 // Same one-liner the auth pages use — the repo has no shared error helper.
 const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err))
@@ -125,7 +126,7 @@ export function TrainingConsentGate({ onAccepted }: Props) {
         </Button>
 
         <p className="mt-5 border-t border-surface-800 pt-4 text-center text-xs leading-relaxed text-surface-500">
-          {t('consent.withdrawNote')}
+          {t('consent.withdrawNote', { email: CONTACT_EMAIL })}
         </p>
       </div>
     </div>

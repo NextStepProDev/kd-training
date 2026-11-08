@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Seo } from '../components/seo/Seo'
-import { CONTACT_EMAIL } from '../config/site'
+import { BUSINESS, CONTACT_EMAIL } from '../config/site'
 import { PageHeader } from '../components/ui/PageHeader'
 
-const LAST_UPDATED = '31 października 2026'
+const LAST_UPDATED = '8 listopada 2026'
 
 /**
  * Terms of service. A working draft: the mechanics around it (acceptance at registration and on the
@@ -27,7 +27,7 @@ export function TermsPage() {
       <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14 space-y-6">
 
         <div className="bg-surface-900 border border-surface-700 rounded-2xl p-6 sm:p-8">
-          {/* Placeholder until the client's details and a legal review are in. */}
+          {/* Placeholder until the client sends his rules of cooperation. */}
           <p className="font-semibold text-surface-200">[Wersja robocza — treść do weryfikacji]</p>
           <p className="text-surface-500 text-sm mt-4">
             Ostatnia aktualizacja: {LAST_UPDATED}
@@ -37,7 +37,7 @@ export function TermsPage() {
         <Section title="§1. Postanowienia ogólne">
           <Paragraphs items={[
             'Regulamin określa zasady korzystania z serwisu internetowego Mocny Grzbiet (dalej: „Serwis”), w tym rodzaje i zakres usług świadczonych drogą elektroniczną, warunki ich świadczenia oraz tryb postępowania reklamacyjnego.',
-            'Usługodawcą jest: [Dane usługodawcy — do uzupełnienia].',
+            `Usługodawcą jest ${BUSINESS.name}, ${BUSINESS.street}, ${BUSINESS.city}, NIP ${BUSINESS.nip}.`,
           ]} />
           <p className="text-surface-400 text-sm mt-3 leading-relaxed">
             Kontakt z Usługodawcą:{' '}

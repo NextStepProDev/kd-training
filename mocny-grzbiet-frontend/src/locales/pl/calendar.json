@@ -320,7 +320,7 @@
     "readPolicy": "Przeczytaj politykę prywatności (sekcja o planie treningowym)",
     "checkbox": "Zapoznałem/-am się z <1>polityką prywatności</1> i wyrażam zgodę na przetwarzanie moich danych treningowych, w tym limitów kalorii, ocen wysiłku oraz zdjęć, które sam/-a dołączę do komentarzy, w celu prowadzenia mojego planu treningowego.",
     "accept": "Akceptuję i przechodzę do planu",
-    "withdrawNote": "Zgodę możesz wycofać w każdej chwili, pisząc na kontakt@mocnygrzbiet.pl — usuniemy wtedy dane kaloryczne, oceny wysiłku i dołączone zdjęcia. Pojedyncze zdjęcie możesz też usunąć samodzielnie, w dowolnym momencie. Bez zgody plan treningowy pozostaje zamknięty, reszta konta działa normalnie."
+    "withdrawNote": "Zgodę możesz wycofać w każdej chwili, pisząc na {{email}} — usuniemy wtedy dane kaloryczne, oceny wysiłku i dołączone zdjęcia. Pojedyncze zdjęcie możesz też usunąć samodzielnie, w dowolnym momencie. Bez zgody plan treningowy pozostaje zamknięty, reszta konta działa normalnie."
   },
   "notes": {
     "title": "Prywatna notatka",

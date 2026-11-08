@@ -276,8 +276,9 @@ public class AdminUserDataExportService {
             zdjecia/   — zdjęcie profilowe i zdjęcia dodane do komentarzy treningowych
 
             Data przygotowania: %s
-            Administrator danych: [DANE FIRMY — DO UZUPEŁNIENIA PRZED STARTEM]
-            Kontakt: kontakt@mocnygrzbiet.pl
+            Administrator danych: Kacper Dąbrowski - Trener Personalny,
+            ul. Jana Matejki 15, 47-220 Kędzierzyn-Koźle, NIP 7492112807
+            Kontakt: mocny.grzbiet@gmail.com, tel. 730-348-440
             """.formatted(LocalDate.now());
     }
 

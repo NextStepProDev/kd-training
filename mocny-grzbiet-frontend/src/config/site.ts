@@ -1,8 +1,20 @@
 /**
- * Contact details shown on the site. One place, so the footer, the home page and the privacy
- * policy cannot drift apart. Placeholder until the client confirms the real address.
+ * Contact details shown on the site. One place, so the footer, the home page, the privacy policy and
+ * the terms cannot drift apart. Translations take the address as {{email}} (site.test.ts rejects a literal);
+ * the backend keeps its own copy in AdminUserDataExportService.readme().
  */
-export const CONTACT_EMAIL = 'kontakt@mocnygrzbiet.pl'
+export const CONTACT_EMAIL = 'mocny.grzbiet@gmail.com'
+
+/** As the client wrote it; `href` is the same number in international form for `tel:`. */
+export const CONTACT_PHONE = { display: '730-348-440', href: 'tel:+48730348440' }
+
+/** The client's sole proprietorship: data controller (privacy policy) and service provider (terms). */
+export const BUSINESS = {
+  name: 'Kacper Dąbrowski - Trener Personalny',
+  nip: '7492112807',
+  street: 'ul. Jana Matejki 15',
+  city: '47-220 Kędzierzyn-Koźle',
+}
 
 /**
  * Photos for the home page, under public/images/: the client's own, resized and stripped of camera

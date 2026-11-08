@@ -122,7 +122,8 @@ public class AdminUserService {
                 user.hasMarketingConsent(),
                 user.isAthlete(),
                 user.getPreferredLanguage(), user.getPasswordHash() != null,
-                user.getOauthProvider() != null, avatarUrl, user.getBlockedAt(), user.getCreatedAt());
+                user.getOauthProvider() != null, avatarUrl, user.getBlockedAt(), user.getScheduledDeletionAt(),
+                user.getCreatedAt());
     }
 
     @Transactional(readOnly = true)

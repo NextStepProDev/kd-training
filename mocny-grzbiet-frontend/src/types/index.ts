@@ -66,6 +66,8 @@ export interface AdminUserDetail {
   oauthLinked: boolean
   avatarUrl: string | null
   blockedAt: string | null
+  /** A blocked account is deleted with all its data at this moment (a year after blocking). */
+  scheduledDeletionAt: string | null
   createdAt: string
 }
 

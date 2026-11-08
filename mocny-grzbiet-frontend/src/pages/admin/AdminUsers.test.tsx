@@ -148,7 +148,7 @@ describe('AdminUsers', () => {
     const adminApi = await renderPage([regular])
     vi.mocked(adminApi.getUser).mockResolvedValue({
       ...regular, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false,
-      avatarUrl: null, blockedAt: null,
+      avatarUrl: null, blockedAt: null, scheduledDeletionAt: null,
     })
     await screen.findByText('Jan Kowalski')
 

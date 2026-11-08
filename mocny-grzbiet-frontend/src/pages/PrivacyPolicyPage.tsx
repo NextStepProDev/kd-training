@@ -345,8 +345,10 @@ export function PrivacyPolicyPage() {
             <p>
               <span className="text-surface-200 font-medium">Zablokowane konto</span> — po zakończeniu współpracy
               trener może zablokować konto zamiast je usuwać. Nie da się wtedy zalogować, a dane czekają na wypadek
-              powrotu. Skoro nie możesz się zalogować, o usunięcie zablokowanego konta i wszystkich danych poproś,
-              pisząc na adres kontaktowy — usuniemy je bez zbędnej zwłoki.
+              powrotu, <span className="text-surface-300 font-medium">najdłużej rok</span> — po roku od zablokowania
+              konto i wszystkie dane usuwają się automatycznie. Odblokowanie konta liczy ten rok od nowa. Skoro nie
+              możesz się zalogować, o wcześniejsze usunięcie zablokowanego konta i wszystkich danych poproś, pisząc
+              na adres kontaktowy — usuniemy je bez zbędnej zwłoki.
             </p>
             <p>
               <span className="text-surface-200 font-medium">Dane z planu treningowego 1:1</span> (plan, wykonania,

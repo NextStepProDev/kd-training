@@ -16,7 +16,11 @@ const tMap: Record<string, string> = {
 }
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => tMap[key] ?? key }),
+  // A deletion date is the one variable a test here needs to see in the text, so only it is appended.
+  useTranslation: () => ({
+    t: (key: string, vars?: Record<string, unknown>) =>
+      (tMap[key] ?? key) + (vars?.deleteDate ? ` [${vars.deleteDate}]` : ''),
+  }),
 }))
 
 vi.mock('../../api/admin', () => ({
@@ -36,7 +40,7 @@ vi.mock('../../context/ToastContext', () => ({
 const baseUser: AdminUserDetailType = {
   id: 'u1', email: 'jan@test.com', firstName: 'Jan', lastName: 'Kowalski', phone: '123456789',
   role: 'USER', isAdmin: false, superAdmin: false, emailVerified: true,
-  marketingConsent: false, isAthlete: false, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false, avatarUrl: null, blockedAt: null,
+  marketingConsent: false, isAthlete: false, preferredLanguage: 'pl', hasPassword: true, oauthLinked: false, avatarUrl: null, blockedAt: null, scheduledDeletionAt: null,
   createdAt: '2026-01-01T00:00:00Z',
 }
 
@@ -127,6 +131,12 @@ describe('AdminUserDetail', () => {
     await user.click(await screen.findByRole('button', { name: 'Odblokuj konto' }))
 
     await waitFor(() => expect(api.unblockUser).toHaveBeenCalledWith('u1'))
+  })
+
+  it('tells when a blocked account will be deleted', async () => {
+    await renderDetail({ blockedAt: '2026-11-08T10:00:00Z', scheduledDeletionAt: '2027-11-08T10:00:00Z' })
+
+    expect(await screen.findByText(/\[8\.11\.2027\]/)).toBeInTheDocument()
   })
 
   it('offers no block for an admin', async () => {

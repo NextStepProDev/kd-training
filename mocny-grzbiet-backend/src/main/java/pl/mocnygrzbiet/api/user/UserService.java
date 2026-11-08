@@ -159,6 +159,28 @@ public class UserService {
         return abandoned.size();
     }
 
+    /**
+     * Deletes the accounts blocked for longer than {@link User#BLOCKED_ACCOUNT_RETENTION}, with all
+     * their data — the same erasure as deleting an account by hand. The end of a cooperation blocks
+     * the account so a client who comes back finds their plan; a year later nobody is coming back,
+     * and GDPR leaves no basis to keep health data on the chance. Invoked by a scheduler.
+     * <p>
+     * An admin is never caught: blocking refuses admins, and promoting a blocked account later must
+     * not turn this into a way to delete an administrator.
+     *
+     * @return the ids of the deleted accounts, for the log (never their e-mails)
+     */
+    @Transactional
+    public List<UUID> purgeLongBlockedAccounts(Instant now) {
+        List<User> expired = userRepository.findByBlockedAtBefore(now.minus(User.BLOCKED_ACCOUNT_RETENTION))
+                .stream()
+                .filter(u -> !u.isAdmin())
+                .toList();
+        List<UUID> ids = expired.stream().map(User::getId).toList();
+        expired.forEach(this::eraseAndDeleteAccount);
+        return ids;
+    }
+
     // The shared "tail" of account deletion: deleting comment photos, the avatar, tokens, the account
     // itself, and eviction from the JWT filter cache. Call within a transaction, after permission checks.
     private void eraseAndDeleteAccount(User user) {

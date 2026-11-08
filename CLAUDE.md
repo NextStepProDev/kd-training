@@ -54,7 +54,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - Nowy kontroler = własna reguła w `RULES` albo świadomy wpis w allowliście `INTENTIONALLY_GENERIC`.
 - **Sesję kończy wyłącznie 401/403 od serwera.** 429, timeout ani błąd sieci — nigdy. Nierozpoznany błąd znaczy „nie wiem", a nie „wyloguj".
 - Hasło sprawdzane **przed** zgłoszeniem blokady konta (anty-enumeracja). Nie odwracać kolejności. Dotyczy obu blokad: czasowej po nieudanych logowaniach i trenerskiej (`blocked_at`).
-- **Zablokowane konto (`blocked_at`) nie ma żadnej drogi do środka**: logowanie, odświeżenie sesji, Google, link do resetu hasła (nie jest wysyłany, a otwarte linki giną przy blokadzie) i filtr JWT (sesja pada na następnym żądaniu). Nowa ścieżka wejścia = sprawdzenie `isBlocked()`.
+- **Zablokowane konto (`blocked_at`) nie ma żadnej drogi do środka**: logowanie, odświeżenie sesji, Google, link do resetu hasła (nie jest wysyłany, a otwarte linki giną przy blokadzie) i filtr JWT (sesja pada na następnym żądaniu). Nowa ścieżka wejścia = sprawdzenie `isBlocked()`. Po roku (`User.BLOCKED_ACCOUNT_RETENTION`) konto usuwa się samo.
 - **Konto powstaje wyłącznie z zaproszenia** (`invitations`, V2). Każda nowa ścieżka zakładania konta (dziś: link z maila, Google) musi zużyć zaproszenie na ten adres — inaczej staje się obejściem. Pierwszy admin dostaje zaproszenie przy starcie produkcji (`AdminInvitationBootstrap`).
 - Google OAuth jest **wyłączone** flagą `GOOGLE_LOGIN_ENABLED`. Kolejność włączania: klucze → profil `oauth2` → flaga. Dopóki flaga stoi na `false`, markery „w przygotowaniu" w polityce prywatności **muszą** zostać.
 

@@ -26,8 +26,12 @@
   blokada kasuje wszystkie tokeny osoby i czyści cache filtra, więc otwarta sesja pada na **następnym** żądaniu,
   nie po 15 minutach. Admina nie da się zablokować (najpierw degradacja), siebie też nie — panel nie może
   zamknąć ostatniej osoby, która umie to cofnąć. Dane zostają; zablokowany znika z listy podopiecznych
-  i z maili zbiorczych do wszystkich. Automatyczne kasowanie po czasie czeka na decyzję klienta (pytanie
-  o „rok” z 07.11.2026); do tego czasu usuwa się ręcznie, a polityka prywatności mówi, jak o to poprosić.
+  i z maili zbiorczych do wszystkich. **Po roku konto usuwa się samo** (klient: „pasuje rok? tak”, 08.11.2026):
+  `BlockedAccountRetentionScheduler` co noc woła `UserService.purgeLongBlockedAccounts`, tą samą ścieżką co
+  ręczne usunięcie (zdjęcia z dysku, avatar, tokeny, kaskada w bazie). Okres to `User.BLOCKED_ACCOUNT_RETENTION`
+  — jedno źródło: panel trenera pokazuje datę z `scheduledDeletionAt` z serwera, nie liczy jej sam.
+  Odblokowanie liczy rok od nowa (`blocked_at` znika, kolejna blokada to nowa data). Admin nigdy nie podpada,
+  nawet gdyby ktoś awansował zablokowane konto. Wcześniej — na prośbę, ręcznie; polityka prywatności mówi jedno i drugie.
 - Account lockout: 5 nieudanych prób → 15 min blokady. ⚠️ **Hasło jest sprawdzane PRZED zgłoszeniem
   blokady i to jest cały sens tej kolejności.** Odwrotnie logowanie było jedynym miejscem w aplikacji,
   które odpowiada na pytanie „czy ten adres ma konto”: pięć złych strzałów i szóste żądanie zwracało

@@ -135,7 +135,7 @@ public class AuthService {
         // Privacy policy consent is required (@AssertTrue validation) — we record the acceptance moment (GDPR).
         user.setPrivacyAcceptedAt(Instant.now());
         // Same for the terms of service (@AssertTrue) — the moment is the proof of acceptance.
-        user.setTermsAcceptedAt(Instant.now());
+        user.acceptCurrentTerms(Instant.now());
         // Marketing consent is voluntary (opt-in) — the field is optional (may be absent) → null is treated as no consent.
         if (Boolean.TRUE.equals(request.acceptedMarketing())) {
             user.setMarketingConsentAt(Instant.now());

@@ -12,7 +12,12 @@ public final class UserDtos {
                                 @Nullable String phone, String role, boolean isAdmin,
                                 boolean superAdmin,
                                 boolean emailVerified,
-                                boolean privacyAccepted, boolean termsAccepted, boolean marketingConsent,
+                                boolean privacyAccepted,
+                                /** The terms in force are accepted; false also when an earlier version was. */
+                                boolean termsAccepted,
+                                /** Accepted once, but the terms changed since — the screen says "we updated them". */
+                                boolean termsUpdated,
+                                boolean marketingConsent,
                                 boolean isAthlete, boolean trainingConsent,
                                 String preferredLanguage, boolean hasPassword,
                                 boolean oauthLinked, @Nullable String avatarUrl, Instant createdAt) {}

@@ -3,6 +3,10 @@ import { Seo } from '../components/seo/Seo'
 import { BUSINESS, CONTACT_EMAIL } from '../config/site'
 import { PageHeader } from '../components/ui/PageHeader'
 
+/**
+ * Same date as TermsOfService.CURRENT_VERSION in the backend (2026-11-08). A change of the text that
+ * matters to anybody moves both: the backend version is what makes everyone accept the terms again.
+ */
 const LAST_UPDATED = '8 listopada 2026'
 
 /**
@@ -123,6 +127,7 @@ export function TermsPage() {
         <Section title="§11. Postanowienia końcowe">
           <Items items={[
             'O zmianie Regulaminu Usługodawca informuje Użytkowników e-mailem co najmniej 14 dni przed jej wejściem w życie. Użytkownik, który nie akceptuje zmian, może usunąć Konto.',
+            'Po wejściu zmian w życie Użytkownik akceptuje nową treść Regulaminu przy najbliższym wejściu do Serwisu. Do czasu akceptacji korzystanie z Konta jest wstrzymane, a dane Użytkownika pozostają bez zmian.',
             'W sprawach nieuregulowanych w Regulaminie stosuje się przepisy prawa polskiego.',
             'Postanowienia Regulaminu nie wyłączają ani nie ograniczają uprawnień konsumentów wynikających z bezwzględnie obowiązujących przepisów prawa.',
           ]} />

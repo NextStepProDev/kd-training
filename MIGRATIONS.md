@@ -16,6 +16,7 @@
 | V6 | `users.blocked_at`: blokada konta po końcu współpracy (null = aktywne; dane zostają) |
 | V7 | `training_change_notices`: kolejka maili o zmianach w planie (jeden wiersz na trening, pierwsza zmiana od ostatniego maila; bez FK do treningu, bo odwołanie przeżywa wiersz) |
 | V8 | `personal_trainings.group_id`: trening wspólny — wiersz na osobę, wspólny identyfikator sesji (bez limitu osób, kopia go nie dostaje) |
+| V9 | `users.terms_version`: którą wersję regulaminu ktoś zaakceptował (zmiana treści = nowa wersja w `TermsOfService` → ponowna akceptacja); dotychczasowe akceptacje oznaczone `2026-11-08` |
 
 ## Jak powstała V1 (26.10.2026)
 

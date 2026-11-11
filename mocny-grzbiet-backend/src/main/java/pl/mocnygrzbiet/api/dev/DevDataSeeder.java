@@ -98,6 +98,6 @@ public class DevDataSeeder implements CommandLineRunner {
     // account, not just Piotr's missing phone.
     private static void acceptPolicies(User u) {
         u.setPrivacyAcceptedAt(Instant.now());
-        u.setTermsAcceptedAt(Instant.now());
+        u.acceptCurrentTerms(Instant.now());
     }
 }

@@ -29,6 +29,8 @@
   "completion": {
     "pageTitle": "Uzupełnij swoje dane",
     "pageText": "Zanim przejdziesz dalej, uzupełnij brakujące informacje. Potrzebujemy ich, aby mieć z Tobą kontakt.",
+    "termsUpdatedTitle": "Zaktualizowaliśmy regulamin",
+    "termsUpdatedText": "Regulamin się zmienił. Przeczytaj nową wersję i zaakceptuj ją, aby dalej korzystać z konta.",
     "submit": "Zapisz i kontynuuj",
     "errors": {
       "fieldRequired": "To pole jest wymagane.",

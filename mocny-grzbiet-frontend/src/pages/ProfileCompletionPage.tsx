@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { authApi } from '../api/client'
 import { consumeRedirectPath } from '../utils/redirect'
-import { needsProfileCompletion } from '../utils/profileCompletion'
+import { getMissingProfileFields, needsProfileCompletion } from '../utils/profileCompletion'
 import { ProfileCompletionForm } from '../components/profile/ProfileCompletionForm'
 import { Button } from '../components/ui/Button'
 
@@ -25,6 +25,10 @@ export function ProfileCompletionPage() {
   const incomplete = needsProfileCompletion(user)
   // Declining is offered while either document still waits for acceptance — the account cannot be used without both.
   const needConsents = !!user && (!user.privacyAccepted || !user.termsAccepted)
+  // Someone who used the site for months and now meets this screen deserves the reason, not a form
+  // that looks like their account broke: the only thing missing is the new version of the terms.
+  const onlyNewTerms = !!user && !!user.termsUpdated && user.privacyAccepted
+    && getMissingProfileFields(user).length === 0
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -53,8 +57,12 @@ export function ProfileCompletionPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold text-surface-100">{t('completion.pageTitle')}</h1>
-      <p className="text-surface-400 mt-2 mb-6">{t('completion.pageText')}</p>
+      <h1 className="text-2xl font-bold text-surface-100">
+        {t(onlyNewTerms ? 'completion.termsUpdatedTitle' : 'completion.pageTitle')}
+      </h1>
+      <p className="text-surface-400 mt-2 mb-6">
+        {t(onlyNewTerms ? 'completion.termsUpdatedText' : 'completion.pageText')}
+      </p>
       <ProfileCompletionForm />
 
       {needConsents && (

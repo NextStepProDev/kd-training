@@ -8,7 +8,10 @@ export interface User {
   isAdmin: boolean
   superAdmin: boolean
   privacyAccepted: boolean
+  /** The terms in force are accepted — false also when only an earlier version was. */
   termsAccepted: boolean
+  /** Accepted once, but the terms have changed since: the completion screen says so. */
+  termsUpdated?: boolean
   marketingConsent: boolean
   /** 1-on-1 coaching client — unlocks the personal training calendar. Set by an admin. */
   isAthlete: boolean

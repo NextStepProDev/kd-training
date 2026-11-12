@@ -16,8 +16,8 @@ export interface User {
   /** 1-on-1 coaching client — unlocks the personal training calendar. Set by an admin. */
   isAthlete: boolean
   /**
-   * Explicit consent (GDPR art. 9) to the calendar's health data — weigh-ins, weight goals,
-   * calorie targets, effort ratings. False for every client until they pass the consent screen;
+   * Explicit consent (GDPR art. 9) to the calendar's health data — calorie targets, effort ratings
+   * and the client's own photos. False for every client until they pass the consent screen;
    * /api/user/my-training answers 409 without it.
    */
   trainingConsent: boolean

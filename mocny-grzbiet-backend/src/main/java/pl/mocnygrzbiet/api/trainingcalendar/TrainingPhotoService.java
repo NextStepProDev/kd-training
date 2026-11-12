@@ -140,7 +140,7 @@ public class TrainingPhotoService {
     /**
      * How many photos are already in this client's calendar today.
      * <p>
-     * A calendar day in the club's timezone, not a rolling twenty-four hours. Both bound the disk
+     * A calendar day in the coach's timezone, not a rolling twenty-four hours. Both bound the disk
      * the same way on average, and only one of them can be explained to somebody standing in a gym:
      * "you have used today's allowance" is an answer, "you uploaded some of these nineteen hours ago"
      * is a riddle. The JVM runs on Europe/Warsaw (see the Dockerfile), which is what makes midnight

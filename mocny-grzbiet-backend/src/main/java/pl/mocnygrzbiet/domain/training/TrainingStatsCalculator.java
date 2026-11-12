@@ -17,8 +17,8 @@ import java.util.TreeSet;
  * The arithmetic behind the client's statistics — pure, so every window and threshold can be tested
  * against a fixed "today" instead of whatever day the suite happens to run on.
  * <p>
- * One activity = one completed personal training on a date. Group sessions are counted separately by
- * the caller, because attendance there is not something anyone ticks off.
+ * One activity = one completed training on a date. A group training counts for each participant, on
+ * their own row; tasks are counted separately by the caller.
  */
 public final class TrainingStatsCalculator {
 
@@ -125,8 +125,8 @@ public final class TrainingStatsCalculator {
     }
 
     /**
-     * Share of planned sessions actually done, in the trailing window. Counts only 1-on-1 trainings:
-     * a group session nobody ticks off would otherwise read as a miss.
+     * Share of planned sessions actually done, in the trailing window. Counts trainings only: a task
+     * has its own block with its own denominator.
      *
      * @return null when nothing was planned in the window — 0% would imply a failure that never happened
      */

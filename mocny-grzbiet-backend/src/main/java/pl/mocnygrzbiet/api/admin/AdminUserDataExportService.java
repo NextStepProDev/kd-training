@@ -31,7 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Everything the club holds about one person, packed for a GDPR access request (art. 15) and for
+ * Everything the site holds about one person, packed for a GDPR access request (art. 15) and for
  * data portability (art. 20): a ZIP with {@code dane.json}, the photos and a short Polish readme.
  *
  * <p>Plain SQL with an explicit column list per section, on purpose. The list is the decision about

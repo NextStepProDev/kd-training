@@ -2,9 +2,9 @@ import type { User } from '../types'
 
 export type ProfileField = 'firstName' | 'lastName' | 'phone'
 
-// Profile fields required to enroll in an event (the organizer needs contact details).
+// Profile fields every account needs: the coach must be able to reach the client.
 // Adding a new required field in the future = appending it here — the completion form
-// and enrollment gates will compute the missing fields automatically.
+// and its gate will compute the missing fields automatically.
 export const REQUIRED_PROFILE_FIELDS: ProfileField[] = ['firstName', 'lastName', 'phone']
 
 /** Returns the list of required profile fields the user has not yet filled in. */

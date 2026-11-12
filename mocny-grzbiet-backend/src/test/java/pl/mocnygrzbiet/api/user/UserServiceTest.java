@@ -292,7 +292,6 @@ class UserServiceTest {
     @Test
     void shouldSetPrivacyAndMarketingOnConsentsForGoogleUser() {
         user.setPrivacyAcceptedAt(null);
-        user.setTermsAcceptedAt(null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
@@ -320,7 +319,6 @@ class UserServiceTest {
     @Test
     void shouldRejectConsentsWhenTermsMissingAndNotAccepted() {
         user.setPrivacyAcceptedAt(null);
-        user.setTermsAcceptedAt(null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(msg.get("validation.terms.required")).thenReturn("Wymagany regulamin");
 
@@ -330,10 +328,10 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldNotAskForTermsAgainOnceAccepted() {
+    void shouldNotAskForTermsAgainOnceTheCurrentVersionIsAccepted() {
         java.time.Instant accepted = java.time.Instant.parse("2026-01-01T10:00:00Z");
         user.setPrivacyAcceptedAt(accepted);
-        user.setTermsAcceptedAt(accepted);
+        user.acceptCurrentTerms(accepted);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
@@ -341,6 +339,54 @@ class UserServiceTest {
 
         // The first acceptance is the proof; a later request must neither refuse nor overwrite it.
         assertEquals(accepted, user.getTermsAcceptedAt());
+    }
+
+    /** Accepted the terms once — under a version that is no longer in force. */
+    private void acceptedEarlierTerms(java.time.Instant at) {
+        user.setPrivacyAcceptedAt(at);
+        user.acceptCurrentTerms(at);
+        org.springframework.test.util.ReflectionTestUtils.setField(user, "termsVersion", "2025-01-01");
+    }
+
+    @Test
+    void shouldAskAgainOnceTheTermsChange() {
+        acceptedEarlierTerms(java.time.Instant.parse("2025-01-01T10:00:00Z"));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        UserResponse before = service.getMe(userId);
+
+        assertFalse(before.termsAccepted(), "an acceptance of the old text does not cover the new one");
+        assertTrue(before.termsUpdated());
+    }
+
+    @Test
+    void shouldRecordTheNewVersionWhenAcceptedAgain() {
+        acceptedEarlierTerms(java.time.Instant.parse("2025-01-01T10:00:00Z"));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(msg.get("validation.terms.required")).thenReturn("Wymagany regulamin");
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.submitConsents(userId, new ConsentsRequest(false, false, false)));
+        UserResponse after = service.submitConsents(userId, new ConsentsRequest(false, true, false));
+
+        assertEquals(pl.mocnygrzbiet.domain.user.TermsOfService.CURRENT_VERSION, user.getTermsVersion());
+        assertTrue(user.getTermsAcceptedAt().isAfter(java.time.Instant.parse("2025-01-01T10:00:00Z")));
+        assertTrue(after.termsAccepted());
+        assertFalse(after.termsUpdated());
+    }
+
+    @Test
+    void shouldNotLockTheCoachOutWhenTheTermsChange() {
+        // The terms are his own: a new version must not hold the panel behind an acceptance screen.
+        acceptedEarlierTerms(java.time.Instant.parse("2025-01-01T10:00:00Z"));
+        user.setRole(UserRole.ADMIN);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        UserResponse me = service.getMe(userId);
+
+        assertTrue(me.termsAccepted());
+        assertFalse(me.termsUpdated());
     }
 
     @Test

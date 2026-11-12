@@ -136,7 +136,7 @@ CLAUDE.md · API.md · MIGRATIONS.md · DECISIONS-SECURITY.md · DECISIONS-TRAIN
 
 ## Baza danych — Flyway
 
-**Obecny stan: V8 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta, V7 kolejka maili o zmianach w planie, V8 treningi wspólne; jeszcze nigdzie niewdrożone). Kolejna migracja: V9.**
+**Obecny stan: V9 (V1 schemat startowy, V2 zaproszenia, V3 materiały, V4 serie treningów, V5 dni wolne trenera, V6 blokada konta, V7 kolejka maili o zmianach w planie, V8 treningi wspólne, V9 wersja regulaminu; jeszcze nigdzie niewdrożone). Kolejna migracja: V10.**
 
 `V1__initial_schema.sql` to sklejka V1–V42 z Fire Academy bez tabel wyciętych funkcji — jak powstała
 i jak sprawdzono, że jest identyczna → [`MIGRATIONS.md`](MIGRATIONS.md).
@@ -171,7 +171,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/moje-konto/plan-treningowy` | MyTrainingCalendarPage | strefa podopiecznego: zgoda art. 9 → cele, kalendarz, wiadomości, statystyki |
 | `/settings` | SettingsPage | avatar, dane, hasło, zgoda marketingowa, usunięcie konta |
 | `/polityka-prywatnosci` | PrivacyPolicyPage | polityka prywatności z danymi administratora |
-| `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy są, zasady współpracy od Kacpra do wpisania); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at`) |
+| `/regulamin` | TermsPage | regulamin — **wersja robocza** (dane usługodawcy są, zasady współpracy od Kacpra do wpisania); akceptacja obowiązkowa przy rejestracji i na `/uzupelnij-profil` (`terms_accepted_at` + `terms_version`); po zmianie wersji wszyscy poza trenerem akceptują ją ponownie |
 | `/wypisz-sie` | MarketingUnsubscribePage | rezygnacja z marketingu z linku w mailu |
 | `/admin/podopieczni` · `/admin/uzytkownicy` | AdminPage | panel trenera: podopieczni (kalendarz 1:1, cele, statystyki, biblioteka filmów, szablony), użytkownicy (zaproszenia, profil, włączenie planu 1:1, eksport RODO, usunięcie planu/konta, mailing) |
 | `/reset-password` · `/forgot-password` · `/oauth-callback` | — | przepływy konta (osobnego potwierdzania maila nie ma: konto z zaproszenia albo z Google jest od razu zweryfikowane) |
@@ -323,7 +323,7 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 2. Dane administratora i kontakt — wpisane (08.11.2026).
 3. Treść wizytówki: tekst, zdjęcia, logo, ikony i kontakt są. Brakuje skanów certyfikatów (Kacper przyśle).
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
-   `users.terms_accepted_at`, eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
+   `users.terms_accepted_at` + `terms_version` (V9: zmiana treści = nowe `TermsOfService.CURRENT_VERSION` **i** `LAST_UPDATED` w `TermsPage.tsx` → wszyscy poza trenerem akceptują ponownie; zgodność obu dat pilnuje `TermsOfServiceVersionTest`), eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
    `TermsPage.tsx` to szkic (dane usługodawcy już są) do podmiany po zasadach współpracy od Kacpra.
 5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/mocny-grzbiet`, a skoro
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse

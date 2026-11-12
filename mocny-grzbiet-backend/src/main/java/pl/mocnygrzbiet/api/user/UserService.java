@@ -181,6 +181,14 @@ public class UserService {
         return ids;
     }
 
+    /**
+     * Whether the terms stand between this person and the site. The coach is the service provider: the
+     * terms are his own, so a new version does not lock him out of the panel until he "accepts" it.
+     */
+    private static boolean termsSettled(User user) {
+        return user.hasTermsAccepted() || (user.isAdmin() && user.getTermsAcceptedAt() != null);
+    }
+
     // The shared "tail" of account deletion: deleting comment photos, the avatar, tokens, the account
     // itself, and eviction from the JWT filter cache. Call within a transaction, after permission checks.
     private void eraseAndDeleteAccount(User user) {
@@ -266,12 +274,13 @@ public class UserService {
             }
             user.setPrivacyAcceptedAt(Instant.now());
         }
-        // Terms of service: the same rule — mandatory until accepted, never re-asked.
+        // Terms of service: mandatory until the version in force is accepted — asked again whenever the
+        // terms change (TermsOfService.CURRENT_VERSION).
         if (!user.hasTermsAccepted()) {
             if (!request.acceptedTerms()) {
                 throw new IllegalArgumentException(msg.get("validation.terms.required"));
             }
-            user.setTermsAcceptedAt(Instant.now());
+            user.acceptCurrentTerms(Instant.now());
         }
         // Marketing voluntary — we set it only when checked and not yet granted.
         if (request.acceptedMarketing() && !user.hasMarketingConsent()) {
@@ -310,7 +319,8 @@ public class UserService {
             user.getRole() == UserRole.ADMIN,
             adminEmailConfig.isAdminEmail(user.getEmail()),
             user.isEmailVerified(),
-            user.hasPrivacyAccepted(), user.hasTermsAccepted(), user.hasMarketingConsent(),
+            user.hasPrivacyAccepted(), termsSettled(user), user.hasAcceptedEarlierTerms() && !user.isAdmin(),
+            user.hasMarketingConsent(),
             user.isAthlete(), user.hasTrainingConsent(),
             user.getPreferredLanguage(), user.getPasswordHash() != null,
             user.getOauthProvider() != null, avatarUrl, user.getCreatedAt()

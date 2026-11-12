@@ -71,7 +71,7 @@ public class AdminUserDataExportService {
 
     private static final String CONSENTS_SQL = """
         SELECT privacy_accepted_at AS polityka_prywatnosci_zaakceptowana,
-               terms_accepted_at AS regulamin_zaakceptowany,
+               terms_accepted_at AS regulamin_zaakceptowany, terms_version AS wersja_regulaminu,
                marketing_consent_at AS zgoda_marketingowa,
                training_consent_at AS zgoda_na_dane_zdrowotne
         FROM users WHERE id = ?

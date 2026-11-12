@@ -11,12 +11,15 @@ on:
       # the deployable jar travels between two jobs here: a broken download-artifact could merge
       # green without a single run.
       - .github/workflows/ci-backend.yml
+      # Read by TermsOfServiceVersionTest: a new date on the terms page must meet the backend version.
+      - mocny-grzbiet-frontend/src/pages/TermsPage.tsx
   pull_request:
     branches: [main]
     paths:
       - mocny-grzbiet-backend/**
       - VERSION
       - .github/workflows/ci-backend.yml
+      - mocny-grzbiet-frontend/src/pages/TermsPage.tsx
 
   # Re-scan what is already published. A build-time scan is only ever as fresh as the day it
   # ran: these three CRITICAL Tomcat advisories were published into Trivy's database AFTER

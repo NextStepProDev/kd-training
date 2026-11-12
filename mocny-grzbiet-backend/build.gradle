@@ -124,6 +124,9 @@ tasks.named('processResources') {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // TermsOfServiceVersionTest reads the terms page from the frontend. Without declaring it, a changed
+    // page leaves this task UP-TO-DATE and the guard never runs on the edit it exists to catch.
+    inputs.file('../mocny-grzbiet-frontend/src/pages/TermsPage.tsx').withPropertyName('termsPage')
     // Run the suite in the clock the business logic assumes. Billing months, payment windows, "today"
     // and session dates are all computed from the JVM default zone, which production pins via
     // -Duser.timezone in the Dockerfile — and nothing pinned it here, so tests inherited the host:

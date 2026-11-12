@@ -67,6 +67,11 @@ public class User {
     @Nullable
     private Instant termsAcceptedAt;
 
+    /** The {@link TermsOfService} version accepted at {@link #termsAcceptedAt}. */
+    @Column(name = "terms_version", length = 20)
+    @Nullable
+    private String termsVersion;
+
     @Column(name = "marketing_consent_at")
     @Nullable
     private Instant marketingConsentAt;
@@ -276,12 +281,25 @@ public class User {
         return termsAcceptedAt;
     }
 
-    public void setTermsAcceptedAt(@Nullable Instant termsAcceptedAt) {
-        this.termsAcceptedAt = termsAcceptedAt;
+    @Nullable
+    public String getTermsVersion() {
+        return termsVersion;
     }
 
+    /** Records acceptance of the terms in force now — the moment is the proof, the version says of what. */
+    public void acceptCurrentTerms(Instant at) {
+        this.termsAcceptedAt = at;
+        this.termsVersion = TermsOfService.CURRENT_VERSION;
+    }
+
+    /** Accepted the terms in force. An acceptance of an earlier version does not count. */
     public boolean hasTermsAccepted() {
-        return termsAcceptedAt != null;
+        return termsAcceptedAt != null && TermsOfService.CURRENT_VERSION.equals(termsVersion);
+    }
+
+    /** Accepted the terms once, but they have changed since — drives the "we updated the terms" message. */
+    public boolean hasAcceptedEarlierTerms() {
+        return termsAcceptedAt != null && !TermsOfService.CURRENT_VERSION.equals(termsVersion);
     }
 
     @Nullable

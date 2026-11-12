@@ -103,8 +103,8 @@ public class TrainingStatsService {
                 completedDates.add(t.getDate());
                 completed.add(t);
             }
-            // Attendance counts 1-on-1 trainings only: nobody ticks off a group session, so
-            // including them would read as a wall of misses.
+            // Attendance counts trainings only (tasks were settled above, with their own
+            // denominators). A group training is this client's own row, ticked off like any other.
             if (!t.getDate().isBefore(attendanceFrom)) {
                 if (done) {
                     completedInWindow++;

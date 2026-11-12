@@ -114,7 +114,7 @@ export async function fetchApi<T>(
   // Only reads may be replayed. A write that timed out or came back 502 may well have been
   // applied — the request reached the server and the answer was lost on the way back — so sending
   // it again creates a second training, a second comment, a second copy. The endpoints that can
-  // detect a repeat (an enrolment, a duplicate e-mail) already answer 409; the 1-on-1 calendar
+  // detect a repeat (a duplicate e-mail) already answer 409; the 1-on-1 calendar
   // deliberately cannot, because two identical sessions on one day is a legitimate plan.
   const method = (options?.method ?? 'GET').toUpperCase()
   const replayable = method === 'GET' || method === 'HEAD'

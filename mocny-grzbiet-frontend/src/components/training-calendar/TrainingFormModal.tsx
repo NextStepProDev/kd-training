@@ -197,7 +197,7 @@ export function TrainingFormModal({
         </div>
 
         {/* Tasks only. A number rather than "max 2200 kcal" typed into the heading, so a month of
-            them can be counted — and, later, read next to the weight trend. */}
+            them can be counted. */}
         {isTask && (
           <div>
             <label htmlFor="training-calories" className="block text-sm text-surface-300 mb-1">

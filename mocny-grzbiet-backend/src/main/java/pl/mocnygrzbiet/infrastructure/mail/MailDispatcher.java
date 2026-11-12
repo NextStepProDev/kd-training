@@ -59,10 +59,10 @@ public class MailDispatcher {
      * <p>
      * Their absence hurts twice over: filters score the message worse, and a reader who cannot find a way
      * out presses "report spam" instead — which is the expensive click, because it damages the reputation
-     * of the whole domain and takes the verification and password-reset mail down with it.
+     * of the whole domain and takes the invitation and password-reset mail down with it.
      * <p>
      * <strong>Only for mail somebody can actually unsubscribe from.</strong> Declaring an unsubscribe
-     * address on a verification or enrolment email would promise something we cannot honour, so the caller
+     * address on an invitation or password-reset email would promise something we cannot honour, so the caller
      * decides, and {@link AdminUserMailService} decides it by the presence of an unsubscribe token.
      *
      * @param unsubscribeUrl an https address on our own backend that unsubscribes on POST — never a page

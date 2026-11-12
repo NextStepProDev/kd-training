@@ -150,10 +150,9 @@ musiałoby skasować jego RPE, żeby przejść CHECK-i.
 Zadanie odhacza się **bez RPE** (`CHECK rpe IS NULL OR kind='TRAINING'`) — „jak ciężko było
 zmieścić się w 2200 kcal, 1–10" to pytanie o nic, a odpowiedź trafiłaby do tych samych średnich,
 z których trener czyta obciążenie. Limit kalorii jest **liczbą, nie tekstem w tytule**
-(CHECK 500–10000, jak przy wadze łapie zgubione zero) — inaczej nie da się tego policzyć ani
-zestawić z wagą.
+(CHECK 500–10000 łapie zgubione albo dopisane zero) — inaczej nie da się tego policzyć.
 
-Statystyki treningowe (seria, frekwencja, mapa, miesiące, `byType.personal`, „najbliższy
+Statystyki treningowe (seria, frekwencja, mapa, miesiące, „najbliższy
 trening") **nie widzą zadań**; zadania mają własny blok `tasks`, w którym **każda liczba niesie
 swój mianownik i swoje okno** (`thisMonthDone/thisMonthDue`, `windowDone/windowDue` = 90 dni,
 `completionPercent`). Gołe liczniki z różnych okien obok siebie czytają się jak zestaw do
@@ -368,7 +367,7 @@ decyzja Mateusza z 01.11.2026 — wcześniej telefon startował na tygodniu.
 
 **Modale dzielą jeden stos** (`modalStack` w `Modal.tsx`). Zagnieżdżenie jest normą (potwierdzenie usunięcia nad szczegółami treningu, wybór filmu nad formularzem), a każdy modal ma własny nasłuch `keydown` na `document`. Bez stosu zamknięcie wewnętrznego oddawało stronę scrollowaniu spod wciąż otwartego zewnętrznego, a jeden Escape zamykał oba naraz. Reguła: `overflow` wraca dopiero przy pustym stosie, a na klawiaturę reaguje wyłącznie modal na wierzchu (również pułapka focusa — `ConfirmDialog` jest **rodzeństwem**, nie dzieckiem modala, który go otworzył). Pilnuje `Modal.test.tsx`.
 
-**Liczby „łącznie" i „pierwsza aktywność" idą z bazy, nie z okna 12 miesięcy.** Reszta panelu statystyk (mapa cieplna, serie, średnie, frekwencja) liczy się z `findRange(athleteId, yearAgo, today)`. Wyprowadzone z tej samej listy liczby dożywotnie psują się po cichu: po roku „łącznie" przestaje rosnąć (stare treningi wypadają tak samo szybko, jak dochodzą nowe), a data pierwszego treningu pełznie do przodu. Stąd `countCompleted` / `findFirstCompletedDate` w repozytorium. **`byType` zostaje okienkowe** — jest zestawione z rocznym licznikiem zajęć grupowych, więc wartość dożywotnia porównywałaby dwa różne okresy. `bestStreakWeeks` też widzi tylko rok i tak jest opisane w Javadocu.
+**Liczby „łącznie" i „pierwsza aktywność" idą z bazy, nie z okna 12 miesięcy.** Reszta panelu statystyk (mapa cieplna, serie, średnie, frekwencja) liczy się z `findRange(athleteId, yearAgo, today)`. Wyprowadzone z tej samej listy liczby dożywotnie psują się po cichu: po roku „łącznie" przestaje rosnąć (stare treningi wypadają tak samo szybko, jak dochodzą nowe), a data pierwszego treningu pełznie do przodu. Stąd `countCompleted` / `findFirstCompletedDate` w repozytorium. `bestStreakWeeks` też widzi tylko rok i tak jest opisane w Javadocu.
 
 **Brak siatki godzinowej — świadomie.** Kalendarz to kolumny dni z kafelkami; godzina jest opcjonalna i jej brak to przypadek domyślny, więc trening bez godziny **nie renderuje żadnej etykiety czasu** (ani myślnika, ani „cały dzień"). Test asercjuje, że w drzewie nie ma osi godzinowej.
 

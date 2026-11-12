@@ -286,7 +286,7 @@ export function PrivacyPolicyPage() {
           <SubSection title="Zgoda i jej wycofanie">
             <p className="text-surface-400 text-sm leading-relaxed">
               Zgodę wyrażasz świadomym zaznaczeniem oświadczenia przed pierwszym wejściem do planu — nie
-              wynika ona z samego korzystania z serwisu ani z wpisania pomiaru. Zapisujemy datę i godzinę jej
+              wynika ona z samego korzystania z serwisu ani z dodania wpisu w planie. Zapisujemy datę i godzinę jej
               udzielenia jako wymagany przez RODO dowód. Zgodę możesz wycofać w każdej chwili, pisząc na adres
               podany w punkcie 1 — wtedy usuwamy dane kaloryczne, oceny wysiłku i dołączone zdjęcia,
               a plan przestaje być dostępny. Wycofanie nie wpływa na zgodność z prawem przetwarzania sprzed wycofania i nie ma

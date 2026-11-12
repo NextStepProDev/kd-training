@@ -17,11 +17,11 @@ interface Props {
 /**
  * One-time consent screen in front of the client's 1-on-1 calendar.
  *
- * The calendar holds weigh-ins, weight goals, daily calorie targets, effort ratings and notes on
- * how a session felt — health data under GDPR art. 9, which needs EXPLICIT consent: a statement the
+ * The calendar holds daily calorie targets, effort ratings, the client's photos and notes on how a
+ * session felt — health data under GDPR art. 9, which needs EXPLICIT consent: a statement the
  * client makes, never one inferred from them typing a number in. Hence a checkbox that starts
  * unticked and a submit button disabled until it is ticked. Shown to every client whose consent is
- * not on record, including those who have used the calendar for months (V38 backfills nothing).
+ * not on record, including those who have used the calendar for months (no migration backfills it).
  *
  * Rendered instead of the calendar rather than as a dialog over it: nothing may load calendar
  * content before consent (the API 409s regardless), the client needs room to read the policy, and

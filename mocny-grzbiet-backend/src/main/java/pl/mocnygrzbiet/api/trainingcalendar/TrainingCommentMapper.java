@@ -53,7 +53,7 @@ final class TrainingCommentMapper {
     /**
      * The author can always withdraw what they sent — a screenshot that turned out to show more than
      * intended has to be removable, and comments have no delete of their own. The coach can remove
-     * anything in their client's thread, because they are the one answering for what the club holds.
+     * anything in their client's thread, because they are the one answering for what the site holds.
      */
     static boolean canDelete(TrainingComment c, UUID viewerId, boolean viewerIsAdmin) {
         if (viewerIsAdmin) {

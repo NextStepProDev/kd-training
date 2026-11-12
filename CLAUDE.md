@@ -324,7 +324,9 @@ Decyzja Mateusza: wyciąć od razu, a stały grafik Kacpra zaprojektować od now
 3. Treść wizytówki: tekst, zdjęcia, logo, ikony i kontakt są. Brakuje skanów certyfikatów (Kacper przyśle).
 4. Regulamin (brief klienta, pkt 6): mechanika gotowa (checkbox przy rejestracji i na `/uzupelnij-profil`,
    `users.terms_accepted_at` + `terms_version` (V9: zmiana treści = nowe `TermsOfService.CURRENT_VERSION` **i** `LAST_UPDATED` w `TermsPage.tsx` → wszyscy poza trenerem akceptują ponownie; zgodność obu dat pilnuje `TermsOfServiceVersionTest`), eksport RODO, `/regulamin` w mapie strony i prerenderze). Brakuje **treści**:
-   `TermsPage.tsx` to szkic (dane usługodawcy już są) do podmiany po zasadach współpracy od Kacpra.
+   część o stronie jest napisana zgodnie z kodem (12.11.2026: konto z zaproszenia, 16 lat, zgoda art. 9, zdjęcia 30 dni,
+   trening wspólny, powiadomienia, blokada i usunięcie po roku). Brakuje **§8 — zasad współpracy od Kacpra**
+   (odwołania, przeciwwskazania, odpowiedzialność); po ich wpisaniu — nowa wersja regulaminu.
 5. Serwer: nowa maszyna albo istniejąca. Na istniejącej: osobny katalog `/opt/mocny-grzbiet`, a skoro
    kontener frontu wystawia porty 80/443, dwa projekty na jednej maszynie wymagają wspólnego reverse
    proxy przed nimi. Rozmiar maszyny decyduje o `mem_limit` (dziś 384m backend jak w Fire — patrz

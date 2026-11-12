@@ -11,7 +11,7 @@ package pl.mocnygrzbiet.domain.user;
  */
 public final class TermsOfService {
 
-    public static final String CURRENT_VERSION = "2026-11-08";
+    public static final String CURRENT_VERSION = "2026-11-12";
 
     private TermsOfService() {}
 }

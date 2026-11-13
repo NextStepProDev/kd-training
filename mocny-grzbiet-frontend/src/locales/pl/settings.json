@@ -34,7 +34,8 @@
     "submit": "Zapisz i kontynuuj",
     "errors": {
       "fieldRequired": "To pole jest wymagane.",
-      "nameTooShort": "Imię i nazwisko muszą mieć co najmniej 3 znaki."
+      "nameTooShort": "Imię i nazwisko muszą mieć co najmniej 3 znaki.",
+      "phoneInvalid": "Nieprawidłowy numer telefonu (9 cyfr lub +48123456789)."
     },
     "decline": {
       "title": "Nie chcę akceptować polityki prywatności",

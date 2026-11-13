@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { authApi } from '../../api/client'
 import { Button } from '../ui/Button'
 import { getMissingProfileFields, type ProfileField } from '../../utils/profileCompletion'
+import { isValidPhone, normalizePhone } from '../../utils/phone'
 
 
 const FIELD_INPUT_TYPE: Record<ProfileField, string> = { firstName: 'text', lastName: 'text', phone: 'tel' }
@@ -69,6 +70,8 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
         nextFieldErrors[field] = t('completion.errors.fieldRequired')
       } else if ((field === 'firstName' || field === 'lastName') && value.length < 3) {
         nextFieldErrors[field] = t('completion.errors.nameTooShort')
+      } else if (field === 'phone' && !isValidPhone(value)) {
+        nextFieldErrors[field] = t('completion.errors.phoneInvalid')
       }
     }
     const nextPrivacyError = needPrivacy && !acceptedPrivacy ? t('register.privacyRequired', { ns: 'auth' }) : null
@@ -86,7 +89,7 @@ export function ProfileCompletionForm({ submitLabel }: ProfileCompletionFormProp
         await authApi.updateProfile(
           missing.includes('firstName') ? values.firstName.trim() : user.firstName,
           missing.includes('lastName') ? values.lastName.trim() : user.lastName,
-          missing.includes('phone') ? values.phone.trim() : (user.phone ?? ''),
+          missing.includes('phone') ? normalizePhone(values.phone) : (user.phone ?? ''),
         )
       }
       if (needConsents) {

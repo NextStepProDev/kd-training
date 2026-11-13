@@ -58,6 +58,31 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void shouldRejectAPhoneThatRegistrationWouldRefuse() throws Exception {
+        // Found in manual testing: the profile-completion screen saved "123" as a phone, while
+        // registration accepts only nine digits or +country code and nine digits. The same rule here,
+        // or the coach ends up with a number nobody can call.
+        String token = userToken();
+        for (String phone : new String[]{"123", "", "50010010", "abc100100100"}) {
+            mockMvc.perform(put("/api/user/me")
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"firstName":"Updated","lastName":"UserName","phone":"%s"}
+                        """.formatted(phone)))
+                .andExpect(status().isBadRequest());
+        }
+        mockMvc.perform(put("/api/user/me")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"firstName":"Updated","lastName":"UserName","phone":"+48500100200"}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.phone").value("+48500100200"));
+    }
+
+    @Test
     void shouldChangePassword() throws Exception {
         User user = new User("changepw-it@test.com", "Jan", "Kowalski", null);
         user.setPasswordHash(ENCODER.encode("OldPassword123"));

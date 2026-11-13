@@ -5,16 +5,14 @@ import { GOOGLE_LOGIN_ENABLED } from '../config/features'
 import { BUSINESS, CONTACT_EMAIL, CONTACT_PHONE } from '../config/site'
 import { PageHeader } from '../components/ui/PageHeader'
 
-const LAST_UPDATED = '9 listopada 2026'
+const LAST_UPDATED = '13 listopada 2026'
 
 /**
- * Google sign-in is described here in full while it is still switched off, so that the day it goes
- * live nobody has to be re-informed about a processor that appeared overnight. A privacy notice has
- * to be true when somebody reads it, though, so every place describing it carries this marker until
- * {@link GOOGLE_LOGIN_ENABLED} says otherwise — one flag, and the page stops promising what the
- * application does not yet do.
+ * Google sign-in appears here only while {@link GOOGLE_LOGIN_ENABLED} is on. The client chose e-mail and
+ * password ("Google maybe later"), and a policy describes what the site does: a method marked
+ * "w przygotowaniu" read as a promise. Switching the flag on brings the three passages back as they are
+ * — and that day the policy changes, so its date moves too.
  */
-const notYet = (title: string) => GOOGLE_LOGIN_ENABLED ? title : `${title} — w przygotowaniu`
 
 export function PrivacyPolicyPage() {
   const { hash } = useLocation()
@@ -161,15 +159,10 @@ export function PrivacyPolicyPage() {
             </p>
           </SubSection>
 
-          <SubSection title={notYet('Logowanie przez konto Google')}>
-            {!GOOGLE_LOGIN_ENABLED && (
-              <p className="text-surface-400 text-sm mb-2 leading-relaxed">
-                Ta metoda logowania nie jest jeszcze uruchomiona. Opisujemy ją z wyprzedzeniem, żeby zakres
-                przetwarzanych danych był znany, zanim funkcja ruszy, a nie ogłaszany po fakcie.
-              </p>
-            )}
+          {GOOGLE_LOGIN_ENABLED && (
+          <SubSection title="Logowanie przez konto Google">
             <p className="text-surface-400 text-sm mb-2 leading-relaxed">
-              Konto można będzie założyć także przez Google. W takim wypadku Google przekazuje nam wyłącznie:
+              Konto można założyć także przez Google. W takim wypadku Google przekazuje nam wyłącznie:
             </p>
             <DataList items={[
               'Imię i nazwisko zapisane w koncie Google',
@@ -183,6 +176,7 @@ export function PrivacyPolicyPage() {
               z akceptacją tej polityki, o którą prosimy przy pierwszym logowaniu.
             </p>
           </SubSection>
+          )}
 
           <p className="text-surface-500 text-sm mt-4">
             Nie korzystamy z plików cookies śledzących, Google Analytics, Facebook Pixel ani żadnych innych narzędzi analitycznych.
@@ -199,10 +193,12 @@ export function PrivacyPolicyPage() {
               purpose="Zdjęcie profilowe (avatar)"
               basis="Art. 6 ust. 1 lit. a RODO — dobrowolna zgoda, którą możesz w każdej chwili wycofać, usuwając zdjęcie w ustawieniach konta"
             />
-            <LegalBasis
-              purpose={notYet('Logowanie przez konto Google')}
-              basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy (założenie konta i dostęp do niego). Korzystanie z tej metody jest dobrowolne: konto można założyć również adresem e-mail i hasłem, a zakres danych jest wtedy taki sam."
-            />
+            {GOOGLE_LOGIN_ENABLED && (
+              <LegalBasis
+                purpose="Logowanie przez konto Google"
+                basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy (założenie konta i dostęp do niego). Korzystanie z tej metody jest dobrowolne: konto można założyć również adresem e-mail i hasłem, a zakres danych jest wtedy taki sam."
+              />
+            )}
             <LegalBasis
               purpose="Zaproszenie do założenia konta i odzyskiwanie hasła"
               basis="Art. 6 ust. 1 lit. b RODO — wykonanie umowy"
@@ -402,10 +398,12 @@ export function PrivacyPolicyPage() {
               title="Zewnętrzny serwer poczty e-mail (SMTP)"
               description="Wykorzystywany do dostarczenia wszystkich wiadomości e-mail wysyłanych z systemu — zarówno serwisowych (zaproszenie do założenia konta, reset hasła, powiadomienia o koncie, o wiadomościach od trenera i o zmianach w planie treningowym), jak i marketingowych (po udzieleniu zgody). Dostawca nie przetwarza Twoich danych w żadnym innym celu."
             />
-            <InfoItem
-              title={notYet('Google LLC (logowanie przez konto Google)')}
-              description="Osoby, które wybiorą logowanie przez Google, uwierzytelnia Google — to Google potwierdza nam tożsamość i przekazuje imię, nazwisko oraz adres e-mail. Nie przekazujemy Google żadnych danych o Twoich treningach ani planie 1:1. Kto zakłada konto adresem e-mail i hasłem, nie ma z tym nic wspólnego."
-            />
+            {GOOGLE_LOGIN_ENABLED && (
+              <InfoItem
+                title="Google LLC (logowanie przez konto Google)"
+                description="Osoby, które wybiorą logowanie przez Google, uwierzytelnia Google — to Google potwierdza nam tożsamość i przekazuje imię, nazwisko oraz adres e-mail. Nie przekazujemy Google żadnych danych o Twoich treningach ani planie 1:1. Kto zakłada konto adresem e-mail i hasłem, nie ma z tym nic wspólnego."
+              />
+            )}
             <InfoItem
               title="Google LLC (kopie zapasowe)"
               description="Zaszyfrowane kopie zapasowe bazy danych i przesłanych plików przechowywane są na prywatnym, niepublicznym dysku Google Drive. Kopia obejmuje całą bazę, a więc również dane planu treningowego 1:1. Google nie ma dostępu do treści kopii — są zaszyfrowane przed wysłaniem."

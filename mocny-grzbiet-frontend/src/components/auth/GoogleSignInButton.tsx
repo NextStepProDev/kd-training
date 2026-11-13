@@ -9,13 +9,13 @@ import { GOOGLE_LOGIN_ENABLED } from '../../config/features'
  * was no single place where "is this available?" could be asked. Now there is one, and the answer
  * comes from {@link GOOGLE_LOGIN_ENABLED}.
  *
- * While the feature is off the control is deliberately NOT a link. A disabled-looking anchor that
- * still navigates is worse than the original bug: it says "unavailable" and then proves itself wrong
- * with a 401. The explanation sits next to it as ordinary visible text rather than a title tooltip,
- * so it reaches everybody — a disabled button is skipped by screen readers, its label with it.
+ * While the feature is off it renders nothing, divider included: the client chose e-mail and password
+ * (Google "maybe later"), and a greyed-out "soon" on the sign-in page read as something missing. The
+ * code stays, so switching the flag on is the whole change.
  */
 export function GoogleSignInButton() {
   const { t } = useTranslation('auth')
+  if (!GOOGLE_LOGIN_ENABLED) return null
 
   const face = (
     <>
@@ -40,24 +40,12 @@ export function GoogleSignInButton() {
         </div>
       </div>
 
-      {GOOGLE_LOGIN_ENABLED ? (
-        <a
-          href="/oauth2/authorization/google"
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-surface-700 bg-surface-800 px-4 py-2.5 text-sm font-medium text-surface-200 hover:bg-surface-700 transition-colors"
-        >
-          {face}
-        </a>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex w-full items-center justify-center gap-3 rounded-lg border border-dashed border-surface-700 bg-surface-800/40 px-4 py-2.5 text-sm font-medium text-surface-500">
-            <span className="flex items-center gap-3 opacity-60">{face}</span>
-            <span className="rounded-full border border-surface-600 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-surface-400">
-              {t('oauth.soon')}
-            </span>
-          </div>
-          <p className="text-center text-xs text-surface-500">{t('oauth.inProgress')}</p>
-        </div>
-      )}
+      <a
+        href="/oauth2/authorization/google"
+        className="flex w-full items-center justify-center gap-3 rounded-lg border border-surface-700 bg-surface-800 px-4 py-2.5 text-sm font-medium text-surface-200 hover:bg-surface-700 transition-colors"
+      >
+        {face}
+      </a>
     </>
   )
 }

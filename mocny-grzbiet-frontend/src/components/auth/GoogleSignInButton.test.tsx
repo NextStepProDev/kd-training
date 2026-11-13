@@ -17,22 +17,14 @@ describe('GoogleSignInButton', () => {
   beforeEach(() => vi.resetModules())
   afterEach(() => vi.doUnmock('../../config/features'))
 
-  it('shouldNotOfferADoorThatAnswersWithAnErrorWhileTheFeatureIsOff', async () => {
-    // The whole bug in one assertion: production runs without the oauth2 profile, so this address
-    // answers 401. Anything navigable here sends somebody on the sign-up path into raw JSON.
+  it('shouldShowNothingAtAllWhileTheFeatureIsOff', async () => {
+    // Off means absent: no link that answers 401 (production runs without the oauth2 profile), and no
+    // greyed-out "soon" either — the client chose e-mail and password, and a promise on the sign-in
+    // page reads as a feature that is missing.
     await renderWith(false)
 
-    expect(document.querySelector('a[href="/oauth2/authorization/google"]')).toBeNull()
+    expect(document.body.textContent).toBe('')
     expect(screen.queryByRole('link')).toBeNull()
-    expect(screen.queryByRole('button')).toBeNull()
-  })
-
-  it('shouldSayThatGoogleSignInIsStillBeingBuilt', async () => {
-    // A control that is merely greyed out reads as broken. It has to say which of the two it is.
-    await renderWith(false)
-
-    expect(screen.getByText('oauth.soon')).toBeInTheDocument()
-    expect(screen.getByText('oauth.inProgress')).toBeInTheDocument()
   })
 
   it('shouldLinkToGoogleOnceTheFeatureIsOn', async () => {

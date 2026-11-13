@@ -316,7 +316,7 @@
       "Wiadomości wymieniane z trenerem przy poszczególnych treningach i pod materiałami",
       "Zdjęcia dołączane do tych wiadomości — na przykład zrzuty ekranu z zegarka sportowego lub aplikacji treningowej, razem z widocznymi na nich parametrami (tętno, strefy, tempo, sen). Zdjęcia usuwamy automatycznie po 30 dniach"
     ],
-    "coachAccess": "Wszystko powyżej widzi Twój trener prowadzący — to jest sens wspólnego planu. Nikt poza Tobą i trenerem nie ma do tych danych dostępu.",
+    "coachAccess": "Wszystko powyżej widzi Twój trener prowadzący — to jest sens wspólnego planu. Nikt inny nie ma do tych danych dostępu. Wyjątek: przy treningu wspólnym pozostali uczestnicy widzą ten trening i Twoje imię — nic więcej.",
     "readPolicy": "Przeczytaj politykę prywatności (sekcja o planie treningowym)",
     "checkbox": "Zapoznałem/-am się z <1>polityką prywatności</1> i wyrażam zgodę na przetwarzanie moich danych treningowych, w tym limitów kalorii, ocen wysiłku oraz zdjęć, które sam/-a dołączę do komentarzy, w celu prowadzenia mojego planu treningowego.",
     "accept": "Akceptuję i przechodzę do planu",

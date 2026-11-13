@@ -11,6 +11,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { AvatarCropper } from '../components/ui/AvatarCropper'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { inputClassMuted as inputClass } from '../utils/fieldClass'
+import { isValidPhone, normalizePhone } from '../utils/phone'
 import { PageHeader } from '../components/ui/PageHeader'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
@@ -90,9 +91,14 @@ export function SettingsPage() {
   const handleProfileSave = async (e: FormEvent) => {
     e.preventDefault()
     setProfileError(null)
+    // The phone is required on every account (the coach needs it) and follows the server's rule.
+    if (!isValidPhone(phone)) {
+      setProfileError(t('validation.phoneInvalid', { ns: 'errors' }))
+      return
+    }
     setProfileLoading(true)
     try {
-      await authApi.updateProfile(firstName, lastName, phone)
+      await authApi.updateProfile(firstName, lastName, normalizePhone(phone))
       await refreshUser()
       showToast(t('profile.saved'))
     } catch (err) {

@@ -1,4 +1,5 @@
 import i18n from '../i18n'
+import { isValidPhone } from './phone'
 
 export function validateName(name: string): string | null {
   if (name.trim().length < 3) {
@@ -8,11 +9,7 @@ export function validateName(name: string): string | null {
 }
 
 export function validatePhone(phone: string): string | null {
-  const normalized = phone.replace(/\s/g, '')
-  if (!/^(\d{9}|\+\d{1,4}\d{9})$/.test(normalized)) {
-    return i18n.t('validation.phoneInvalid', { ns: 'errors' })
-  }
-  return null
+  return isValidPhone(phone) ? null : i18n.t('validation.phoneInvalid', { ns: 'errors' })
 }
 
 export function validateEmail(email: string): string | null {

@@ -16,6 +16,7 @@ vi.mock('react-i18next', () => ({
         'completion.submit': 'Zapisz i kontynuuj',
         'completion.errors.fieldRequired': 'To pole jest wymagane.',
         'completion.errors.nameTooShort': 'Imię i nazwisko muszą mieć co najmniej 3 znaki.',
+        'completion.errors.phoneInvalid': 'Nieprawidłowy numer telefonu.',
         'register.acceptPrivacyPrefix': 'Akceptuję',
         'register.privacyLink': 'Politykę prywatności',
         'register.privacyRequired': 'Musisz zaakceptować Politykę prywatności.',
@@ -109,6 +110,24 @@ describe('ProfileCompletionForm', () => {
     const phoneInput = container.querySelector<HTMLInputElement>('input[autocomplete="tel"]')!
     expect(phoneInput).toHaveAttribute('aria-invalid', 'true')
     expect(updateProfileMock).not.toHaveBeenCalled()
+  })
+
+  it('should refuse a phone that is not nine digits and send a valid one without spaces', async () => {
+    // Found in manual testing: "123" went through and was saved as the phone.
+    mockUser = { firstName: 'Anna', lastName: 'Nowak', phone: '', privacyAccepted: true, termsAccepted: true, marketingConsent: false }
+    const user = userEvent.setup()
+    const { container } = render(<ProfileCompletionForm />)
+    const phoneInput = container.querySelector<HTMLInputElement>('input[autocomplete="tel"]')!
+
+    await user.type(phoneInput, '123')
+    await user.click(screen.getByText('Zapisz i kontynuuj'))
+    expect(screen.getByText('Nieprawidłowy numer telefonu.')).toBeInTheDocument()
+    expect(updateProfileMock).not.toHaveBeenCalled()
+
+    await user.clear(phoneInput)
+    await user.type(phoneInput, '500 100 200')
+    await user.click(screen.getByText('Zapisz i kontynuuj'))
+    await waitFor(() => expect(updateProfileMock).toHaveBeenCalledWith('Anna', 'Nowak', '500100200'))
   })
 
   it('should clear a field error once the user starts editing', async () => {

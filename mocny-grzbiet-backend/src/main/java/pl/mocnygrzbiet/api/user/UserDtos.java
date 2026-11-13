@@ -25,7 +25,8 @@ public final class UserDtos {
     public record UpdateUserRequest(
         @NotBlank @Size(min = 3, max = 100) String firstName,
         @NotBlank @Size(min = 3, max = 100) String lastName,
-        @Nullable String phone
+        /** The same rule as RegisterRequest.phone: the coach has to be able to call this number. */
+        @Nullable @Pattern(regexp = "^(\\d{9}|\\+\\d{1,4}\\d{9})$", message = "{validation.phone.format}") String phone
     ) {}
 
     public record ChangePasswordRequest(

@@ -11,6 +11,7 @@ import { AttachmentList } from './AttachmentList'
 import { formatLongDate } from '../../utils/calendarRange'
 import type { PersonalTraining, TrainingStatus } from '../../types'
 import { canReshapeTraining, type TrainingCalendarAdapter } from './adapter'
+import { hasTrainingStarted } from './trainingStart'
 import { AdminPrivateNote } from '../notes/AdminPrivateNote'
 
 /** Same rule as the cards: done is the solid white one, missed a dashed outline, planned in between. */
@@ -62,6 +63,9 @@ export function TrainingDetailModal({
   // what it offers rather than letting a click fail.
   const canReshape = canReshapeTraining(adapter.role, training)
   const canComplete = onComplete != null && training.status !== 'COMPLETED'
+  // The server refuses a tick before the start; offering the form earlier made the client rate a
+  // session that had not happened, only to be told so after pressing the button.
+  const startedYet = hasTrainingStarted(training)
   const canUncomplete = onUncomplete != null && training.status === 'COMPLETED'
   // A training needs its effort rating before it can be ticked off; a task has nothing to rate.
   const readyToComplete = isTask || rpe != null
@@ -133,7 +137,13 @@ export function TrainingDetailModal({
             </div>
           )}
 
-          {canComplete && (
+          {canComplete && !startedYet && (
+            <p className="rounded-lg border border-surface-800 p-3 text-sm text-surface-400">
+              {t(isTask ? 'detail.completeTaskLater' : 'detail.completeLater')}
+            </p>
+          )}
+
+          {canComplete && startedYet && (
             <div className="space-y-3 rounded-lg border border-surface-800 p-3">
               {!isTask && <RpeInput value={rpe} onChange={setRpe} label={t('detail.rpeQuestion')} />}
               <div>

@@ -30,6 +30,16 @@ async function renderGate() {
 }
 
 describe('TrainingConsentGate', () => {
+  it('shouldNotPromiseThatOnlyTheCoachSeesThePlanWhenPartnersDoToo', async () => {
+    // Found in manual testing: the screen said nobody but the client and the coach can see the plan,
+    // while a group training shows the session and the client's first name to the other participants.
+    await renderGate()
+
+    const note = screen.getByText(/trener prowadzący/)
+    expect(note.textContent).toMatch(/trening(u)? wspóln/)
+    expect(note.textContent).toMatch(/imię/)
+  })
+
   it('shouldTellWhereToWriteToWithdrawTheConsent', async () => {
     await renderGate()
 

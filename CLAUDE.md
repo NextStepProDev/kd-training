@@ -221,8 +221,15 @@ aplikacji; `application-gmail.yml`, pilnuje `GmailProfileMailConfigTest`). `./gr
 środowiskowych; **bez `.env` z `ADMIN_EMAIL` seeder nie zakłada żadnego admina.**
 
 Profil `dev` przy każdym starcie **czyści bazę i odtwarza ją z migracji** (`FlywayConfig`), a
-`DevDataSeeder` zakłada konta z hasłem `dev`: admini z `ADMIN_EMAIL` oraz `jan@dev.pl`, `anna@dev.pl`
-(podopieczni), `piotr@`, `kasia@`, `marek@dev.pl`. Wyłączenie resetu: `app.dev.reset-on-start=false`.
+`DevDataSeeder` stawia gotową sytuację testową, hasło `dev` dla wszystkich. Adresy powstają z pierwszego
+`ADMIN_EMAIL` przez plus-adresowanie (`ty@gmail.com` → `ty+ania@gmail.com`), więc z profilem `gmail` każdy mail
+do konta testowego trafia do jednej skrzynki; bez `ADMIN_EMAIL` — `ania@dev.pl` itd. i bez admina i planu.
+Konta: trener (admin), **ania** (podopieczna ze zgodą i planem: seria, trening w parze z Kasią, wykonany z RPE
+i komentarzami, przegapiony, zadanie, cel, materiał z pytaniem), **kasia** (podopieczna bez zgody art. 9),
+**ola**, **lena**, **beata** (podopieczne z pustym planem), **piotr** (bez telefonu → bramka profilu),
+**marek** (zablokowany 3 dni temu). Do tego 3 filmy, szablon i dzień wolny. Seeder pisze **przez repozytoria,
+nie serwisy** — inaczej każdy restart zakolejkowałby maile o zmianach w planie. Wyłączenie resetu:
+`app.dev.reset-on-start=false`.
 
 Porty wybrane tak, żeby nie kolidowały z innymi projektami w `Projects/` (Fire: 5433/8081/5174,
 abcwspinania: 5435/3000). Ten sam port Vite co gdzie indziej = Playwright testowałby cudzą aplikację

@@ -176,6 +176,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private void seedPlan(User coach, User ania, User kasia) {
         LocalDate today = LocalDate.now();
 
+        // Sample library entries: the ids are placeholders, so a thumbnail or the player may stay empty.
         ExerciseVideo deadBug = video("Dead bug — stabilizacja tułowia", "https://www.youtube.com/watch?v=g_BYB0R-4Ws");
         video("Koci grzbiet — mobilność kręgosłupa", "https://www.youtube.com/watch?v=kqnua4rHVVA");
         video("Oddychanie przeponowe w leżeniu", "https://www.youtube.com/watch?v=UB3tSaChwYs");
@@ -226,9 +227,11 @@ public class DevDataSeeder implements CommandLineRunner {
         // Kasia: one entry of her own.
         trainings.save(new PersonalTraining(kasia, TrainingKind.TRAINING, today.plusDays(2), "Basen 30 minut", false));
 
-        // Coach: a day off next week (seen in every calendar) and a template.
-        LocalDate nextMonday = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).plusWeeks(1);
-        daysOff.save(new CoachDayOff(nextMonday, nextMonday.plusDays(1), "Szkolenie"));
+        // Coach: a two-day break (seen in every calendar) on the Monday and Tuesday of the series' second
+        // week. It covers that Tuesday's training on purpose: a planned session on a day off is a case the
+        // calendar has to show. And a template.
+        LocalDate secondTuesday = tuesday.plusWeeks(1);
+        daysOff.save(new CoachDayOff(secondTuesday.minusDays(1), secondTuesday, "Szkolenie"));
         templates.save(new TrainingTemplate("Rozgrzewka standard",
                 "Krążenia ramion, koci grzbiet, przysiad z pauzą.", 15));
         log.info("DEV-SEEDER: plan seeded (series, group training, completed, missed, task, goal, material)");

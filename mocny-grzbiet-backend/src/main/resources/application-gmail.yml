@@ -1,0 +1,19 @@
+# Real mail from a developer's machine, for testing deliverability and what the messages look like in
+# a real inbox. Added ON TOP of dev (SPRING_PROFILES_ACTIVE=dev,gmail): a later profile overrides the
+# MailHog literals in application-dev.yml, and dev on its own keeps sending to MailHog — that is what
+# DevProfileMailConfigTest guards. Host and port are fixed on purpose: a .env copied from .env.example
+# carries MailHog's MAIL_HOST/MAIL_PORT, and read through placeholders they would point this profile
+# back at MailHog with login switched on. Only the credentials come from .env (a Gmail address + an app
+# password); GmailProfileMailConfigTest guards the fixed parts.
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

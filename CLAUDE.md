@@ -215,6 +215,10 @@ cd mocny-grzbiet-frontend && npm run dev
 ```
 
 Backend wymaga działającego PostgreSQL (port 5436). MailHog (web UI: localhost:8027) przechwytuje emaile wysyłane przez auth flow (zaproszenia, reset hasła) — profil `dev` kieruje SMTP na `localhost:1027` bez logowania i TLS (do 01.11.2026 tego nie robił i maile szły na domyślny `smtp.gmail.com`; pilnuje `DevProfileMailConfigTest`).
+Prawdziwe maile z lokalnej maszyny (np. żeby obejrzeć je w Gmailu): profil **`gmail` dołożony do `dev`**
+(`SPRING_PROFILES_ACTIVE=dev,gmail` w `mocny-grzbiet-backend/.env` + `MAIL_USERNAME`/`MAIL_PASSWORD` = Gmail i hasło
+aplikacji; `application-gmail.yml`, pilnuje `GmailProfileMailConfigTest`). `./gradlew bootRun` czyta `.env` do zmiennych
+środowiskowych; **bez `.env` z `ADMIN_EMAIL` seeder nie zakłada żadnego admina.**
 
 Profil `dev` przy każdym starcie **czyści bazę i odtwarza ją z migracji** (`FlywayConfig`), a
 `DevDataSeeder` zakłada konta z hasłem `dev`: admini z `ADMIN_EMAIL` oraz `jan@dev.pl`, `anna@dev.pl`

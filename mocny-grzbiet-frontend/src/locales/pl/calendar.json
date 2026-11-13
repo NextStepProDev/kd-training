@@ -83,6 +83,8 @@
     "calorieLimit": "Limit: do {{value}} kcal",
     "markDone": "Oznacz jako wykonany",
     "markTaskDone": "Oznacz jako zrobione",
+    "completeLater": "Odhaczysz ten trening, gdy się zacznie — wtedy pojawi się też ocena wysiłku.",
+    "completeTaskLater": "Odhaczysz to zadanie w dniu, na który jest zaplanowane.",
     "undoDone": "Cofnij wykonanie",
     "duplicate": "Powtórz za tydzień",
     "edit": "Edytuj",

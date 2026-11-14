@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { inputClassMuted } from '../utils/fieldClass'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
 import { Brand } from '../components/layout/Brand'
+import { Seo } from '../components/seo/Seo'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -42,6 +43,7 @@ export function LoginPage() {
 
   return (
     <div className={authStageClass}>
+      <Seo title={t('login.title')} path="/logowanie" />
       <div className={authCardClass}>
         <div className="text-center mb-6">
           <Brand size="lg" />

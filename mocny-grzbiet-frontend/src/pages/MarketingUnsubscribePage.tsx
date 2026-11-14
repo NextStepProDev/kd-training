@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { MailX, CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
+import { Seo } from '../components/seo/Seo'
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
 
@@ -35,6 +36,7 @@ export function MarketingUnsubscribePage() {
 
   return (
     <div className={authStageClass}>
+      <Seo title={t('unsubscribe.title')} path="/wypisz-sie" />
       <div className={`${authCardClass} text-center`}>
         {status === 'done' ? (
           <>

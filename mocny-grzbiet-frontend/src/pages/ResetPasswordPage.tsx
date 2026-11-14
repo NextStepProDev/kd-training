@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button'
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { inputClassMuted } from '../utils/fieldClass'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
+import { Seo } from '../components/seo/Seo'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -46,6 +47,7 @@ export function ResetPasswordPage() {
   if (success) {
     return (
       <div className={authStageClass}>
+        <Seo title={t('resetPassword.title')} path="/reset-password" />
         <div className={`${authCardClass} text-center`}>
           <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,6 +66,7 @@ export function ResetPasswordPage() {
 
   return (
     <div className={authStageClass}>
+      <Seo title={t('resetPassword.title')} path="/reset-password" />
       <div className={authCardClass}>
         <h1 className="text-2xl font-bold text-surface-100 mb-6 text-center">{t('resetPassword.title')}</h1>
 

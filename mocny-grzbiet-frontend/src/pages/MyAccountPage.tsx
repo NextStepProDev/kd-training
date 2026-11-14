@@ -9,6 +9,9 @@ import { Card } from '../components/ui/Card'
 import { buttonClass } from '../components/ui/buttonClass'
 import { Avatar } from '../components/ui/Avatar'
 import { SHORT_STALE_MS } from '../utils/queryFreshness'
+import { format, parseISO } from 'date-fns'
+import { pl } from 'date-fns/locale'
+import { addDaysIso, todayIso } from '../utils/calendarRange'
 
 export function MyAccountPage() {
   const { t } = useTranslation('account')
@@ -30,6 +33,15 @@ export function MyAccountPage() {
   })
 
   if (!user) return null
+
+  // The server already works out the next training (tasks left out); "dziś" and "jutro" read better
+  // than a date for the two days a client checks most.
+  const nextIso = summaryQuery.data?.nextTrainingDate
+  const today = todayIso()
+  const nextTraining = nextIso == null ? null
+    : nextIso === today ? tCalendar('my.tileToday')
+    : nextIso === addDaysIso(today, 1) ? tCalendar('my.tileTomorrow')
+    : format(parseISO(nextIso), 'EEEE, d MMMM', { locale: pl })
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16 space-y-10">
@@ -59,6 +71,7 @@ export function MyAccountPage() {
           description={tCalendar('my.tileDescription')}
           count={summaryQuery.data?.unreadCount || undefined}
           countLabel={summaryQuery.data?.unreadCount ? tCalendar('my.tileBadge') : undefined}
+          next={nextTraining && tCalendar('my.tileNext', { date: nextTraining })}
           cta={tCalendar('my.tileCta')}
         />
       )}
@@ -107,6 +120,8 @@ interface AccountTileProps {
   count?: number
   /** Optional: a tile without a counted collection behind it has nothing to caption. */
   countLabel?: string
+  /** "Najbliższy trening: …" — absent when nothing is planned. */
+  next?: string | null
   cta: string
 }
 
@@ -114,7 +129,7 @@ interface AccountTileProps {
  * The way into the training plan: a wide, photographic-feeling card with the unread count as the one
  * solid element on it, so new messages from the coach are the first thing seen.
  */
-function AccountTile({ to, icon, title, description, count, countLabel, cta }: AccountTileProps) {
+function AccountTile({ to, icon, title, description, count, countLabel, next, cta }: AccountTileProps) {
   return (
     <Link
       to={to}
@@ -134,6 +149,7 @@ function AccountTile({ to, icon, title, description, count, countLabel, cta }: A
         </div>
         <h2 className="mt-8 text-display text-3xl sm:text-4xl text-white">{title}</h2>
         <p className="mt-3 max-w-md text-surface-300">{description}</p>
+        {next && <p className="mt-4 text-sm font-medium text-white">{next}</p>}
         <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white">
           {cta}
           <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />

@@ -90,6 +90,7 @@ Jeśli zmiana dotyka któregoś punktu — otwórz wskazany plik **przed** pisan
 - `fetchApi` ponawia **tylko** `GET`/`HEAD`. Ponowiony zapis tworzy drugi wpis.
 - `staleTime: 0` jest błędem (lawina żądań przy powrocie na kartę) — jest `SHORT_STALE_MS` z `utils/queryFreshness.ts`.
 - Surowy `<input type="date">` poza `components/ui/DateInput` wywala build.
+- Każda strona w `pages/` renderuje `<Seo title=… path=…>` — bez tego karta przeglądarki zostaje z tytułem poprzedniej strony (logowanie i panel nazywały się jak strona główna). Pilnuje `__architecture__/pageTitle.test.ts`; w testach jednostkowych stron `Seo` jest mockowane (brak `HelmetProvider`).
 - Kluczowe ekrany przechodzą **axe** (WCAG 2.1 AA, telefon i komputer) — `e2e/a11y.spec.ts`. Nowy ekran dopisz do listy; fałszywe sesje i odpowiedzi API są w `e2e/support/session.ts`. Przycisk z samą ikoną zawsze dostaje `aria-label`, link w tekście jest podkreślony (nie tylko jaśniejszy).
 
 **Obrazy i CI → [`INFRA.md`](INFRA.md)**
@@ -167,7 +168,7 @@ Pełna lista endpointów wraz z pułapkami → [`API.md`](API.md).
 | `/` | HomePage | Wizytówka (brief, pkt 2): hero na cały ekran, O mnie, Czym się zajmuję, Z pracy, Umów trening (mail, telefon, adres). „O mnie” to tekst Kacpra dosłownie (poza „pacjent” → „podopieczny”, na jego prośbę z 08.11.2026), usługi zbudowane z niego; zdjęcia klienta w `public/images/` |
 | `/logowanie` · `/rejestracja` | LoginPage · RegisterPage | `/login`, `/register`, `/admin/login`, `/admin/register` → redirect tutaj; po zalogowaniu powrót na zapamiętaną ścieżkę. Rejestracja **tylko z linku w zaproszeniu** (`?token=`): bez niego sama informacja, adres konta z zaproszenia (pole tylko do odczytu) |
 | `/uzupelnij-profil` | ProfileCompletionPage | domknięcie konta po Google (brakujące pola + polityka prywatności + regulamin) |
-| `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`) |
+| `/moje-konto` | MyAccountPage | profil + kafelek planu treningowego (tylko `isAthlete`: licznik nowości i najbliższy trening — „dziś”, „jutro” albo dzień tygodnia z datą; zadania się nie liczą) |
 | `/moje-konto/plan-treningowy` | MyTrainingCalendarPage | strefa podopiecznego: zgoda art. 9 → cele, kalendarz, wiadomości, statystyki |
 | `/settings` | SettingsPage | avatar, dane, hasło, zgoda marketingowa, usunięcie konta |
 | `/polityka-prywatnosci` | PrivacyPolicyPage | polityka prywatności z danymi administratora |

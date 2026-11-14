@@ -12,6 +12,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
 import { Brand } from '../components/layout/Brand'
+import { Seo } from '../components/seo/Seo'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -37,6 +38,17 @@ function Notice({ title, children }: { title: string; children: ReactNode }) {
  * the address the invitation went to. Without a working link there is no form, only a notice.
  */
 export function RegisterPage() {
+  const { t } = useTranslation('auth')
+  // One title for every branch below: the notices, the spinner, the form and its success screen.
+  return (
+    <>
+      <Seo title={t('register.title')} path="/rejestracja" />
+      <RegisterPageContent />
+    </>
+  )
+}
+
+function RegisterPageContent() {
   const { t } = useTranslation('auth')
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')

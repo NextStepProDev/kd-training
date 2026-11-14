@@ -5,6 +5,7 @@ import { forgotPassword } from '../api/auth'
 import { Button } from '../components/ui/Button'
 import { inputClassMuted } from '../utils/fieldClass'
 import { authCardClass, authStageClass } from '../components/auth/authCard'
+import { Seo } from '../components/seo/Seo'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -32,6 +33,7 @@ export function ForgotPasswordPage() {
 
   return (
     <div className={authStageClass}>
+      <Seo title={t('forgotPassword.title')} path="/forgot-password" />
       <div className={authCardClass}>
         <h1 className="text-2xl font-bold text-surface-100 mb-2 text-center">{t('forgotPassword.title')}</h1>
         <p className="text-surface-400 text-sm text-center mb-6">{t('forgotPassword.description')}</p>

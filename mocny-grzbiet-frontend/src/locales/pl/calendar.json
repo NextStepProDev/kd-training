@@ -114,6 +114,9 @@
     "tileDescription": "Treningi indywidualne od trenera",
     "tileCta": "Otwórz kalendarz",
     "tileBadge": "nowe",
+    "tileNext": "Najbliższy trening: {{date}}",
+    "tileToday": "dziś",
+    "tileTomorrow": "jutro",
     "sharedNotice": "Plan, wykonanie, oceny wysiłku i komentarze są widoczne dla Twojego trenera."
   },
   "unread": {

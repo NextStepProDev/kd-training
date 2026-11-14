@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { SettingsPage } from './SettingsPage'
 
 const updateProfile = vi.fn()
+vi.mock('../components/seo/Seo', () => ({ Seo: () => null }))
 vi.mock('../api/client', () => ({
   authApi: { updateProfile: (...args: unknown[]) => updateProfile(...args) },
 }))

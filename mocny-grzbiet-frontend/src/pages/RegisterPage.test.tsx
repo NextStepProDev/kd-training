@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegisterPage } from './RegisterPage'
 
+vi.mock('../components/seo/Seo', () => ({ Seo: () => null }))
 vi.mock('react-i18next', () => ({
   // validation.ts reaches the real i18n instance, which registers this plugin on import.
   initReactI18next: { type: '3rdParty', init: () => {} },

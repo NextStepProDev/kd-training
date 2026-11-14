@@ -9,6 +9,7 @@ import { AdminExerciseVideos } from './admin/AdminExerciseVideos'
 import { AdminTrainingTemplates } from './admin/AdminTrainingTemplates'
 import { AdminDaysOff } from './admin/AdminDaysOff'
 import type { AthleteSummary } from '../types'
+import { Seo } from '../components/seo/Seo'
 
 const tabs = [
   { key: 'podopieczni', ns: 'admin.tabs.athletes' },
@@ -31,6 +32,7 @@ export function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 sm:py-14">
+      <Seo title={t('admin.kicker')} path="/admin/podopieczni" />
       <PageHeader kicker={t('admin.kicker')} title={t('admin.title')} className="mb-8" />
 
       {/* Segmented pills, the same shape as the calendar's week/month switch. */}

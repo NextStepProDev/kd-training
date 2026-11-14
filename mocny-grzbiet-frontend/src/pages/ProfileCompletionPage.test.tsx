@@ -5,6 +5,7 @@ import { ProfileCompletionPage } from './ProfileCompletionPage'
 import type { User } from '../types'
 
 let currentUser: User | null = null
+vi.mock('../components/seo/Seo', () => ({ Seo: () => null }))
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({ user: currentUser, logout: vi.fn(), refreshUser: vi.fn() }),
 }))

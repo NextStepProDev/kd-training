@@ -8,6 +8,7 @@ import { consumeRedirectPath } from '../utils/redirect'
 import { getMissingProfileFields, needsProfileCompletion } from '../utils/profileCompletion'
 import { ProfileCompletionForm } from '../components/profile/ProfileCompletionForm'
 import { Button } from '../components/ui/Button'
+import { Seo } from '../components/seo/Seo'
 
 /**
  * Profile completion page after registration/login, when required data is missing
@@ -57,6 +58,7 @@ export function ProfileCompletionPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
+      <Seo title={t(onlyNewTerms ? 'completion.termsUpdatedTitle' : 'completion.pageTitle')} path="/uzupelnij-profil" />
       <h1 className="text-2xl font-bold text-surface-100">
         {t(onlyNewTerms ? 'completion.termsUpdatedTitle' : 'completion.pageTitle')}
       </h1>

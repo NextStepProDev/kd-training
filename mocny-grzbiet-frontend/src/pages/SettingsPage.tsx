@@ -13,6 +13,7 @@ import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter'
 import { inputClassMuted as inputClass } from '../utils/fieldClass'
 import { isValidPhone, normalizePhone } from '../utils/phone'
 import { PageHeader } from '../components/ui/PageHeader'
+import { Seo } from '../components/seo/Seo'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
 
@@ -199,6 +200,7 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 sm:py-16">
+      <Seo title={t('title')} path="/settings" />
       <PageHeader kicker={t('kicker')} title={t('title')} className="mb-10" />
 
       <section className="mb-5 rounded-2xl border border-white/[0.07] bg-surface-900 p-6 sm:p-7">

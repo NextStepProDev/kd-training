@@ -239,7 +239,7 @@ public class AdminUserDataExportService {
     /** Writes the package as a ZIP. Runs outside the transaction — it only touches storage. */
     public void writeZip(ExportPackage pkg, OutputStream out) throws IOException {
         try (ZipOutputStream zip = new ZipOutputStream(out, StandardCharsets.UTF_8)) {
-            put(zip, "CZYTAJ_MNIE.txt", readme().getBytes(StandardCharsets.UTF_8));
+            put(zip, "Informacja.txt", readme().getBytes(StandardCharsets.UTF_8));
             put(zip, "dane.json", pkg.json());
             for (Photo photo : pkg.photos()) {
                 // Expired training photos lose their file to the sweep; the comment row stays. The name
@@ -272,7 +272,8 @@ public class AdminUserDataExportService {
             przygotowane na Twoje żądanie (art. 15 i 20 RODO).
 
             dane.json  — dane konta, zgody, plan treningowy 1:1 (treningi, komentarze, cele,
-                         usunięte treningi) oraz notatki trenera na Twój temat
+                         materiały z pytaniami, usunięte treningi) oraz notatki trenera
+                         na Twój temat
             zdjecia/   — zdjęcie profilowe i zdjęcia dodane do komentarzy treningowych
 
             Data przygotowania: %s

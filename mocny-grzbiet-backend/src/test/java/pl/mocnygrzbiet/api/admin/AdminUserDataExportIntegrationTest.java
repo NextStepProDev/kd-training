@@ -137,7 +137,10 @@ class AdminUserDataExportIntegrationTest extends BaseIntegrationTest {
 
         Map<String, byte[]> zip = export(admin, marekId);
 
-        assertTrue(zip.containsKey("CZYTAJ_MNIE.txt"));
+        // A plain Polish name for the person who receives the package, not a programmer's "README".
+        assertTrue(zip.containsKey("Informacja.txt"));
+        // The note lists every part of dane.json; materials (with their questions) were left out once.
+        assertTrue(new String(zip.get("Informacja.txt"), StandardCharsets.UTF_8).contains("materiały"));
         assertTrue(zip.containsKey("zdjecia/treningi/" + photo));
         assertFalse(zip.containsKey("zdjecia/treningi/" + gone));
 
